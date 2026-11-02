@@ -21,7 +21,10 @@ def main(argv: list[str] | None = None) -> None:
     bl.add_argument("--offline", action="store_true", help="rebuild data/blocks/*.csv and the manifest from the cache only (no network)")
     bl.add_argument("--workers", type=int, default=2)
 
-    oc = sub.add_parser("onchain", help="publish the index to NEAR Social (dry run unless --send)")
+    oc = sub.add_parser("onchain", help="publish the index to NEAR Social (dry run unless --send); --verify reads it back and compares hashes")
+    oc.add_argument("--verify", action="store_true", help="read <account>/near_thesis/index from NEAR Social and compare with this checkout")
+    oc.add_argument("--account", help="account to verify (default NEAR_ACCOUNT_ID)")
+    oc.add_argument("--network", choices=["testnet", "mainnet"], help="default NEAR_NETWORK or testnet")
     oc.add_argument("--send", action="store_true", help="actually sign and send (requires NEAR_ACCOUNT_ID/NEAR_PRIVATE_KEY in .env)")
 
     for name, helptext in [("features", "derive metric tables into data/derived/"),
@@ -43,6 +46,8 @@ def main(argv: list[str] | None = None) -> None:
         blocks.run(day_step=a.day_step, blocks_per_window=a.blocks, workers=a.workers, offline=a.offline)
     elif a.cmd == "onchain":
         from . import onchain
+        if a.verify:
+            raise SystemExit(0 if onchain.verify(a.account, a.network) else 1)
         onchain.run(dry_run=not a.send)
     elif a.cmd == "features":
         from . import features

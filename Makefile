@@ -3,7 +3,7 @@
 PY := uv run
 
 BLOCKS ?= 50   # blocks per sampling window for `make blocks` (budget: ~0.35 blocks/s)
-.PHONY: all build setup fetch bq blocks onchain features models charts thesis site notebook test clean
+.PHONY: all build setup fetch bq blocks onchain onchain-verify features models charts thesis site notebook test clean
 
 all: fetch build
 
@@ -42,6 +42,9 @@ blocks:           ## sample full blocks from FastNear (no credentials) for L1/L2
 
 onchain:          ## dry-run of the on-chain index publication (add SEND=1 to sign; needs keys in .env)
 	$(PY) near-thesis onchain $(if $(SEND),--send,)
+
+onchain-verify:   ## read the published index back from NEAR Social and compare its THESIS.md hash with this checkout
+	$(PY) near-thesis onchain --verify
 
 test:
 	$(PY) pytest -q

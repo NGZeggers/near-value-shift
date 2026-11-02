@@ -36,7 +36,7 @@ Requirements: [uv](https://docs.astral.sh/uv/) (it installs Python 3.12 itself).
    is cached and resumable, and `BLOCKS=100` tops it up) or `make bq` (BigQuery, see `docs/SETUP_BIGQUERY.md`; dry-runs every
    query and refuses any above `BQ_MAX_GB_PER_QUERY`). L1 and L2 use the BigQuery extract when present and the
    block sample otherwise; THESIS.md states which.
-7. Optional, on-chain index: `make onchain` prints the payload that `make onchain SEND=1` would write to NEAR Social
+7. Optional, on-chain index: `make onchain` writes `data/derived/onchain_index.json` and prints the payload that `make onchain SEND=1` would write to NEAR Social; `make onchain-verify` reads it back from the chain by RPC and checks that its `THESIS.md` hash matches this checkout
    on testnet (needs `NEAR_ACCOUNT_ID` and `NEAR_PRIVATE_KEY` in `.env`; signing is a human decision).
 
 ## What NEAR does in this product

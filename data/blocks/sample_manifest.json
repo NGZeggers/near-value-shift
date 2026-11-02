@@ -1,5 +1,5 @@
 {
- "fetched_at": "2026-11-02T18:47:10+00:00",
+ "fetched_at": "2026-11-02T18:52:13+00:00",
  "source": "https://mainnet.neardata.xyz/v0/block/{h}",
  "windows": [
   {
@@ -103,15 +103,15 @@
    "hour": 3,
    "start_height": 138758725,
    "n": 50,
-   "fetched": 50,
-   "usable": true
+   "fetched": 0,
+   "usable": false
   },
   {
    "day": "2025-02-02",
    "hour": 15,
    "start_height": 138797282,
    "n": 50,
-   "fetched": 9,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -119,7 +119,7 @@
    "hour": 3,
    "start_height": 139918034,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -127,7 +127,7 @@
    "hour": 15,
    "start_height": 139956910,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -135,7 +135,7 @@
    "hour": 3,
    "start_height": 141065847,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -143,7 +143,7 @@
    "hour": 15,
    "start_height": 141103761,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -151,7 +151,7 @@
    "hour": 3,
    "start_height": 142179851,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -159,7 +159,7 @@
    "hour": 15,
    "start_height": 142217543,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -167,7 +167,7 @@
    "hour": 3,
    "start_height": 143327989,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -175,7 +175,7 @@
    "hour": 15,
    "start_height": 143364268,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -183,7 +183,7 @@
    "hour": 3,
    "start_height": 144468656,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -191,7 +191,7 @@
    "hour": 15,
    "start_height": 144507213,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -199,7 +199,7 @@
    "hour": 3,
    "start_height": 145626020,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -207,7 +207,7 @@
    "hour": 15,
    "start_height": 145665051,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -215,7 +215,7 @@
    "hour": 3,
    "start_height": 147211298,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -223,7 +223,7 @@
    "hour": 15,
    "start_height": 147281769,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -231,7 +231,7 @@
    "hour": 3,
    "start_height": 149322740,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -239,7 +239,7 @@
    "hour": 15,
    "start_height": 149393067,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -247,7 +247,7 @@
    "hour": 3,
    "start_height": 151439066,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -255,7 +255,7 @@
    "hour": 15,
    "start_height": 151509786,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -263,7 +263,7 @@
    "hour": 3,
    "start_height": 153516547,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -271,7 +271,7 @@
    "hour": 15,
    "start_height": 153581193,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -279,7 +279,7 @@
    "hour": 3,
    "start_height": 155577316,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -287,7 +287,7 @@
    "hour": 15,
    "start_height": 155648458,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -295,7 +295,7 @@
    "hour": 3,
    "start_height": 157700652,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -303,7 +303,7 @@
    "hour": 15,
    "start_height": 157771486,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -311,7 +311,7 @@
    "hour": 3,
    "start_height": 159821729,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -319,7 +319,7 @@
    "hour": 15,
    "start_height": 159893945,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -327,7 +327,7 @@
    "hour": 3,
    "start_height": 161944847,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -335,7 +335,7 @@
    "hour": 15,
    "start_height": 162016011,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -343,7 +343,7 @@
    "hour": 3,
    "start_height": 164100613,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -351,7 +351,7 @@
    "hour": 15,
    "start_height": 164172441,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -359,7 +359,7 @@
    "hour": 3,
    "start_height": 166213890,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -367,7 +367,7 @@
    "hour": 15,
    "start_height": 166284509,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -375,7 +375,7 @@
    "hour": 3,
    "start_height": 168336520,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -383,7 +383,7 @@
    "hour": 15,
    "start_height": 168406303,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -391,7 +391,7 @@
    "hour": 3,
    "start_height": 170442199,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -399,7 +399,7 @@
    "hour": 15,
    "start_height": 170506434,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -407,7 +407,7 @@
    "hour": 3,
    "start_height": 172543554,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -415,7 +415,7 @@
    "hour": 15,
    "start_height": 172614020,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -423,7 +423,7 @@
    "hour": 3,
    "start_height": 174650824,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -431,7 +431,7 @@
    "hour": 15,
    "start_height": 174722327,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -439,7 +439,7 @@
    "hour": 3,
    "start_height": 176744088,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -447,7 +447,7 @@
    "hour": 15,
    "start_height": 176815183,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -455,7 +455,7 @@
    "hour": 3,
    "start_height": 178797109,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -463,7 +463,7 @@
    "hour": 15,
    "start_height": 178868396,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -471,7 +471,7 @@
    "hour": 3,
    "start_height": 180915972,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -479,7 +479,7 @@
    "hour": 15,
    "start_height": 180987599,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -487,7 +487,7 @@
    "hour": 3,
    "start_height": 183037140,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -495,7 +495,7 @@
    "hour": 15,
    "start_height": 183108176,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -503,7 +503,7 @@
    "hour": 3,
    "start_height": 185174990,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -511,7 +511,7 @@
    "hour": 15,
    "start_height": 185245360,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -519,7 +519,7 @@
    "hour": 3,
    "start_height": 187308062,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -527,7 +527,7 @@
    "hour": 15,
    "start_height": 187379702,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -535,7 +535,7 @@
    "hour": 3,
    "start_height": 189446940,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -543,7 +543,7 @@
    "hour": 15,
    "start_height": 189518761,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -551,7 +551,7 @@
    "hour": 3,
    "start_height": 191599492,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -559,7 +559,7 @@
    "hour": 15,
    "start_height": 191671708,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -567,7 +567,7 @@
    "hour": 3,
    "start_height": 193767468,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -575,7 +575,7 @@
    "hour": 15,
    "start_height": 193836785,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -583,7 +583,7 @@
    "hour": 3,
    "start_height": 195918232,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -591,7 +591,7 @@
    "hour": 15,
    "start_height": 195991052,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -599,7 +599,7 @@
    "hour": 3,
    "start_height": 198088586,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -607,7 +607,7 @@
    "hour": 15,
    "start_height": 198161235,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -615,7 +615,7 @@
    "hour": 3,
    "start_height": 200219583,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -623,7 +623,7 @@
    "hour": 15,
    "start_height": 200290666,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -631,7 +631,7 @@
    "hour": 3,
    "start_height": 202333315,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -639,7 +639,7 @@
    "hour": 15,
    "start_height": 202403279,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -647,7 +647,7 @@
    "hour": 3,
    "start_height": 204462627,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -655,7 +655,7 @@
    "hour": 15,
    "start_height": 204535070,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -663,7 +663,7 @@
    "hour": 3,
    "start_height": 206595575,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -671,7 +671,7 @@
    "hour": 15,
    "start_height": 206667198,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -679,7 +679,7 @@
    "hour": 3,
    "start_height": 208706309,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -687,7 +687,7 @@
    "hour": 15,
    "start_height": 208776717,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -695,7 +695,7 @@
    "hour": 3,
    "start_height": 210821568,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -703,7 +703,7 @@
    "hour": 15,
    "start_height": 210891943,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -711,7 +711,7 @@
    "hour": 3,
    "start_height": 212937423,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -719,7 +719,7 @@
    "hour": 15,
    "start_height": 213009011,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -727,7 +727,7 @@
    "hour": 3,
    "start_height": 215026021,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -735,7 +735,7 @@
    "hour": 15,
    "start_height": 215096252,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -743,7 +743,7 @@
    "hour": 3,
    "start_height": 217137096,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -751,7 +751,7 @@
    "hour": 15,
    "start_height": 217209572,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -759,7 +759,7 @@
    "hour": 3,
    "start_height": 219319224,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -767,7 +767,7 @@
    "hour": 15,
    "start_height": 219392477,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -775,7 +775,7 @@
    "hour": 3,
    "start_height": 221479721,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   },
   {
@@ -783,12 +783,12 @@
    "hour": 15,
    "start_height": 221554827,
    "n": 50,
-   "fetched": 1,
+   "fetched": 0,
    "usable": false
   }
  ],
  "blocks_requested": 4900,
- "blocks_fetched": 743,
+ "blocks_fetched": 600,
  "blocks_missing": 0,
  "complete": false,
  "day_step": 15,

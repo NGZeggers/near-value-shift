@@ -30,7 +30,7 @@ def payload() -> dict:
     q = pd.read_csv(qaa, parse_dates=["month"]).set_index("month").iloc[-1] if qaa.exists() else None
     ic = {r["metric"]: r["spearman_ic"] for r in json.loads((MODELS / "signal_ic.json").read_text()) if r.get("horizon_weeks") == 12 and r.get("benchmark") == "btc" and "spearman_ic" in r}
     return {
-        "as_of": str(d.index.max().date()), "published_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "as_of": str(d.index.max().date()),
         "month": str(full.name.date())[:7],
         "active_accounts_daily_mean": round(float(full["active_accounts"])),
         "qaa": None if q is None else round(float(q["qaa"])),
@@ -47,10 +47,12 @@ async def publish(dry_run: bool = True) -> dict:
     network = os.getenv("NEAR_NETWORK", "testnet")
     contract, rpc = SOCIAL[network]
     account_id, key = os.getenv("NEAR_ACCOUNT_ID"), os.getenv("NEAR_PRIVATE_KEY")
-    data = {account_id or "<account>": {"near_thesis": {"index": json.dumps(payload())}}}
+    index = payload()
+    (DERIVED / "onchain_index.json").write_text(json.dumps(index, indent=1))  # what the chain would hold; diffable in git
+    data = {account_id or "<account>": {"near_thesis": {"index": json.dumps(dict(index, published_at=datetime.now(timezone.utc).isoformat(timespec="seconds")))}}}
     print(json.dumps(data, indent=1))
     if dry_run:
-        print(f"dry run: would call {contract}.set on {network} from {account_id}")
+        print(f"dry run: would call {contract}.set on {network} from {account_id} (saved data/derived/onchain_index.json)")
         return data
     if not (account_id and key):
         raise SystemExit("NEAR_ACCOUNT_ID and NEAR_PRIVATE_KEY are required in .env")
@@ -61,6 +63,42 @@ async def publish(dry_run: bool = True) -> dict:
     res = await acc.function_call(contract, "set", {"data": data}, gas=100_000_000_000_000, amount=50_000_000_000_000_000_000_000)  # 0.05 NEAR storage deposit
     print("tx:", res.transaction.hash)
     return {"tx": res.transaction.hash}
+
+
+def read_index(account_id: str, network: str = "testnet") -> dict | None:
+    """Read <account>/near_thesis/index back from NEAR Social with a plain RPC view call (no keys, no py-near)."""
+    import base64
+
+    import requests
+
+    contract, rpc = SOCIAL[network]
+    args = base64.b64encode(json.dumps({"keys": [f"{account_id}/near_thesis/index"]}).encode()).decode()
+    body = {"jsonrpc": "2.0", "id": "1", "method": "query",
+            "params": {"request_type": "call_function", "finality": "final", "account_id": contract, "method_name": "get", "args_base64": args}}
+    r = requests.post(rpc, json=body, timeout=30); r.raise_for_status()
+    res = r.json().get("result", {})
+    if "error" in res or not res.get("result"):
+        return None
+    tree = json.loads(bytes(res["result"]).decode())
+    raw = ((tree.get(account_id) or {}).get("near_thesis") or {}).get("index")
+    return json.loads(raw) if raw else None
+
+
+def verify(account_id: str | None = None, network: str | None = None) -> bool:
+    """Compare the on-chain index with this checkout: same THESIS.md hash means the published numbers are the ones here."""
+    account_id = account_id or os.getenv("NEAR_ACCOUNT_ID")
+    network = network or os.getenv("NEAR_NETWORK", "testnet")
+    if not account_id:
+        raise SystemExit("pass --account or set NEAR_ACCOUNT_ID")
+    chain = read_index(account_id, network)
+    if chain is None:
+        print(f"no index published under {account_id}/near_thesis/index on {network}")
+        return False
+    local = payload()
+    same = chain.get("thesis_sha256") == local["thesis_sha256"]
+    print(json.dumps({"network": network, "account": account_id, "published_at": chain.get("published_at"), "as_of_chain": chain.get("as_of"),
+                      "as_of_local": local["as_of"], "thesis_sha256_matches": same, "chain": chain}, indent=1))
+    return same
 
 
 def run(dry_run: bool = True) -> None:
