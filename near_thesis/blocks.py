@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import csv
 import json
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, timezone
@@ -26,17 +27,32 @@ ARCHIVAL_RPC = "https://archival-rpc.mainnet.fastnear.com"
 BLOCKS = DATA / "blocks"
 CACHE = BLOCKS / "cache"
 UA = {"user-agent": "near-thesis/0.1 (NEAR Hackathon 2026; sampled block reader)"}
+RATE_PER_S = 2.5  # polite global rate limit for the public block API (it answers 429 above a few requests per second)
+_lock = threading.Lock()
+_next_slot = [0.0]
+
+
+def _throttle() -> None:
+    with _lock:
+        now = time.monotonic()
+        wait = max(0.0, _next_slot[0] - now)
+        _next_slot[0] = max(now, _next_slot[0]) + 1.0 / RATE_PER_S
+    if wait:
+        time.sleep(wait)
 
 
 def rpc_block(height: int) -> dict | None:
-    r = requests.post(ARCHIVAL_RPC, json={"jsonrpc": "2.0", "id": 1, "method": "block", "params": {"block_id": height}}, timeout=30, headers=UA)
-    j = r.json()
-    return j.get("result")
+    try:
+        r = requests.post(ARCHIVAL_RPC, json={"jsonrpc": "2.0", "id": 1, "method": "block", "params": {"block_id": height}}, timeout=30, headers=UA)
+        return r.json().get("result")
+    except (requests.RequestException, ValueError):
+        return None
 
 
 def latest_height() -> int:
-    r = requests.post(ARCHIVAL_RPC, json={"jsonrpc": "2.0", "id": 1, "method": "block", "params": {"finality": "final"}}, timeout=30, headers=UA)
-    return int(r.json()["result"]["header"]["height"])
+    r = requests.get("https://mainnet.neardata.xyz/v0/last_block/final", timeout=30, headers=UA, allow_redirects=True)
+    r.raise_for_status()
+    return int(r.json()["block"]["header"]["height"])
 
 
 def find_height(ts_ns: int, lo: int, hi: int) -> int:
@@ -58,33 +74,73 @@ def find_height(ts_ns: int, lo: int, hi: int) -> int:
     return lo
 
 
+def block_ts(height: int) -> tuple[int, int] | None:
+    """(height, timestamp_ns) from neardata, stepping forward over skipped heights."""
+    for step in range(0, 6):
+        b = fetch_block(height + step)
+        if b is not None:
+            return b["height"], b["ts"]
+    return None
+
+
+def find_height_fast(ts_ns: int, guess: int, top: int, tol_s: float = 90.0, max_iter: int = 12) -> int:
+    """Secant iteration on neardata block timestamps (fast, cached). Stops within tol_s seconds of the target,
+    returning the first height at or after the target instant. Falls back to the archival-RPC binary search."""
+    h, t = block_ts(min(max(guess, 1), top)) or (None, None)
+    if h is None:
+        return find_height(ts_ns, max(1, guess - 10_000_000), top)
+    rate = 0.6e9  # ns per block, refined below
+    prev = None
+    for _ in range(max_iter):
+        err = (ts_ns - t) / 1e9
+        if abs(err) <= tol_s:
+            break
+        if prev is not None and prev[0] != h and prev[1] != t:
+            rate = max(0.3e9, min(2e9, (t - prev[1]) / (h - prev[0])))
+        prev = (h, t)
+        step = int((ts_ns - t) / rate)
+        nh = min(max(h + step, 1), top)
+        got = block_ts(nh)
+        if got is None:
+            break
+        h, t = got
+    # within tol_s of the target instant is good enough for a sampling window start
+    return h
+
+
 def plan(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_window: int = 250, start: str = INTENTS_START) -> list[dict]:
     """List of windows {day, hour, start_height, n}. Day sampling is deterministic (fixed step from INTENTS_START)."""
     d0 = datetime.fromisoformat(start).replace(tzinfo=timezone.utc)
     end = datetime.now(timezone.utc) - timedelta(days=1)
     top = latest_height()
-    out, lo_hint = [], 100_000_000
+    out, guess = [], 130_000_000
     day = d0
     while day <= end:
         for hr in windows:
             ts = int((day.replace(hour=hr)).timestamp() * 1e9)
-            h = find_height(ts, lo_hint, top)
+            h = find_height_fast(ts, guess, top)
             out.append({"day": day.strftime("%Y-%m-%d"), "hour": hr, "start_height": h, "n": blocks_per_window})
-            lo_hint = h
+            guess = h + int((hr and 0) or 0) + 12 * 3600 * 2  # next window is hours/days ahead; secant corrects it
+            print(f"  window {day.strftime('%Y-%m-%d')} {hr:02d}:00 -> height {h}", flush=True)
         day += timedelta(days=day_step)
     return out
 
 
-def fetch_block(height: int, retries: int = 4) -> dict | None:
+def fetch_block(height: int, retries: int = 6) -> dict | None:
     cached = CACHE / f"{height}.json"
     if cached.exists():
         return json.loads(cached.read_text())
     for attempt in range(retries):
         try:
+            _throttle()
             r = requests.get(NEARDATA.format(h=height), timeout=60, headers=UA, allow_redirects=True)
             if r.status_code == 404:
                 CACHE.mkdir(parents=True, exist_ok=True); cached.write_text("null"); return None
-            if r.status_code == 429 or r.status_code >= 500:
+            if r.status_code == 429:
+                wait = float(r.headers.get("retry-after") or 0) or 20.0 * (attempt + 1)
+                time.sleep(wait)
+                continue
+            if r.status_code >= 500:
                 raise requests.HTTPError(str(r.status_code))
             r.raise_for_status()
             full = r.json()
@@ -126,7 +182,7 @@ def extract(block: dict) -> dict:
     return {"height": height, "ts": ts, "n_outcomes": n_outcomes, "txs": txs, "events": events}
 
 
-def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_window: int = 250, workers: int = 4) -> dict:
+def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_window: int = 250, workers: int = 2) -> dict:
     BLOCKS.mkdir(parents=True, exist_ok=True)
     plan_file = BLOCKS / "sample_plan.json"
     if plan_file.exists():
@@ -157,7 +213,7 @@ def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_windo
                 for s, r, kind, m, dep in b["txs"]:
                     wt.writerow([day, w["day"], w["hour"], b["height"], b["ts"], s, r, kind, m, dep])
                 if done % 500 == 0:
-                    print(f"  {done}/{len(heights)} blocks, {missing} missing, {time.time() - t0:,.0f}s")
+                    print(f"  {done}/{len(heights)} blocks, {missing} missing, {time.time() - t0:,.0f}s", flush=True)
     man = {"fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": NEARDATA, "windows": P,
            "blocks_requested": len(heights), "blocks_missing": missing, "day_step": day_step, "hours": list(windows), "blocks_per_window": blocks_per_window}
     (BLOCKS / "sample_manifest.json").write_text(json.dumps(man, indent=1))
