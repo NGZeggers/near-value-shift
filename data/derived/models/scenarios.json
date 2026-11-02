@@ -1,0 +1,32 @@
+{
+ "as_of": "2026-11-01",
+ "inputs": {
+  "intents_volume_12m_usd": 32761177210.0,
+  "intents_fees_12m_usd": 54041680.0,
+  "observed_take_rate_bps": 16.495646555553062,
+  "gas_fees_12m_usd": 1202522.06297554,
+  "market_cap_usd": 5807002813.858446,
+  "current_price_to_gas_fees": 4829.019768244006
+ },
+ "assumptions": {
+  "volume_multiplier": "lognormal(median 1, sigma 0.6) clipped [0.25, 4]",
+  "take_rate_bps": "uniform [0.5x, 1.5x] of observed",
+  "share_to_token": "uniform [0, 0.5]",
+  "note": "scenarios, not forecasts; no fee-sharing mechanism exists on NEAR today"
+ },
+ "token_fees_usd": {
+  "p5": 2254732.407368327,
+  "p25": 6408854.93755285,
+  "p50": 12500327.908934308,
+  "p75": 22743411.26098031,
+  "p95": 48858307.62076155
+ },
+ "price_to_fees": {
+  "p5": 118.8539535501959,
+  "p25": 255.32682197489217,
+  "p50": 464.5480394492862,
+  "p75": 906.0905379628016,
+  "p95": 2575.4731693885496
+ },
+ "n": 20000
+}

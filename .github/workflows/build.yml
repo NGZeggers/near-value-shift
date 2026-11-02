@@ -1,0 +1,41 @@
+name: build
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: uv sync --all-extras
+      - name: Rebuild everything from the committed raw snapshots (no network, no credentials)
+        run: make build
+      - name: Tests
+        run: make test
+      - name: Thesis must be regenerated identically from the snapshots
+        run: git diff --exit-code -- THESIS.md || (echo "THESIS.md is out of date: run make thesis and commit" && exit 1)
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

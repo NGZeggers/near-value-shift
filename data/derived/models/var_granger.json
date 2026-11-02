@@ -1,0 +1,104 @@
+[
+ {
+  "metric": "active_accounts",
+  "start": "2021-01-10",
+  "end": "2026-11-01",
+  "n_weeks": 304,
+  "lag_aic": 1,
+  "usage_granger_causes_price": {
+   "F": 2.8048684715174694,
+   "p_value": 0.09449963577598809
+  },
+  "price_granger_causes_usage": {
+   "F": 0.0037383230290445,
+   "p_value": 0.951266618524706
+  },
+  "cum_price_response_to_usage_shock_8w": 0.011622283344485994,
+  "contemporaneous_corr_dlog": 0.14882652660247084
+ },
+ {
+  "metric": "txns",
+  "start": "2021-01-10",
+  "end": "2026-11-01",
+  "n_weeks": 304,
+  "lag_aic": 8,
+  "usage_granger_causes_price": {
+   "F": 3.494789836552874,
+   "p_value": 0.0005965760343550941
+  },
+  "price_granger_causes_usage": {
+   "F": 2.119832251796679,
+   "p_value": 0.032310152325637
+  },
+  "cum_price_response_to_usage_shock_8w": -0.031680897146264195,
+  "contemporaneous_corr_dlog": 0.09820510749127431
+ },
+ {
+  "metric": "tx_fee_usd",
+  "start": "2021-01-10",
+  "end": "2026-11-01",
+  "n_weeks": 304,
+  "lag_aic": 8,
+  "usage_granger_causes_price": {
+   "F": 2.4313239957157906,
+   "p_value": 0.01371834542796949
+  },
+  "price_granger_causes_usage": {
+   "F": 6.233252797931118,
+   "p_value": 9.806371958624321e-08
+  },
+  "cum_price_response_to_usage_shock_8w": 0.024041947885233655,
+  "contemporaneous_corr_dlog": 0.384850449471811
+ },
+ {
+  "metric": "tx_volume_usd",
+  "start": "2021-01-10",
+  "end": "2026-11-01",
+  "n_weeks": 304,
+  "lag_aic": 3,
+  "usage_granger_causes_price": {
+   "F": 1.7585386879777742,
+   "p_value": 0.15394680775210742
+  },
+  "price_granger_causes_usage": {
+   "F": 13.540315554762723,
+   "p_value": 1.4902664761095784e-08
+  },
+  "cum_price_response_to_usage_shock_8w": 0.10089149914146454,
+  "contemporaneous_corr_dlog": 0.34955918067347297
+ },
+ {
+  "metric": "intents_volume_usd",
+  "start": "2024-12-22",
+  "end": "2026-11-01",
+  "n_weeks": 98,
+  "lag_aic": 1,
+  "usage_granger_causes_price": {
+   "F": 0.5353234192776566,
+   "p_value": 0.46528837037654686
+  },
+  "price_granger_causes_usage": {
+   "F": 0.6521135414864814,
+   "p_value": 0.42037858091777475
+  },
+  "cum_price_response_to_usage_shock_8w": 0.0071574114020110996,
+  "contemporaneous_corr_dlog": -0.00037421490540073533
+ },
+ {
+  "metric": "near_app_fees_usd",
+  "start": "2024-04-28",
+  "end": "2026-11-01",
+  "n_weeks": 128,
+  "lag_aic": 2,
+  "usage_granger_causes_price": {
+   "F": 1.2725701287133266,
+   "p_value": 0.2819784012960405
+  },
+  "price_granger_causes_usage": {
+   "F": 0.19168730172049495,
+   "p_value": 0.8256902076455261
+  },
+  "cum_price_response_to_usage_shock_8w": 0.043694919318696616,
+  "contemporaneous_corr_dlog": 0.10218860195786843
+ }
+]

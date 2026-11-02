@@ -1,0 +1,68 @@
+[
+ {
+  "metric": "active_accounts",
+  "n_weeks": 305,
+  "start": "2021-01-03",
+  "end": "2026-11-01",
+  "trace_r0": 13.18686365970401,
+  "cv95_r0": 15.4943,
+  "trace_r1": 3.248867174001272,
+  "cv95_r1": 3.8415,
+  "cointegrated_5pct": false
+ },
+ {
+  "metric": "txns",
+  "n_weeks": 305,
+  "start": "2021-01-03",
+  "end": "2026-11-01",
+  "trace_r0": 14.82084559072931,
+  "cv95_r0": 15.4943,
+  "trace_r1": 6.54029462492361,
+  "cv95_r1": 3.8415,
+  "cointegrated_5pct": false
+ },
+ {
+  "metric": "tx_fee_usd",
+  "n_weeks": 305,
+  "start": "2021-01-03",
+  "end": "2026-11-01",
+  "trace_r0": 13.965049591316594,
+  "cv95_r0": 15.4943,
+  "trace_r1": 5.574621118699215,
+  "cv95_r1": 3.8415,
+  "cointegrated_5pct": false
+ },
+ {
+  "metric": "tx_volume_usd",
+  "n_weeks": 305,
+  "start": "2021-01-03",
+  "end": "2026-11-01",
+  "trace_r0": 22.692619815215554,
+  "cv95_r0": 15.4943,
+  "trace_r1": 4.187083918912577,
+  "cv95_r1": 3.8415,
+  "cointegrated_5pct": false
+ },
+ {
+  "metric": "intents_volume_usd",
+  "n_weeks": 99,
+  "start": "2024-12-15",
+  "end": "2026-11-01",
+  "trace_r0": 12.097724795608151,
+  "cv95_r0": 15.4943,
+  "trace_r1": 2.6760324261221125,
+  "cv95_r1": 3.8415,
+  "cointegrated_5pct": false
+ },
+ {
+  "metric": "near_app_fees_usd",
+  "n_weeks": 134,
+  "start": "2024-01-28",
+  "end": "2026-11-01",
+  "trace_r0": 6.179499693720889,
+  "cv95_r0": 15.4943,
+  "trace_r1": 1.3819401184963152,
+  "cv95_r1": 3.8415,
+  "cointegrated_5pct": false
+ }
+]

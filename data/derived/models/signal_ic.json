@@ -1,0 +1,342 @@
+[
+ {
+  "metric": "active_accounts",
+  "horizon_weeks": 4,
+  "benchmark": "btc",
+  "n": 294,
+  "start": "2021-02-21",
+  "end": "2026-10-04",
+  "spearman_ic": 0.0844104865871842,
+  "p_value_naive": 0.14880918474749838,
+  "ci95_block_bootstrap": [
+   -0.09694993702860141,
+   0.2616057305655746
+  ],
+  "ic_first_half": 0.1410966459890139,
+  "ic_second_half": -0.028953751067254004,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "active_accounts",
+  "horizon_weeks": 4,
+  "benchmark": "eth",
+  "n": 294,
+  "start": "2021-02-21",
+  "end": "2026-10-04",
+  "spearman_ic": 0.041622641999473485,
+  "p_value_naive": 0.47711677093271004,
+  "ci95_block_bootstrap": [
+   -0.13966171805584712,
+   0.20908072072542175
+  ],
+  "ic_first_half": 0.11315159162517283,
+  "ic_second_half": -0.06758267912866739,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "active_accounts",
+  "horizon_weeks": 12,
+  "benchmark": "btc",
+  "n": 286,
+  "start": "2021-02-21",
+  "end": "2026-08-09",
+  "spearman_ic": -0.025109934994402255,
+  "p_value_naive": 0.6724014244400941,
+  "ci95_block_bootstrap": [
+   -0.25217943309455415,
+   0.1795835792351734
+  ],
+  "ic_first_half": -0.03041793886864309,
+  "ic_second_half": -0.05619439246199809,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "active_accounts",
+  "horizon_weeks": 12,
+  "benchmark": "eth",
+  "n": 286,
+  "start": "2021-02-21",
+  "end": "2026-08-09",
+  "spearman_ic": -0.008532930484149995,
+  "p_value_naive": 0.8857566486990283,
+  "ci95_block_bootstrap": [
+   -0.2885804703790835,
+   0.2620088836116473
+  ],
+  "ic_first_half": -0.0658097770773827,
+  "ic_second_half": 0.09067106602317869,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "txns",
+  "horizon_weeks": 4,
+  "benchmark": "btc",
+  "n": 294,
+  "start": "2021-02-21",
+  "end": "2026-10-04",
+  "spearman_ic": -0.06848014846593466,
+  "p_value_naive": 0.24177469095145263,
+  "ci95_block_bootstrap": [
+   -0.25370674903018114,
+   0.128684683539728
+  ],
+  "ic_first_half": -0.2132996849239511,
+  "ic_second_half": 0.11146287467226802,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "txns",
+  "horizon_weeks": 4,
+  "benchmark": "eth",
+  "n": 294,
+  "start": "2021-02-21",
+  "end": "2026-10-04",
+  "spearman_ic": -0.05117376157381446,
+  "p_value_naive": 0.3819645646211453,
+  "ci95_block_bootstrap": [
+   -0.25208249514421277,
+   0.1436952842756004
+  ],
+  "ic_first_half": -0.17348449931620188,
+  "ic_second_half": 0.08373316005409939,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "txns",
+  "horizon_weeks": 12,
+  "benchmark": "btc",
+  "n": 286,
+  "start": "2021-02-21",
+  "end": "2026-08-09",
+  "spearman_ic": -0.04811696647383425,
+  "p_value_naive": 0.4175737574671468,
+  "ci95_block_bootstrap": [
+   -0.3007100233451395,
+   0.22139617070124665
+  ],
+  "ic_first_half": -0.041765159722906196,
+  "ic_second_half": -0.12534472569683835,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "txns",
+  "horizon_weeks": 12,
+  "benchmark": "eth",
+  "n": 286,
+  "start": "2021-02-21",
+  "end": "2026-08-09",
+  "spearman_ic": 0.007174596905020525,
+  "p_value_naive": 0.9038465789703541,
+  "ci95_block_bootstrap": [
+   -0.2606308472367252,
+   0.26938877228073416
+  ],
+  "ic_first_half": 0.0206630224235858,
+  "ic_second_half": -0.04147788830887422,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "tx_fee_near",
+  "horizon_weeks": 4,
+  "benchmark": "btc",
+  "n": 294,
+  "start": "2021-02-21",
+  "end": "2026-10-04",
+  "spearman_ic": -0.07908856838275312,
+  "p_value_naive": 0.17623817913772122,
+  "ci95_block_bootstrap": [
+   -0.26582437386550745,
+   0.11183546532678097
+  ],
+  "ic_first_half": -0.26763708074862674,
+  "ic_second_half": 0.20727394993539808,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "tx_fee_near",
+  "horizon_weeks": 4,
+  "benchmark": "eth",
+  "n": 294,
+  "start": "2021-02-21",
+  "end": "2026-10-04",
+  "spearman_ic": -0.0923395308259244,
+  "p_value_naive": 0.11412393848319924,
+  "ci95_block_bootstrap": [
+   -0.29505892260564587,
+   0.11794961656352043
+  ],
+  "ic_first_half": -0.3070895888899803,
+  "ic_second_half": 0.19967661259246386,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "tx_fee_near",
+  "horizon_weeks": 12,
+  "benchmark": "btc",
+  "n": 286,
+  "start": "2021-02-21",
+  "end": "2026-08-09",
+  "spearman_ic": -0.020182385009085906,
+  "p_value_naive": 0.7339657629304571,
+  "ci95_block_bootstrap": [
+   -0.28066019881816634,
+   0.2398303126424778
+  ],
+  "ic_first_half": 0.024036409599789883,
+  "ic_second_half": -0.1745173840244263,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "tx_fee_near",
+  "horizon_weeks": 12,
+  "benchmark": "eth",
+  "n": 286,
+  "start": "2021-02-21",
+  "end": "2026-08-09",
+  "spearman_ic": 0.00045833498978556744,
+  "p_value_naive": 0.9938426242646282,
+  "ci95_block_bootstrap": [
+   -0.25575678887417047,
+   0.2536231946357721
+  ],
+  "ic_first_half": 0.03940132637315736,
+  "ic_second_half": -0.14344282478085293,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "tx_volume_usd",
+  "horizon_weeks": 4,
+  "benchmark": "btc",
+  "n": 294,
+  "start": "2021-02-21",
+  "end": "2026-10-04",
+  "spearman_ic": -0.002561556814546262,
+  "p_value_naive": 0.9651160273613648,
+  "ci95_block_bootstrap": [
+   -0.16941280297144232,
+   0.16002905158839917
+  ],
+  "ic_first_half": -0.017918533574110874,
+  "ic_second_half": -0.00714399050993963,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "tx_volume_usd",
+  "horizon_weeks": 4,
+  "benchmark": "eth",
+  "n": 294,
+  "start": "2021-02-21",
+  "end": "2026-10-04",
+  "spearman_ic": -0.0038096339941657235,
+  "p_value_naive": 0.948139302856231,
+  "ci95_block_bootstrap": [
+   -0.17273429521290115,
+   0.16099730199753115
+  ],
+  "ic_first_half": 0.03930139253035535,
+  "ic_second_half": -0.0968462171984677,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "tx_volume_usd",
+  "horizon_weeks": 12,
+  "benchmark": "btc",
+  "n": 286,
+  "start": "2021-02-21",
+  "end": "2026-08-09",
+  "spearman_ic": -0.163711769616776,
+  "p_value_naive": 0.005516091760699107,
+  "ci95_block_bootstrap": [
+   -0.3699113642613662,
+   0.03978930240724857
+  ],
+  "ic_first_half": -0.17871975442397978,
+  "ic_second_half": -0.16923979776092452,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "tx_volume_usd",
+  "horizon_weeks": 12,
+  "benchmark": "eth",
+  "n": 286,
+  "start": "2021-02-21",
+  "end": "2026-08-09",
+  "spearman_ic": -0.2096883860683604,
+  "p_value_naive": 0.0003564415956832179,
+  "ci95_block_bootstrap": [
+   -0.40791636254119695,
+   -0.010054339744404103
+  ],
+  "ic_first_half": -0.19442529301684228,
+  "ic_second_half": -0.23948176236908628,
+  "significant_bootstrap": true
+ },
+ {
+  "metric": "intents_volume_usd",
+  "horizon_weeks": 4,
+  "benchmark": "btc",
+  "n": 88,
+  "start": "2025-02-02",
+  "end": "2026-10-04",
+  "spearman_ic": -0.15246028671057732,
+  "p_value_naive": 0.15617336924137498,
+  "ci95_block_bootstrap": [
+   -0.43992079205197115,
+   0.16922494526885173
+  ],
+  "ic_first_half": -0.015926708949964764,
+  "ic_second_half": 0.13643410852713178,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "intents_volume_usd",
+  "horizon_weeks": 4,
+  "benchmark": "eth",
+  "n": 88,
+  "start": "2025-02-02",
+  "end": "2026-10-04",
+  "spearman_ic": -0.160367722165475,
+  "p_value_naive": 0.13555478073686386,
+  "ci95_block_bootstrap": [
+   -0.4761628268680182,
+   0.17735934087895702
+  ],
+  "ic_first_half": -0.010852713178294573,
+  "ic_second_half": 0.24059196617336148,
+  "significant_bootstrap": false
+ },
+ {
+  "metric": "intents_volume_usd",
+  "horizon_weeks": 12,
+  "benchmark": "btc",
+  "n": 80,
+  "start": "2025-02-02",
+  "end": "2026-08-09",
+  "spearman_ic": -0.5764885138302861,
+  "p_value_naive": 2.193237544856489e-08,
+  "ci95_block_bootstrap": [
+   -0.7247789542675522,
+   -0.12308337084701047
+  ],
+  "ic_first_half": 0.04746716697936211,
+  "ic_second_half": -0.5193245778611634,
+  "significant_bootstrap": true
+ },
+ {
+  "metric": "intents_volume_usd",
+  "horizon_weeks": 12,
+  "benchmark": "eth",
+  "n": 80,
+  "start": "2025-02-02",
+  "end": "2026-08-09",
+  "spearman_ic": -0.6170651664322552,
+  "p_value_naive": 1.0913993930611905e-09,
+  "ci95_block_bootstrap": [
+   -0.7343460406680092,
+   -0.24125219920179294
+  ],
+  "ic_first_half": -0.0013133208255159477,
+  "ic_second_half": -0.5397748592870545,
+  "significant_bootstrap": true
+ }
+]

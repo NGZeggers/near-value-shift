@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.ipynb_checkpoints/
+data/raw/*.tmp
+.DS_Store
+*.log
+.pytest_cache/
+site/*.html
+.pytest_cache/
+data/derived/features_built_at.txt

@@ -1,0 +1,39 @@
+[project]
+name = "near-thesis"
+version = "0.1.0"
+description = "From clicks to settlement: a reproducible, quality-adjusted investment thesis on NEAR (NEAR Hackathon 2026, track: thesis)"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+dependencies = [
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "scipy>=1.12",
+  "statsmodels>=0.14",
+  "scikit-learn>=1.4",
+  "ruptures>=1.1.9",
+  "requests>=2.32",
+  "pyarrow>=15",
+  "matplotlib>=3.8",
+  "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+bq = ["google-cloud-bigquery>=3.20", "db-dtypes>=1.2"]
+cluster = ["hdbscan>=0.8.38"]
+notebooks = ["jupyterlab>=4.1", "nbconvert>=7.16"]
+onchain = ["py-near>=1.1"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+near-thesis = "near_thesis.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["near_thesis"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
