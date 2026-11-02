@@ -144,6 +144,8 @@ def fetch_block(height: int, retries: int = 6) -> dict | None:
                 raise requests.HTTPError(str(r.status_code))
             r.raise_for_status()
             full = r.json()
+            if not full:  # skipped height: the API answers 200 with a null body
+                CACHE.mkdir(parents=True, exist_ok=True); cached.write_text("null"); return None
             slim = extract(full)
             CACHE.mkdir(parents=True, exist_ok=True)
             cached.write_text(json.dumps(slim, separators=(",", ":")))
@@ -188,7 +190,7 @@ def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_windo
     if plan_file.exists():
         P = json.loads(plan_file.read_text())
     else:
-        print("planning windows (binary search on archival RPC)...")
+        print("planning windows (secant search on block timestamps)...")
         P = plan(day_step, windows, blocks_per_window)
         plan_file.write_text(json.dumps(P, indent=1))
     heights = [(w, w["start_height"] + i) for w in P for i in range(w["n"])]
