@@ -184,6 +184,7 @@ def build() -> str:
     out.append("- QAA: " + (f"computed (L1, source: {qs.get('source')})." if qs.get("computed") else "not computed yet; no quality adjustment is applied to any number above."))
     out.append("- NEAR Intents Explorer API (1Click transactions) requires a partner JWT; not used.")
     out.append("- NEAR price: NearBlocks daily series; BTC and ETH benchmarks: DefiLlama coins API. CoinGecko's free tier does not serve full history.")
+    out.append("- Sampling design, estimators and biases of the no-credentials path: `docs/SAMPLING.md`.")
     out.append("- BigQuery dataset freshness is checked with `sql/q0_freshness.sql` before any L1/L2 run; NEAR Lake was deprecated on 2026-03-24.")
     out.append(f"- Raw snapshot hashes: `docs/REPRODUCIBILITY.md` ({len(raw_manifest())} files).\n")
     out.append("## Reproduce\n")

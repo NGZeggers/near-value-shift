@@ -6,7 +6,7 @@
 3. (0:45) Open `site/index.html`. Hero: Intents monthly volume. KPI row. Toggle range "Since Intents" and dark mode.
 4. (1:10) Section 1 vs Section 2: active accounts down, Intents volume up, USD per transaction up. Hover a chart: crosshair tooltip. Open "Source and query".
 5. (1:40) Section 4: the honest part. Rolling correlation chart, Granger table, the negative information coefficient for Intents volume. "The data does not say usage leads price."
-6. (2:05) Section 3: QAA clustering and solver concentration from raw on-chain events (BigQuery). Show one SQL file and the cluster profile table.
+6. (2:05) Section 3: QAA clustering and solver concentration from raw on-chain events (sampled blocks from FastNear, or BigQuery). Show `docs/SAMPLING.md` and the cluster profile table.
 7. (2:30) THESIS.md: claim, for, against, what would change our mind. "Every number is generated; nothing is typed by hand."
 8. (2:50) What NEAR does in the product: the public BigQuery dataset, NEAR RPC and the Intents contract events are the data layer; the thesis is about NEAR itself.
 
