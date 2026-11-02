@@ -1,6 +1,9 @@
 """On-chain sampling without BigQuery: fetch full blocks from FastNear's public block API (neardata) and extract
 (a) every DIP-4 event log emitted by intents.near and (b) every transaction's signer/receiver/method.
 
+The API rate-limits per IP at roughly 0.3-0.4 requests/s (measured 2026-11-02), so the sample budget is small by
+design: ~5,000 blocks takes about 4-5 hours. Fetched blocks are cached, so the budget can be raised later and resumed.
+
 Design: stratified sample of days (every `day_step` days since INTENTS_START), `windows` fixed UTC hours per day,
 `blocks_per_window` consecutive blocks per window. Block heights for each timestamp are found by binary search on
 the archival RPC. Expansion to daily totals uses blocks-per-day from NearBlocks (data/derived/daily.csv).
@@ -27,18 +30,26 @@ ARCHIVAL_RPC = "https://archival-rpc.mainnet.fastnear.com"
 BLOCKS = DATA / "blocks"
 CACHE = BLOCKS / "cache"
 UA = {"user-agent": "near-thesis/0.1 (NEAR Hackathon 2026; sampled block reader)"}
-RATE_PER_S = 2.5  # polite global rate limit for the public block API (it answers 429 above a few requests per second)
+RATE_PER_S = 0.35  # measured 2026-11-02: the public block API sustains ~0.3-0.4 requests/s per IP before answering 429
+RATE_MIN, RATE_MAX = 0.12, 0.6
 _lock = threading.Lock()
 _next_slot = [0.0]
+_rate = [RATE_PER_S]
 
 
 def _throttle() -> None:
     with _lock:
         now = time.monotonic()
         wait = max(0.0, _next_slot[0] - now)
-        _next_slot[0] = max(now, _next_slot[0]) + 1.0 / RATE_PER_S
+        _next_slot[0] = max(now, _next_slot[0]) + 1.0 / _rate[0]
     if wait:
         time.sleep(wait)
+
+
+def _adapt(ok: bool) -> None:
+    """AIMD: a 429 cuts the rate by a third, every success nudges it up by 1%."""
+    with _lock:
+        _rate[0] = max(RATE_MIN, _rate[0] * 0.67) if not ok else min(RATE_MAX, _rate[0] * 1.01)
 
 
 def rpc_block(height: int) -> dict | None:
@@ -126,20 +137,22 @@ def plan(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_wind
     return out
 
 
-def fetch_block(height: int, retries: int = 6) -> dict | None:
+def fetch_block(height: int, retries: int = 6, rate_limit_retries: int = 40) -> dict | None:
     cached = CACHE / f"{height}.json"
     if cached.exists():
         return json.loads(cached.read_text())
-    for attempt in range(retries):
+    attempt = limited = 0
+    while attempt < retries and limited < rate_limit_retries:
         try:
             _throttle()
             r = requests.get(NEARDATA.format(h=height), timeout=60, headers=UA, allow_redirects=True)
+            if r.status_code == 429:  # retry-after is always 0 here; back off on our own
+                limited += 1; _adapt(False)
+                time.sleep(min(10.0, 1.5 * limited))
+                continue
+            _adapt(True)
             if r.status_code == 404:
                 CACHE.mkdir(parents=True, exist_ok=True); cached.write_text("null"); return None
-            if r.status_code == 429:
-                wait = float(r.headers.get("retry-after") or 0) or 20.0 * (attempt + 1)
-                time.sleep(wait)
-                continue
             if r.status_code >= 500:
                 raise requests.HTTPError(str(r.status_code))
             r.raise_for_status()
@@ -151,7 +164,8 @@ def fetch_block(height: int, retries: int = 6) -> dict | None:
             cached.write_text(json.dumps(slim, separators=(",", ":")))
             return slim
         except (requests.RequestException, ValueError):
-            time.sleep(2 * (attempt + 1))
+            attempt += 1
+            time.sleep(2 * attempt)
     return None
 
 
@@ -193,7 +207,7 @@ def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_windo
         print("planning windows (secant search on block timestamps)...")
         P = plan(day_step, windows, blocks_per_window)
         plan_file.write_text(json.dumps(P, indent=1))
-    heights = [(w, w["start_height"] + i) for w in P for i in range(w["n"])]
+    heights = [(w, w["start_height"] + i) for w in P for i in range(blocks_per_window)]  # the plan fixes the windows; n per window is a budget knob
     print(f"{len(P)} windows over {len({w['day'] for w in P})} days, {len(heights)} blocks to read")
     t0 = time.time(); done = 0; missing = 0
     ev_path, tx_path = BLOCKS / "intents_events_sampled.csv", BLOCKS / "tx_sampled.csv"
@@ -214,8 +228,9 @@ def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_windo
                     we.writerow([day, b["ts"], rid, pred, log, w["day"], w["hour"], b["height"]])
                 for s, r, kind, m, dep in b["txs"]:
                     wt.writerow([day, w["day"], w["hour"], b["height"], b["ts"], s, r, kind, m, dep])
-                if done % 500 == 0:
-                    print(f"  {done}/{len(heights)} blocks, {missing} missing, {time.time() - t0:,.0f}s", flush=True)
+                if done % 100 == 0:
+                    el = time.time() - t0
+                    print(f"  {done}/{len(heights)} blocks, {missing} missing, {el:,.0f}s, rate {_rate[0]:.2f}/s, eta {(len(heights) - done) / max(done / el, 1e-9) / 60:,.0f} min", flush=True)
     man = {"fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": NEARDATA, "windows": P,
            "blocks_requested": len(heights), "blocks_missing": missing, "day_step": day_step, "hours": list(windows), "blocks_per_window": blocks_per_window}
     (BLOCKS / "sample_manifest.json").write_text(json.dumps(man, indent=1))

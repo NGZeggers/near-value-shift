@@ -2,6 +2,7 @@
 # Requires: uv (https://docs.astral.sh/uv/). Google credentials are optional (see docs/SETUP_BIGQUERY.md).
 PY := uv run
 
+BLOCKS ?= 50   # blocks per sampling window for `make blocks` (budget: ~0.35 blocks/s)
 .PHONY: all build setup fetch bq blocks onchain features models charts thesis site notebook test clean
 
 all: fetch build
@@ -37,7 +38,7 @@ notebook:         ## regenerate notebooks/walkthrough.ipynb and execute it to si
 	$(PY) jupyter nbconvert --to html --execute --ExecutePreprocessor.timeout=600 --output-dir site notebooks/walkthrough.ipynb
 
 blocks:           ## sample full blocks from FastNear (no credentials) for L1/L2 without BigQuery
-	$(PY) near-thesis blocks
+	$(PY) near-thesis blocks --blocks $(BLOCKS)
 
 onchain:          ## dry-run of the on-chain index publication (add SEND=1 to sign; needs keys in .env)
 	$(PY) near-thesis onchain $(if $(SEND),--send,)

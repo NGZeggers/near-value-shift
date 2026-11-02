@@ -17,7 +17,7 @@ def main(argv: list[str] | None = None) -> None:
 
     bl = sub.add_parser("blocks", help="sample full blocks from FastNear neardata (no credentials) into data/blocks/")
     bl.add_argument("--day-step", type=int, default=15)
-    bl.add_argument("--blocks", type=int, default=250, help="blocks per window")
+    bl.add_argument("--blocks", type=int, default=50, help="blocks per window")
     bl.add_argument("--workers", type=int, default=2)
 
     oc = sub.add_parser("onchain", help="publish the index to NEAR Social (dry run unless --send)")
