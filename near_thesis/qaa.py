@@ -53,7 +53,8 @@ def load_sampled() -> pd.DataFrame | None:
                  transfers=("action_kind", lambda a: int((a == "TRANSFER").sum())), distinct_methods=("method", "nunique"),
                  distinct_contracts=("receiver", "nunique"), intents_actions=("receiver", lambda r: int((r == "intents.near").sum())),
                  deposit_near=("deposit", lambda d: float(d.sum()) / 1e24)).reset_index().rename(columns={"signer": "account"})
-    gaps = t.sort_values("block_timestamp").groupby(["month", "signer"])["block_timestamp"].apply(lambda x: x.diff().dropna() / 1e9)
+    # inter-arrival gaps are measured inside a window only (gaps across windows are sampling artefacts)
+    gaps = t.sort_values("block_timestamp").groupby(["month", "signer", "window"])["block_timestamp"].apply(lambda x: x.diff().dropna() / 1e9)
     gs = gaps.groupby(level=[0, 1]).agg(gap_median_s="median", gap_cv=lambda x: float(x.std() / x.mean()) if len(x) > 1 and x.mean() else np.nan).reset_index().rename(columns={"signer": "account"})
     df = base.merge(gs, on=["month", "account"], how="left")
     a = df["account"].astype(str)
