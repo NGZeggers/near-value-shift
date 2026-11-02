@@ -15,7 +15,7 @@ from sklearn.metrics import silhouette_score
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import RobustScaler
 
-from .config import BQ_DIR, MODELS
+from .config import BQ_DIR, DATA, DERIVED, MODELS
 
 NUMERIC = ["log_txns", "active_day_share", "log_receivers", "self_share", "log_gap_median", "gap_cv",
            "fc_share", "transfer_share", "log_methods", "log_contracts", "intents_share", "log_deposit"]
@@ -32,6 +32,34 @@ def load_inputs() -> pd.DataFrame | None:
         b = pd.read_csv(f2, parse_dates=["month"])
         a = a.merge(b, on=["month", "account"], how="left")
     return a
+
+
+def load_sampled() -> pd.DataFrame | None:
+    """Account-month features from sampled blocks (data/blocks/tx_sampled.csv). Same columns as the BigQuery extract,
+    computed within the sampled windows only; active_days counts sampled windows with activity."""
+    f = DATA / "blocks" / "tx_sampled.csv"
+    if not f.exists():
+        return None
+    t = pd.read_csv(f)
+    if t.empty:
+        return None
+    t["month"] = pd.to_datetime(t["window_day"]).dt.to_period("M").dt.to_timestamp()
+    t["window"] = t["window_day"] + "T" + t["window_hour"].astype(str)
+    t["deposit"] = pd.to_numeric(t["deposit"], errors="coerce").fillna(0)
+    g = t.sort_values("block_timestamp").groupby(["month", "signer"])
+    base = g.agg(txns=("receiver", "size"), active_days=("window", "nunique"), distinct_receivers=("receiver", "nunique"),
+                 self_txns=("receiver", lambda r: int((r == r.name[1]).sum()) if hasattr(r, "name") else 0),
+                 actions=("action_kind", "size"), function_calls=("action_kind", lambda a: int((a == "FUNCTION_CALL").sum())),
+                 transfers=("action_kind", lambda a: int((a == "TRANSFER").sum())), distinct_methods=("method", "nunique"),
+                 distinct_contracts=("receiver", "nunique"), intents_actions=("receiver", lambda r: int((r == "intents.near").sum())),
+                 deposit_near=("deposit", lambda d: float(d.sum()) / 1e24)).reset_index().rename(columns={"signer": "account"})
+    gaps = t.sort_values("block_timestamp").groupby(["month", "signer"])["block_timestamp"].apply(lambda x: x.diff().dropna() / 1e9)
+    gs = gaps.groupby(level=[0, 1]).agg(gap_median_s="median", gap_cv=lambda x: float(x.std() / x.mean()) if len(x) > 1 and x.mean() else np.nan).reset_index().rename(columns={"signer": "account"})
+    df = base.merge(gs, on=["month", "account"], how="left")
+    a = df["account"].astype(str)
+    df["name_class"] = np.select([a.str.endswith(".tg"), a.str.endswith(".sweat"), a.str.fullmatch(r"[0-9a-f]{64}"), a.str.endswith(".near")],
+                                 ["tg", "sweat", "implicit", "named"], "other")
+    return df
 
 
 def featurize(df: pd.DataFrame) -> pd.DataFrame:
@@ -120,11 +148,17 @@ QUALITY = {"human_multi_app", "human_light", "intents_participant"}
 
 def run() -> dict:
     df = load_inputs()
+    source = "bigquery"
     if df is None:
-        status = {"computed": False, "reason": "data/bigquery/l1_account_month_features.csv missing. Run `make bq` after docs/SETUP_BIGQUERY.md."}
+        df = load_sampled()
+        source = "neardata block sample"
+    if df is None:
+        status = {"computed": False, "reason": "no data/bigquery/l1_*.csv (make bq) and no data/blocks/tx_sampled.csv (make blocks)."}
         (MODELS / "qaa_status.json").write_text(json.dumps(status, indent=1))
-        print("L1: not computed (no BigQuery extract)")
+        print("L1: not computed (no on-chain extract)")
         return status
+    if source != "bigquery":
+        df = df[df["txns"] >= 1]
     x = featurize(df)
     labels, info = fit_clusters(x)
     prof = label_clusters(df, x, labels)
@@ -134,9 +168,15 @@ def run() -> dict:
     monthly = monthly.join(shares)
     monthly["qaa"] = shares[[c for c in shares.columns if c in QUALITY]].sum(axis=1)
     monthly["qaa_share"] = monthly["qaa"] / monthly["active_accounts_bq"]
+    if source != "bigquery":
+        # sampled mode: the share is the estimate; scale it by NearBlocks' monthly mean of daily active accounts
+        nb = pd.read_csv(DERIVED / "monthly.csv", parse_dates=["month"]).set_index("month")["active_accounts"]
+        monthly["qaa_share_sampled"] = monthly["qaa_share"]
+        monthly["active_accounts_bq"] = nb.reindex(monthly.index)
+        monthly["qaa"] = monthly["qaa_share"] * monthly["active_accounts_bq"]
     monthly.reset_index().to_csv(MODELS / "qaa_monthly.csv", index=False)
     prof.to_csv(MODELS / "qaa_clusters.csv", index=False)
-    status = {"computed": True, **info, "months": int(monthly.shape[0]),
+    status = {"computed": True, "source": source, **info, "months": int(monthly.shape[0]),
               "labels": prof.set_index("cluster")["label"].to_dict(), "quality_labels": sorted(QUALITY)}
     (MODELS / "qaa_status.json").write_text(json.dumps(status, indent=1, default=str))
     print(f"L1: {info['algorithm']} on {info['n']:,} account-months -> {len(prof)} clusters, QAA for {len(monthly)} months")

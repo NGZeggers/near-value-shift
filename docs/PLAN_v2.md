@@ -108,3 +108,15 @@ Must ship: L0 + L1 + L3 + deliverables. Next: L2 (sampled). Last: L4 scenarios, 
 - USD pricing of Intents legs: anchor on stablecoin legs; CoinGecko daily prices for majors; report
   the share of volume priced each way.
 - Scope: MVP cut line above; Claude keeps the pipeline green daily.
+
+## Status (updated 2026-11-02)
+| Layer | State |
+|---|---|
+| L0 | done: 45 hashed snapshots, derived tables, `make fetch` |
+| L1 | code + synthetic test done; runs on BigQuery extract (`make bq`) or on sampled blocks (`make blocks`, FastNear neardata, no credentials) |
+| L2 | code + synthetic test done; same two data paths; expansion factors and solver thresholds documented in `near_thesis/intents.py` |
+| L3 | done: breaks, ADF, VAR/Granger, Johansen, correlations |
+| L4 | done: IC with block bootstrap, peer panel, Monte Carlo scenarios |
+| Out | THESIS.md generated and deterministic, dashboard (light/dark, tooltips, table views, range filter), executed notebook, CI + Pages workflow, demo script |
+| Stretch | on-chain index publisher to NEAR Social testnet implemented as dry run; signing waits for the team's keys |
+| Pending on the team | BigQuery sandbox (optional now), GitHub repo + push, X post, mainnet payout account, video |

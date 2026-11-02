@@ -26,10 +26,11 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-from .config import BQ_DIR, DERIVED, MODELS
+from .config import BQ_DIR, DATA, DERIVED, MODELS
 
-SOLVER_MIN_BATCHES = 20
+SOLVER_MIN_BATCHES = 20          # BigQuery full days
 SOLVER_MIN_COUNTERPARTIES = 10
+SOLVER_MIN_BATCH_SHARE = 0.02    # sampled windows: an account in >= 2% of a day's sampled batches with >= 5 counterparties
 STABLE_RE = re.compile(r"(usdc|usdt|usdt0|dai|frax|usde|pyusd|usd1|fdusd|busd|tusd|lusd|usdy|usd\b)", re.I)
 # token id -> (price column, decimals). Keys are matched as substrings of the token id.
 MAJORS = {"wrap.near": ("near", 24), "nbtc": ("bitcoin", 8), "btc": ("bitcoin", 8), "eth.omft": ("ethereum", 18),
@@ -90,7 +91,11 @@ def identify_solvers(legs: pd.DataFrame) -> pd.DataFrame:
     cp = pairs.merge(pairs, on=["block_date", "receipt_id"], suffixes=("", "_other"))
     cp = cp[cp["account"] != cp["account_other"]]
     stats = cp.groupby(["block_date", "account"]).agg(batches=("receipt_id", "nunique"), counterparties=("account_other", "nunique")).reset_index()
-    stats["is_solver"] = (stats["batches"] >= SOLVER_MIN_BATCHES) & (stats["counterparties"] >= SOLVER_MIN_COUNTERPARTIES)
+    per_day = pairs.groupby("block_date")["receipt_id"].nunique()
+    stats["batch_share"] = stats["batches"] / stats["block_date"].map(per_day)
+    absolute = (stats["batches"] >= SOLVER_MIN_BATCHES) & (stats["counterparties"] >= SOLVER_MIN_COUNTERPARTIES)
+    relative = (stats["batch_share"] >= SOLVER_MIN_BATCH_SHARE) & (stats["counterparties"] >= 5) & (stats["batches"] >= 5)
+    stats["is_solver"] = absolute | relative
     return stats
 
 
@@ -153,25 +158,55 @@ def monthly_estimates(daily: pd.DataFrame, n_boot: int = 2000, seed: int = 11) -
     return pd.DataFrame(rows)
 
 
+def expansion_factors(raw: pd.DataFrame) -> pd.Series:
+    """blocks in the day (NearBlocks) / blocks sampled that day -> multiply sampled counts and volume to daily totals."""
+    man = json.loads((DATA / "blocks" / "sample_manifest.json").read_text())
+    sampled = {}
+    for w in man["windows"]:
+        sampled[pd.Timestamp(w["day"]).date()] = sampled.get(pd.Timestamp(w["day"]).date(), 0) + w["n"]
+    d = pd.read_csv(DERIVED / "daily.csv", parse_dates=["date"]).set_index("date")["blocks"]
+    bpd = {k.date(): float(v) for k, v in d.items()}
+    return pd.Series({day: bpd.get(day, 150_000.0) / n for day, n in sampled.items()})
+
+
 def run() -> dict:
     f = BQ_DIR / "l2_intents_events.csv"
-    if not f.exists():
-        status = {"computed": False, "reason": "data/bigquery/l2_intents_events.csv missing. Run `make bq` after docs/SETUP_BIGQUERY.md."}
+    sampled = DATA / "blocks" / "intents_events_sampled.csv"
+    if f.exists():
+        source = "bigquery"
+    elif sampled.exists() and (DATA / "blocks" / "sample_manifest.json").exists():
+        f, source = sampled, "neardata block sample"
+    else:
+        status = {"computed": False, "reason": "no data/bigquery/l2_intents_events.csv (make bq) and no data/blocks/intents_events_sampled.csv (make blocks)."}
         (MODELS / "intents_status.json").write_text(json.dumps(status, indent=1))
-        print("L2: not computed (no BigQuery extract)")
+        print("L2: not computed (no on-chain extract)")
         return status
     raw = pd.read_csv(f)
     raw["block_date"] = pd.to_datetime(raw["block_date"]).dt.date
+    if source != "bigquery":
+        raw["block_date"] = pd.to_datetime(raw["window_day"]).dt.date  # attribute a window to its planned day
     events = raw.assign(event=[(parse_event(l) or {}).get("event") for l in raw["log"]])
     legs = batches_from_events(raw)
+    if legs.empty:
+        status = {"computed": False, "reason": f"{source}: no token_diff events in the extract."}
+        (MODELS / "intents_status.json").write_text(json.dumps(status, indent=1))
+        print("L2: no token_diff events found")
+        return status
     roles = identify_solvers(legs)
     daily = daily_metrics(legs, roles, events, _daily_prices())
+    if source != "bigquery":
+        ef = expansion_factors(raw)
+        f_ = daily["date"].dt.date.map(ef).fillna(1.0)
+        daily["expansion_factor"] = f_
+        for c in ["batches", "users", "volume_priced_usd", "withdraw_events"]:
+            daily[c + "_sampled"] = daily[c]
+            daily[c] = daily[c] * f_          # users expanded is an upper bound (the same user can appear in other windows)
     monthly = monthly_estimates(daily)
     daily.to_csv(MODELS / "intents_daily.csv", index=False)
     monthly.to_csv(MODELS / "intents_monthly.csv", index=False)
     solvers = roles[roles["is_solver"]].groupby("account").agg(days=("block_date", "nunique"), batches=("batches", "sum")).sort_values("batches", ascending=False).reset_index()
     solvers.to_csv(MODELS / "intents_solvers.csv", index=False)
-    status = {"computed": True, "sampled_days": int(daily["date"].nunique()), "events": int(len(raw)), "token_diff_legs": int(len(legs)),
+    status = {"computed": True, "source": source, "sampled_days": int(daily["date"].nunique()), "events": int(len(raw)), "token_diff_legs": int(len(legs)),
               "solver_accounts": int(len(solvers)), "priced_batch_share_mean": float(daily["priced_batch_share"].mean()),
               "event_counts": events["event"].value_counts().to_dict(),
               "assumptions": {"solver_min_batches_per_day": SOLVER_MIN_BATCHES, "solver_min_counterparties": SOLVER_MIN_COUNTERPARTIES}}

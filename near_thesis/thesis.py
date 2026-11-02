@@ -121,7 +121,9 @@ def build() -> str:
     if qs.get("computed"):
         q = pd.read_csv(MODELS / "qaa_monthly.csv", parse_dates=["month"]).set_index("month")
         pk = q["active_accounts_bq"].idxmax()
-        out.append(f"Behavioral clustering ({qs.get('algorithm')}) of {num(qs.get('n'))} account-months. Clusters labeled as automation, mini-app farming, "
+        src = qs.get("source", "bigquery")
+        out.append((f"Source: {src}. " if src != "bigquery" else "") + ("In sampled mode the features are computed inside sampled block windows (see `data/blocks/sample_manifest.json`), the cluster shares are the estimate, and QAA = share x NearBlocks monthly active accounts. " if src != "bigquery" else "") +
+                   f"Behavioral clustering ({qs.get('algorithm')}) of {num(qs.get('n'))} account-months. Clusters labeled as automation, mini-app farming, "
                    f"heavy unlabeled, human (multi-app), human (light) and Intents participants; QAA counts the last three. "
                    f"At the {str(pk.date())[:7]} peak QAA was {num(q.loc[pk, 'qaa'])} of {num(q.loc[pk, 'active_accounts_bq'])} active accounts "
                    f"({q.loc[pk, 'qaa_share']*100:.0f}%); in {str(q.index[-1].date())[:7]} it was {num(q.iloc[-1]['qaa'])} of {num(q.iloc[-1]['active_accounts_bq'])} "
@@ -133,7 +135,9 @@ def build() -> str:
     if is_.get("computed"):
         im = pd.read_csv(MODELS / "intents_monthly.csv", parse_dates=["month"]).set_index("month")
         lm = im.iloc[-1]
-        out.append(f"Parsed {num(is_['events'])} DIP-4 events on {is_['sampled_days']} sampled days; {is_['solver_accounts']} accounts classified as solvers "
+        src = is_.get("source", "bigquery")
+        out.append((f"Source: {src}; sampled counts and volumes are expanded to daily totals by blocks-in-day / blocks-sampled (users are an upper bound). " if src != "bigquery" else "") +
+                   f"Parsed {num(is_['events'])} DIP-4 events on {is_['sampled_days']} sampled days; {is_['solver_accounts']} accounts classified as solvers "
                    f"(>= {is_['assumptions']['solver_min_batches_per_day']} batches and >= {is_['assumptions']['solver_min_counterparties']} counterparties in a day). "
                    f"Share of batches with a priced leg: {is_['priced_batch_share_mean']*100:.0f}%. In {str(im.index[-1].date())[:7]}: {num(lm['users_per_day'])} users per day, "
                    f"{num(lm['solvers_per_day'], 1)} solvers per day, solver HHI {lm['hhi_solver']:.2f}, top-1 solver share {lm['top1_solver_share']*100:.0f}%, "
@@ -176,8 +180,8 @@ def build() -> str:
                "- Any fee-sharing or burn mechanism linking Intents volume to NEAR supply would change the valuation section from scenarios to arithmetic.\n")
 
     out.append("## Data gaps and integrity\n")
-    out.append("- Intents volume: DefiLlama (Dune-sourced). Independent on-chain recomputation: " + ("computed (L2)." if is_.get("computed") else "not computed yet."))
-    out.append("- QAA: " + ("computed (L1)." if qs.get("computed") else "not computed yet; no quality adjustment is applied to any number above."))
+    out.append("- Intents volume: DefiLlama (Dune-sourced). Independent on-chain recomputation: " + (f"computed (L2, source: {is_.get('source')})." if is_.get("computed") else "not computed yet."))
+    out.append("- QAA: " + (f"computed (L1, source: {qs.get('source')})." if qs.get("computed") else "not computed yet; no quality adjustment is applied to any number above."))
     out.append("- NEAR Intents Explorer API (1Click transactions) requires a partner JWT; not used.")
     out.append("- NEAR price: NearBlocks daily series; BTC and ETH benchmarks: DefiLlama coins API. CoinGecko's free tier does not serve full history.")
     out.append("- BigQuery dataset freshness is checked with `sql/q0_freshness.sql` before any L1/L2 run; NEAR Lake was deprecated on 2026-03-24.")
