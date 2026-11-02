@@ -18,6 +18,7 @@ def main(argv: list[str] | None = None) -> None:
     bl = sub.add_parser("blocks", help="sample full blocks from FastNear neardata (no credentials) into data/blocks/")
     bl.add_argument("--day-step", type=int, default=15)
     bl.add_argument("--blocks", type=int, default=50, help="blocks per window")
+    bl.add_argument("--offline", action="store_true", help="rebuild data/blocks/*.csv and the manifest from the cache only (no network)")
     bl.add_argument("--workers", type=int, default=2)
 
     oc = sub.add_parser("onchain", help="publish the index to NEAR Social (dry run unless --send)")
@@ -39,7 +40,7 @@ def main(argv: list[str] | None = None) -> None:
         bq.run(a.names or None, dry=a.dry, force=a.force)
     elif a.cmd == "blocks":
         from . import blocks
-        blocks.run(day_step=a.day_step, blocks_per_window=a.blocks, workers=a.workers)
+        blocks.run(day_step=a.day_step, blocks_per_window=a.blocks, workers=a.workers, offline=a.offline)
     elif a.cmd == "onchain":
         from . import onchain
         onchain.run(dry_run=not a.send)

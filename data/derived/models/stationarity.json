@@ -95,6 +95,22 @@
    "stationary_5pct": true
   }
  },
+ "qaa": {
+  "log_level_weekly": {
+   "n": 100,
+   "adf_stat": -2.483038836433433,
+   "p_value": 0.11965588797704341,
+   "lags": 4,
+   "stationary_5pct": false
+  },
+  "dlog_weekly": {
+   "n": 103,
+   "adf_stat": -7.49278707326823,
+   "p_value": 4.459837581519929e-11,
+   "lags": 0,
+   "stationary_5pct": true
+  }
+ },
  "near_price": {
   "log_level_weekly": {
    "n": 303,

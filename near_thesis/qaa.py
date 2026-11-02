@@ -43,6 +43,12 @@ def load_sampled() -> pd.DataFrame | None:
     t = pd.read_csv(f)
     if t.empty:
         return None
+    from .blocks import usable_windows
+    ok = usable_windows()
+    if ok is not None:
+        t = t[[(d, int(h)) in ok for d, h in zip(t["window_day"], t["window_hour"])]].copy()  # windows with only planning probes carry no signal
+        if t.empty:
+            return None
     t["month"] = pd.to_datetime(t["window_day"]).dt.to_period("M").dt.to_timestamp()
     t["window"] = t["window_day"] + "T" + t["window_hour"].astype(str)
     t["deposit"] = pd.to_numeric(t["deposit"], errors="coerce").fillna(0)

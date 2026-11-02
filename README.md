@@ -32,7 +32,8 @@ Requirements: [uv](https://docs.astral.sh/uv/) (it installs Python 3.12 itself).
 4. `make test` -> unit tests for the metric functions pass.
 5. Open `site/walkthrough.html` -> the executed notebook with every model output.
 6. Optional, refresh data: `make fetch` (public APIs) and either `make blocks` (samples full blocks from FastNear's
-   public block API, no credentials, ~1 hour) or `make bq` (BigQuery, see `docs/SETUP_BIGQUERY.md`; dry-runs every
+   public block API, no credentials; the API allows ~0.35 blocks/s, so the default 4,900-block sample takes 4-5 hours,
+   is cached and resumable, and `BLOCKS=100` tops it up) or `make bq` (BigQuery, see `docs/SETUP_BIGQUERY.md`; dry-runs every
    query and refuses any above `BQ_MAX_GB_PER_QUERY`). L1 and L2 use the BigQuery extract when present and the
    block sample otherwise; THESIS.md states which.
 7. Optional, on-chain index: `make onchain` prints the payload that `make onchain SEND=1` would write to NEAR Social

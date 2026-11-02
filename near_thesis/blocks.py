@@ -198,7 +198,33 @@ def extract(block: dict) -> dict:
     return {"height": height, "ts": ts, "n_outcomes": n_outcomes, "txs": txs, "events": events}
 
 
-def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_window: int = 250, workers: int = 2) -> dict:
+def min_usable(n: int) -> int:
+    """A window counts as sampled when at least 10 blocks (or a fifth of the budget) were read; planning probes alone do not."""
+    return max(10, n // 5)
+
+
+def usable_windows() -> set[tuple[str, int]] | None:
+    """(day, hour) of windows with enough blocks in data/blocks/sample_manifest.json; None when there is no manifest."""
+    f = BLOCKS / "sample_manifest.json"
+    if not f.exists():
+        return None
+    man = json.loads(f.read_text())
+    return {(w["day"], int(w["hour"])) for w in man["windows"] if w.get("usable", w.get("fetched", w["n"]) >= min_usable(w["n"]))}
+
+
+def write_manifest(P: list[dict], fetched: dict, blocks_per_window: int, day_step: int, windows: tuple[int, ...], missing: int, requested: int) -> dict:
+    """Manifest with per-window fetched counts; written during the run so a partial sample is usable (and resumable)."""
+    wins = [dict(w, n=blocks_per_window, fetched=fetched.get(i, 0), usable=fetched.get(i, 0) >= min_usable(blocks_per_window)) for i, w in enumerate(P)]
+    got = sum(fetched.values())
+    man = {"fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": NEARDATA, "windows": wins,
+           "blocks_requested": requested, "blocks_fetched": got, "blocks_missing": missing, "complete": got + missing >= requested,
+           "day_step": day_step, "hours": list(windows), "blocks_per_window": blocks_per_window}
+    (BLOCKS / "sample_manifest.json").write_text(json.dumps(man, indent=1))
+    return man
+
+
+def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_window: int = 50, workers: int = 2, offline: bool = False) -> dict:
+    """offline=True rebuilds the CSVs and the manifest from the cache only (no network): the state of a partial run."""
     BLOCKS.mkdir(parents=True, exist_ok=True)
     plan_file = BLOCKS / "sample_plan.json"
     if plan_file.exists():
@@ -207,32 +233,37 @@ def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_windo
         print("planning windows (secant search on block timestamps)...")
         P = plan(day_step, windows, blocks_per_window)
         plan_file.write_text(json.dumps(P, indent=1))
-    heights = [(w, w["start_height"] + i) for w in P for i in range(blocks_per_window)]  # the plan fixes the windows; n per window is a budget knob
-    print(f"{len(P)} windows over {len({w['day'] for w in P})} days, {len(heights)} blocks to read")
-    t0 = time.time(); done = 0; missing = 0
+    heights = [(i, w["start_height"] + j) for i, w in enumerate(P) for j in range(blocks_per_window)]
+    if offline:
+        heights = [(i, h) for i, h in heights if (CACHE / f"{h}.json").exists()]
+    requested = len(P) * blocks_per_window
+    print(f"{len(P)} windows over {len({w['day'] for w in P})} days, {len(heights)} blocks to read" + (" (offline, from cache)" if offline else ""))
+    t0 = time.time(); done = 0; missing = 0; fetched: dict[int, int] = {}
     ev_path, tx_path = BLOCKS / "intents_events_sampled.csv", BLOCKS / "tx_sampled.csv"
     with ev_path.open("w", newline="") as fe, tx_path.open("w", newline="") as ft:
         we, wt = csv.writer(fe), csv.writer(ft)
         we.writerow(["block_date", "block_timestamp", "receipt_id", "caller", "log", "window_day", "window_hour", "block_height"])
         wt.writerow(["block_date", "window_day", "window_hour", "block_height", "block_timestamp", "signer", "receiver", "action_kind", "method", "deposit"])
         with ThreadPoolExecutor(max_workers=workers) as ex:
-            futs = {ex.submit(fetch_block, h): (w, h) for w, h in heights}
+            futs = {ex.submit(fetch_block, h): (i, h) for i, h in heights}
             for f in as_completed(futs):
-                w, h = futs[f]
+                i, h = futs[f]; w = P[i]
                 b = f.result()
                 done += 1
                 if b is None:
-                    missing += 1; continue
-                day = datetime.fromtimestamp(b["ts"] / 1e9, tz=timezone.utc).strftime("%Y-%m-%d")
-                for rid, pred, log in b["events"]:
-                    we.writerow([day, b["ts"], rid, pred, log, w["day"], w["hour"], b["height"]])
-                for s, r, kind, m, dep in b["txs"]:
-                    wt.writerow([day, w["day"], w["hour"], b["height"], b["ts"], s, r, kind, m, dep])
+                    missing += 1
+                else:
+                    fetched[i] = fetched.get(i, 0) + 1
+                    day = datetime.fromtimestamp(b["ts"] / 1e9, tz=timezone.utc).strftime("%Y-%m-%d")
+                    for rid, pred, log in b["events"]:
+                        we.writerow([day, b["ts"], rid, pred, log, w["day"], w["hour"], b["height"]])
+                    for s_, r, kind, m, dep in b["txs"]:
+                        wt.writerow([day, w["day"], w["hour"], b["height"], b["ts"], s_, r, kind, m, dep])
                 if done % 100 == 0:
+                    fe.flush(); ft.flush()
+                    write_manifest(P, fetched, blocks_per_window, day_step, windows, missing, requested)
                     el = time.time() - t0
                     print(f"  {done}/{len(heights)} blocks, {missing} missing, {el:,.0f}s, rate {_rate[0]:.2f}/s, eta {(len(heights) - done) / max(done / el, 1e-9) / 60:,.0f} min", flush=True)
-    man = {"fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": NEARDATA, "windows": P,
-           "blocks_requested": len(heights), "blocks_missing": missing, "day_step": day_step, "hours": list(windows), "blocks_per_window": blocks_per_window}
-    (BLOCKS / "sample_manifest.json").write_text(json.dumps(man, indent=1))
-    print(f"done: {done - missing} blocks in {time.time() - t0:,.0f}s -> data/blocks/")
+    man = write_manifest(P, fetched, blocks_per_window, day_step, windows, missing, requested)
+    print(f"done: {sum(fetched.values())} blocks in {time.time() - t0:,.0f}s -> data/blocks/ (complete={man['complete']})")
     return man

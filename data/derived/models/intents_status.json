@@ -1,4 +1,23 @@
 {
- "computed": false,
- "reason": "data/bigquery/l2_intents_events.csv missing. Run `make bq` after docs/SETUP_BIGQUERY.md."
+ "computed": true,
+ "source": "neardata block sample",
+ "coverage": {
+  "blocks_fetched": 743,
+  "blocks_requested": 4900,
+  "sample_complete": false,
+  "days_with_blocks": 7
+ },
+ "sampled_days": 2,
+ "events": 28,
+ "token_diff_legs": 28,
+ "solver_accounts": 0,
+ "priced_batch_share_mean": 1.0,
+ "event_counts": {
+  "token_diff": 14,
+  "intents_executed": 5
+ },
+ "assumptions": {
+  "solver_min_batches_per_day": 20,
+  "solver_min_counterparties": 10
+ }
 }

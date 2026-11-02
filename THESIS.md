@@ -38,21 +38,21 @@ Three falsifiable predictions were tested:
 
 ## Evidence against
 
-- **Value capture is weak.** NEAR ranks 6 of 7 on annualized application fees divided by market cap (1.51%). Intents fees go to solvers and the Intents protocol, not to NEAR holders; market cap divided by trailing-12-month gas fees burned is 4,829x.
+- **Value capture is weak.** NEAR ranks 6 of 7 on annualized application fees divided by market cap (1.67%). Intents fees go to solvers and the Intents protocol, not to NEAR holders; market cap divided by trailing-12-month gas fees burned is 4,829x.
 - **Volume passes through, it does not stay.** Stablecoin supply on NEAR is $128.9M and TVL is $201.7M, against $4.0B of monthly Intents volume. Stablecoins divided by TVL ranks 8 of 8 among peers.
 - **Usage growth has not predicted returns.** The Spearman information coefficient between 4-week changes in Intents volume and 12-week forward NEAR returns in excess of BTC is -0.58 (block-bootstrap 95% CI -0.72 to -0.12, n=80 weeks; first half +0.05, second half -0.52). If anything, faster Intents growth preceded weaker relative returns. This is a short sample and the sign is unstable across halves.
 - **No lead-lag found for Intents.** Granger tests on weekly log changes (lag 1 by AIC, n=98): Intents volume to price p=0.47, price to Intents volume p=0.42. Transactions and gas fees do show two-way Granger links with price (see table), consistent with price driving speculative activity rather than the reverse.
-- **No cointegration.** Johansen trace tests find no cointegrating relation at 5% between log price and active_accounts, txns, tx_fee_usd, tx_volume_usd, intents_volume_usd, near_app_fees_usd.
+- **No cointegration.** Johansen trace tests find no cointegrating relation at 5% between log price and active_accounts, txns, tx_fee_usd, tx_volume_usd, intents_volume_usd, near_app_fees_usd, qaa.
 - **The 2024 baseline is inflated.** A large share of 2024 activity was mini-app and airdrop traffic; a fall from an inflated base is not itself evidence of a shift to higher-value use. The quality-adjusted series (below) is the honest comparison.
 - **The Intents volume series is third-party.** DefiLlama sources it from a Dune table maintained by the NEAR team. Our independent on-chain recomputation is the cross-check; where it is not computed, the volume figures above rest on one source.
 
 ## Quality-adjusted active accounts (L1)
 
-Not computed: data/bigquery/l1_account_month_features.csv missing. Run `make bq` after docs/SETUP_BIGQUERY.md. The SQL and the clustering code are in place (`sql/l1_*.sql`, `near_thesis/qaa.py`).
+Source: neardata block sample. Block sample: 743 of 4,900 planned blocks (partial run, 15% of the planned sample; the numbers cover only the months with sampled days), 7 sampled days from 2024-11-04 to 2025-02-02, 2 windows per day at UTC hours 3, 15, every 15 days (`docs/SAMPLING.md`). In sampled mode the features are computed inside the sampled block windows, the cluster shares are the estimate, and QAA = share x NearBlocks monthly active accounts. Behavioral clustering (hdbscan) of 13,077 account-months. Clusters labeled as automation, mini-app farming, heavy unlabeled, human (multi-app), human (light) and Intents participants; QAA counts the last three. At the 2024-12 peak QAA was 226,088 of 925,074 active accounts (24%); in 2025-02 it was 163,368 of 724,470 (23%). Silhouette on a 20K sample: 0.94.
 
 ## Intents microstructure from raw events (L2)
 
-Not computed: data/bigquery/l2_intents_events.csv missing. Run `make bq` after docs/SETUP_BIGQUERY.md. The event parser and the sampling design are in place (`sql/l2_intents_events.sql`, `near_thesis/intents.py`, `tests/test_intents.py`).
+Source: neardata block sample. Block sample: 743 of 4,900 planned blocks (partial run, 15% of the planned sample; the numbers cover only the months with sampled days), 7 sampled days from 2024-11-04 to 2025-02-02, 2 windows per day at UTC hours 3, 15, every 15 days (`docs/SAMPLING.md`). Sampled counts and volumes are expanded to daily totals by blocks-in-day / blocks-sampled (users are an upper bound). Parsed 28 DIP-4 events on 2 sampled days; 0 accounts classified as solvers (>= 20 batches and >= 10 counterparties in a day). Share of batches with a priced leg: 100%. In 2025-01: 3,119 users per day, solver concentration not estimable (too few batches per sampled day), median priced trade $106.72. Independent monthly volume estimate $5.2M (95% day-bootstrap interval $5.2M to $5.2M) against DefiLlama $6.4M.
 
 ## Econometrics summary (L3)
 
@@ -64,6 +64,7 @@ Not computed: data/bigquery/l2_intents_events.csv missing. Run `make bq` after d
 | tx_volume_usd | 304 | 3 | 0.154 | 0.000 | 22.7 (15.5) |
 | intents_volume_usd | 98 | 1 | 0.465 | 0.420 | 12.1 (15.5) |
 | near_app_fees_usd | 128 | 2 | 0.282 | 0.826 | 6.2 (15.5) |
+| qaa | 104 | 1 | 0.742 | 0.786 | 13.7 (15.5) |
 
 Weekly means, log differences, VAR lag selected by AIC up to 8, F-test for Granger causality, Johansen with 2 lagged differences and no deterministic trend. Gas fees in USD correlate with price mechanically (fees are paid in NEAR); `tx_fee_near` is the activity measure in the signal tests.
 
@@ -76,12 +77,13 @@ Weekly means, log differences, VAR lag selected by AIC up to 8, F-test for Grang
 | tx_fee_near | -0.02 | -0.28 to +0.24 | +0.02 | -0.17 | 286 |
 | tx_volume_usd | -0.16 | -0.37 to +0.04 | -0.18 | -0.17 | 286 |
 | intents_volume_usd | -0.58 | -0.72 to -0.12 | +0.05 | -0.52 | 80 |
+| qaa | -0.14 | -0.57 to +0.36 | -0.28 | +nan | 86 |
 
 Signal: 4-week log change of the 4-week mean. Target: 12-week forward log return of NEAR minus BTC. Circular block bootstrap with 12-week blocks, 2,000 draws. With 20 tests at 5%, one spurious rejection is expected; treat single significant cells as suggestive.
 
 ## Scenarios, not forecasts (L4)
 
-Trailing 12 months: Intents volume $32.8B, Intents fees $54.0M (observed take rate 16.5 bps), gas fees burned $1.2M, market cap $5.8B. Drawing 20,000 scenarios with volume multiplier lognormal(median 1, sigma 0.6) clipped [0.25, 4], take rate uniform [0.5x, 1.5x] of observed, share accruing to the token uniform [0, 0.5]: median price-to-token-fees 465x (5th to 95th percentile 119x to 2,575x). scenarios, not forecasts; no fee-sharing mechanism exists on NEAR today.
+Trailing 12 months: Intents volume $32.8B, Intents fees $54.0M (observed take rate 16.5 bps), gas fees burned $1.2M, market cap $5.8B. Drawing 20,000 scenarios with volume multiplier lognormal(median 1, sigma 0.6) clipped [0.25, 4], take rate uniform [0.5x, 1.5x] of observed, share accruing to the token uniform [0, 0.5]: median price-to-token-fees 468x (5th to 95th percentile 119x to 2,552x). scenarios, not forecasts; no fee-sharing mechanism exists on NEAR today.
 
 ## What would change our mind
 
@@ -93,12 +95,13 @@ Trailing 12 months: Intents volume $32.8B, Intents fees $54.0M (observed take ra
 
 ## Data gaps and integrity
 
-- Intents volume: DefiLlama (Dune-sourced). Independent on-chain recomputation: not computed yet.
-- QAA: not computed yet; no quality adjustment is applied to any number above.
+- Intents volume: DefiLlama (Dune-sourced). Independent on-chain recomputation: computed (L2, source: neardata block sample).
+- QAA: computed (L1, source: neardata block sample).
 - NEAR Intents Explorer API (1Click transactions) requires a partner JWT; not used.
 - NEAR price: NearBlocks daily series; BTC and ETH benchmarks: DefiLlama coins API. CoinGecko's free tier does not serve full history.
+- Sampling design, estimators and biases of the no-credentials path: `docs/SAMPLING.md`.
 - BigQuery dataset freshness is checked with `sql/q0_freshness.sql` before any L1/L2 run; NEAR Lake was deprecated on 2026-03-24.
-- Raw snapshot hashes: `docs/REPRODUCIBILITY.md` (45 files).
+- Raw snapshot hashes: `docs/REPRODUCIBILITY.md` (58 files).
 
 ## Reproduce
 

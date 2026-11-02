@@ -2,7 +2,7 @@ import json
 
 import pandas as pd
 
-from near_thesis import intents, qaa
+from near_thesis import blocks as blocks_mod, intents, qaa
 
 
 def _write_sample(tmp_path):
@@ -24,6 +24,7 @@ def _write_sample(tmp_path):
 def test_load_sampled_builds_account_month_features(tmp_path, monkeypatch):
     blocks = _write_sample(tmp_path)
     monkeypatch.setattr(qaa, "DATA", tmp_path)
+    monkeypatch.setattr(blocks_mod, "BLOCKS", blocks)
     df = qaa.load_sampled()
     assert set(df["account"]) == {"relayer.near", "alice.near", "u1.tg"}
     r = df.set_index("account")

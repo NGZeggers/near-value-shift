@@ -12,6 +12,7 @@
     if (v === null || v === undefined || Number.isNaN(v)) return 'n/a';
     const a = Math.abs(v);
     const money = unit === 'USD';
+    if (a === 0) return (money ? '$' : '') + '0';
     const s = a >= 1e9 ? (v / 1e9).toFixed(a >= 1e10 ? 0 : 1) + 'B' : a >= 1e6 ? (v / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'M' : a >= 1e4 ? (v / 1e3).toFixed(0) + 'K' : a >= 100 ? v.toFixed(0) : a >= 1 ? v.toFixed(2) : v.toFixed(3);
     return (money ? '$' : '') + s + (unit === 'x' ? 'x' : '');
   };
@@ -112,7 +113,7 @@
     const det = h('details', null, c); h('summary', null, det, 'Source and query'); const pre = h('pre', null, det); pre.textContent = `source: ${spec.source}\nquery: ${spec.query}` + (spec.note && !spec.note.startsWith('emphasis:') ? `\nnote: ${spec.note}` : '');
     return c;
   }
-  function draw(spec, chart) { chart.textContent = ''; if (spec.type === 'empty' || !spec.series.length) { h('div', 'empty', chart, spec.sentence); return; } if (spec.type === 'ranked') rankedChart(spec, chart); else if (spec.type === 'diverging') divergingChart(spec, chart); else timeChart(spec, chart); }
+  function draw(spec, chart) { chart.textContent = ''; if (spec.type === 'empty' || !spec.series.length) { h('div', 'empty', chart, spec.type === 'empty' ? 'No chart: see the sentence above.' : 'No data in the selected range.'); return; } if (spec.type === 'ranked') rankedChart(spec, chart); else if (spec.type === 'diverging') divergingChart(spec, chart); else timeChart(spec, chart); }
 
   function render() {
     const root = document.getElementById('charts'); root.textContent = '';

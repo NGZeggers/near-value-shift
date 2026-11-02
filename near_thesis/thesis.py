@@ -4,9 +4,22 @@ from __future__ import annotations
 import json
 import pandas as pd
 
-from .config import DERIVED, DOCS, MODELS, ROOT
+from .config import DATA, DERIVED, DOCS, MODELS, ROOT
 from .http import raw_manifest
 
+
+
+def _coverage() -> str:
+    """One sentence on the block sample behind sampled-mode L1/L2 (empty when the sample does not exist)."""
+    f = DATA / "blocks" / "sample_manifest.json"
+    if not f.exists():
+        return ""
+    man = json.loads(f.read_text())
+    days = sorted({w["day"] for w in man["windows"] if w.get("usable", True) and w.get("fetched", w["n"])})
+    got, req = man.get("blocks_fetched", 0), man.get("blocks_requested", 0)
+    state = "complete" if man.get("complete") else f"partial run, {got / max(req, 1) * 100:.0f}% of the planned sample; the numbers cover only the months with sampled days"
+    return (f"Block sample: {got:,} of {req:,} planned blocks ({state}), {len(days)} sampled days from {days[0]} to {days[-1]}, "
+            f"{len(man['hours'])} windows per day at UTC hours {', '.join(str(h) for h in man['hours'])}, every {man['day_step']} days (`docs/SAMPLING.md`). ")
 
 def usd(v, d=1):
     if v is None or pd.isna(v):
@@ -122,7 +135,7 @@ def build() -> str:
         q = pd.read_csv(MODELS / "qaa_monthly.csv", parse_dates=["month"]).set_index("month")
         pk = q["active_accounts_bq"].idxmax()
         src = qs.get("source", "bigquery")
-        out.append((f"Source: {src}. " if src != "bigquery" else "") + ("In sampled mode the features are computed inside sampled block windows (see `data/blocks/sample_manifest.json`), the cluster shares are the estimate, and QAA = share x NearBlocks monthly active accounts. " if src != "bigquery" else "") +
+        out.append((f"Source: {src}. " if src != "bigquery" else "") + (_coverage() + "In sampled mode the features are computed inside the sampled block windows, the cluster shares are the estimate, and QAA = share x NearBlocks monthly active accounts. " if src != "bigquery" else "") +
                    f"Behavioral clustering ({qs.get('algorithm')}) of {num(qs.get('n'))} account-months. Clusters labeled as automation, mini-app farming, "
                    f"heavy unlabeled, human (multi-app), human (light) and Intents participants; QAA counts the last three. "
                    f"At the {str(pk.date())[:7]} peak QAA was {num(q.loc[pk, 'qaa'])} of {num(q.loc[pk, 'active_accounts_bq'])} active accounts "
@@ -136,11 +149,11 @@ def build() -> str:
         im = pd.read_csv(MODELS / "intents_monthly.csv", parse_dates=["month"]).set_index("month")
         lm = im.iloc[-1]
         src = is_.get("source", "bigquery")
-        out.append((f"Source: {src}; sampled counts and volumes are expanded to daily totals by blocks-in-day / blocks-sampled (users are an upper bound). " if src != "bigquery" else "") +
+        out.append((f"Source: {src}. " + _coverage() + "Sampled counts and volumes are expanded to daily totals by blocks-in-day / blocks-sampled (users are an upper bound). " if src != "bigquery" else "") +
                    f"Parsed {num(is_['events'])} DIP-4 events on {is_['sampled_days']} sampled days; {is_['solver_accounts']} accounts classified as solvers "
                    f"(>= {is_['assumptions']['solver_min_batches_per_day']} batches and >= {is_['assumptions']['solver_min_counterparties']} counterparties in a day). "
-                   f"Share of batches with a priced leg: {is_['priced_batch_share_mean']*100:.0f}%. In {str(im.index[-1].date())[:7]}: {num(lm['users_per_day'])} users per day, "
-                   f"{num(lm['solvers_per_day'], 1)} solvers per day, solver HHI {lm['hhi_solver']:.2f}, top-1 solver share {lm['top1_solver_share']*100:.0f}%, "
+                   f"Share of batches with a priced leg: {is_['priced_batch_share_mean']*100:.0f}%. In {str(im.index[-1].date())[:7]}: {num(lm['users_per_day'])} users per day, " +
+                   (f"{num(lm['solvers_per_day'], 1)} solvers per day, solver HHI {lm['hhi_solver']:.2f}, top-1 solver share {lm['top1_solver_share']*100:.0f}%, " if pd.notna(lm['hhi_solver']) else "solver concentration not estimable (too few batches per sampled day), ") +
                    f"median priced trade {usd(lm['median_trade_usd'])}. Independent monthly volume estimate {usd(lm['volume_est_usd'])} "
                    f"(95% day-bootstrap interval {usd(lm['volume_ci_lo'])} to {usd(lm['volume_ci_hi'])}) against DefiLlama {usd(m['intents_volume_usd'].loc[im.index[-1]])}.\n")
     else:

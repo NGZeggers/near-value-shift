@@ -32,10 +32,38 @@ SOLVER_MIN_BATCHES = 20          # BigQuery full days
 SOLVER_MIN_COUNTERPARTIES = 10
 SOLVER_MIN_BATCH_SHARE = 0.02    # sampled windows: an account in >= 2% of a day's sampled batches with >= 5 counterparties
 STABLE_RE = re.compile(r"(usdc|usdt|usdt0|dai|frax|usde|pyusd|usd1|fdusd|busd|tusd|lusd|usdy|usd\b)", re.I)
-# token id -> (price column, decimals). Keys are matched as substrings of the token id.
+STABLE_SYMBOLS = {"usdc", "usdt", "usdt0", "dai", "frax", "usde", "pyusd", "usd1", "fdusd", "busd", "tusd", "lusd", "usdy", "usds", "xusd", "usdg"}
+# fallback for tokens absent from the registry: substring of the token id -> (CoinGecko id, decimals)
 MAJORS = {"wrap.near": ("near", 24), "nbtc": ("bitcoin", 8), "btc": ("bitcoin", 8), "eth.omft": ("ethereum", 18),
-          "aurora": ("ethereum", 18), "eth.bridge": ("ethereum", 18), "weth": ("ethereum", 18)}
+          "aurora": ("ethereum", 18), "eth.bridge": ("ethereum", 18), "weth": ("ethereum", 18), "sol.omft": ("solana", 9),
+          "xrp.omft": ("ripple", 6), "doge.omft": ("dogecoin", 8), "zec.omft": ("zcash", 8), "ltc.omft": ("litecoin", 8),
+          "bch.omft": ("bitcoin-cash", 8), "tron.omft": ("tron", 6)}
 STABLE_DECIMALS = 6
+GECKO_ALIASES = {"wrapped-near": "near", "wrapped-bitcoin": "bitcoin", "weth": "ethereum", "wrapped-solana": "solana", "wrapped-steth": "ethereum"}
+
+
+def load_token_registry() -> dict[str, tuple[str, int, str | None]]:
+    """asset id (lower) -> (symbol lower, decimals, CoinGecko id) from the 1Click snapshot (data/raw/intents_tokens.json)."""
+    f = DATA / "raw" / "intents_tokens.json"
+    if not f.exists():
+        return {}
+    out = {}
+    for t in json.loads(f.read_text()).get("data") or []:
+        try:
+            out[str(t["assetId"]).lower()] = (str(t.get("symbol", "")).lower(), int(t["decimals"]), t.get("coingeckoId"))
+        except (KeyError, TypeError, ValueError):
+            continue
+    return out
+
+
+_REGISTRY: dict | None = None
+
+
+def registry() -> dict:
+    global _REGISTRY
+    if _REGISTRY is None:
+        _REGISTRY = load_token_registry()
+    return _REGISTRY
 
 
 def parse_event(log: str) -> dict | None:
@@ -45,11 +73,14 @@ def parse_event(log: str) -> dict | None:
         ev = json.loads(log[len("EVENT_JSON:"):])
     except json.JSONDecodeError:
         return None
-    return ev if ev.get("standard") == "dip4" else None
+    return ev if isinstance(ev, dict) and ev.get("standard") == "dip4" else None
 
 
 def token_decimals(token: str) -> int | None:
     t = token.lower()
+    reg = registry().get(t)
+    if reg:
+        return reg[1]
     if STABLE_RE.search(t):
         return STABLE_DECIMALS
     for k, (_, dec) in MAJORS.items():
@@ -59,8 +90,18 @@ def token_decimals(token: str) -> int | None:
 
 
 def price_leg(token: str, amount_raw: int, prices: dict[str, float]) -> float | None:
-    """USD value of an amount of `token` on a day, or None when unpriced."""
+    """USD value of an amount of `token` on a day, or None when unpriced. Registry first (1Click asset list), then
+    name heuristics for assets no longer listed. Stablecoins at par; majors at the day's DefiLlama price."""
     t = token.lower()
+    reg = registry().get(t)
+    if reg:
+        sym, dec, gid = reg
+        if sym in STABLE_SYMBOLS:
+            return abs(amount_raw) / 10 ** dec
+        gid = GECKO_ALIASES.get(gid, gid)
+        if gid and prices.get(gid):
+            return abs(amount_raw) / 10 ** dec * prices[gid]
+        return None
     if STABLE_RE.search(t):
         return abs(amount_raw) / 10 ** STABLE_DECIMALS
     for k, (col, dec) in MAJORS.items():
@@ -76,10 +117,14 @@ def batches_from_events(df: pd.DataFrame) -> pd.DataFrame:
         ev = parse_event(r.log)
         if not ev or ev.get("event") != "token_diff":
             continue
-        for item in ev.get("data", []):
+        data = ev.get("data")
+        items = data if isinstance(data, list) else ([data] if isinstance(data, dict) else [])  # 2024 events carry one object
+        for item in items:
+            if not isinstance(item, dict):
+                continue
             for token, amt in (item.get("diff") or {}).items():
                 try:
-                    rows.append((r.block_date, r.receipt_id, item.get("account_id"), item.get("intent_hash"), token, int(amt)))
+                    rows.append((r.block_date, r.receipt_id, item.get("account_id"), item.get("intent_hash") or item.get("hash"), token, int(amt)))
                 except (TypeError, ValueError):
                     continue
     return pd.DataFrame(rows, columns=["block_date", "receipt_id", "account", "intent_hash", "token", "amount"])
@@ -100,10 +145,13 @@ def identify_solvers(legs: pd.DataFrame) -> pd.DataFrame:
 
 
 def _daily_prices() -> dict[str, dict[str, float]]:
-    d = pd.read_csv(DERIVED / "daily.csv", parse_dates=["date"]).set_index("date")
-    out = {}
-    for day, r in d.iterrows():
-        out[str(day.date())] = {"near": r.get("near_price"), "bitcoin": r.get("price_bitcoin"), "ethereum": r.get("price_ethereum")}
+    """day -> {coingecko id: USD price} from every data/raw/price_<id>.json snapshot."""
+    out: dict[str, dict[str, float]] = {}
+    for f in sorted((DATA / "raw").glob("price_*.json")):
+        cid = f.stem[len("price_"):]
+        for ts, px in json.loads(f.read_text()).get("data") or []:
+            day = pd.Timestamp(int(ts), unit="s").strftime("%Y-%m-%d")
+            out.setdefault(day, {})[cid] = float(px)
     return out
 
 
@@ -163,7 +211,9 @@ def expansion_factors(raw: pd.DataFrame) -> pd.Series:
     man = json.loads((DATA / "blocks" / "sample_manifest.json").read_text())
     sampled = {}
     for w in man["windows"]:
-        sampled[pd.Timestamp(w["day"]).date()] = sampled.get(pd.Timestamp(w["day"]).date(), 0) + w["n"]
+        n = int(w.get("fetched", w["n"]))
+        if w.get("usable", True) and n > 0:
+            sampled[pd.Timestamp(w["day"]).date()] = sampled.get(pd.Timestamp(w["day"]).date(), 0) + n
     d = pd.read_csv(DERIVED / "daily.csv", parse_dates=["date"]).set_index("date")["blocks"]
     bpd = {k.date(): float(v) for k, v in d.items()}
     return pd.Series({day: bpd.get(day, 150_000.0) / n for day, n in sampled.items()})
@@ -184,6 +234,9 @@ def run() -> dict:
     raw = pd.read_csv(f)
     raw["block_date"] = pd.to_datetime(raw["block_date"]).dt.date
     if source != "bigquery":
+        from .blocks import usable_windows
+        ok = usable_windows() or set()
+        raw = raw[[(d, int(h)) in ok for d, h in zip(raw["window_day"], raw["window_hour"])]].copy()  # drop windows with only planning probes
         raw["block_date"] = pd.to_datetime(raw["window_day"]).dt.date  # attribute a window to its planned day
     events = raw.assign(event=[(parse_event(l) or {}).get("event") for l in raw["log"]])
     legs = batches_from_events(raw)
@@ -206,7 +259,12 @@ def run() -> dict:
     monthly.to_csv(MODELS / "intents_monthly.csv", index=False)
     solvers = roles[roles["is_solver"]].groupby("account").agg(days=("block_date", "nunique"), batches=("batches", "sum")).sort_values("batches", ascending=False).reset_index()
     solvers.to_csv(MODELS / "intents_solvers.csv", index=False)
-    status = {"computed": True, "source": source, "sampled_days": int(daily["date"].nunique()), "events": int(len(raw)), "token_diff_legs": int(len(legs)),
+    coverage = {}
+    if source != "bigquery":
+        man = json.loads((DATA / "blocks" / "sample_manifest.json").read_text())
+        coverage = {"blocks_fetched": man.get("blocks_fetched"), "blocks_requested": man.get("blocks_requested"), "sample_complete": man.get("complete"),
+                    "days_with_blocks": len({w["day"] for w in man["windows"] if w.get("usable", True) and w.get("fetched", w["n"])})}
+    status = {"computed": True, "source": source, "coverage": coverage, "sampled_days": int(daily["date"].nunique()), "events": int(len(raw)), "token_diff_legs": int(len(legs)),
               "solver_accounts": int(len(solvers)), "priced_batch_share_mean": float(daily["priced_batch_share"].mean()),
               "event_counts": events["event"].value_counts().to_dict(),
               "assumptions": {"solver_min_batches_per_day": SOLVER_MIN_BATCHES, "solver_min_counterparties": SOLVER_MIN_COUNTERPARTIES}}

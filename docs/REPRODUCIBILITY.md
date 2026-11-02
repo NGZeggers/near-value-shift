@@ -4,8 +4,9 @@ Every raw snapshot used by the build, with its SHA-256. `make fetch` refreshes t
 
 | File | Fetched at | Bytes | SHA-256 |
 |---|---|---|---|
-| gecko_peer_markets.json | 2026-11-02T04:32:45+00:00 | 5,783 | `489e6c980269c0d9...` |
+| gecko_peer_markets.json | 2026-11-02T18:46:48+00:00 | 5,798 | `d1e4af307cd86e87...` |
 | github_commit_activity.json | 2026-11-02T04:31:12+00:00 | 14,166 | `0f9538b6e3f9be10...` |
+| intents_tokens.json | 2026-11-02T18:46:48+00:00 | 53,534 | `c106887f867a105f...` |
 | llama_chains.json | 2026-11-02T04:30:16+00:00 | 57,968 | `1303054ad34ded0a...` |
 | llama_dexs_aptos.json | 2026-11-02T04:30:41+00:00 | 56,016 | `23862101dc6c7a42...` |
 | llama_dexs_arbitrum.json | 2026-11-02T04:30:28+00:00 | 261,808 | `599771c8f81f8295...` |
@@ -44,8 +45,20 @@ Every raw snapshot used by the build, with its SHA-256. `make fetch` refreshes t
 | llama_tvl_sui.json | 2026-11-02T04:30:35+00:00 | 46,332 | `402a3b5021a7ba2c...` |
 | nearblocks_charts.json | 2026-11-02T04:30:13+00:00 | 1,536,710 | `92860b12c39b4c94...` |
 | nearblocks_stats.json | 2026-11-02T04:30:14+00:00 | 575 | `f43d11b5b6387a80...` |
-| price_bitcoin.json | 2026-11-02T04:32:38+00:00 | 63,129 | `147ba95a2ddd5517...` |
-| price_ethereum.json | 2026-11-02T04:32:45+00:00 | 63,382 | `072c88a1845d652c...` |
-| price_near.json | 2026-11-02T04:32:33+00:00 | 58,947 | `af7d3828e46aeada...` |
+| price_aptos.json | 2026-11-02T18:46:47+00:00 | 142 | `8499d8f1b4c4b8c9...` |
+| price_arbitrum.json | 2026-11-02T18:46:47+00:00 | 145 | `5492fec3683c6f8c...` |
+| price_avalanche-2.json | 2026-11-02T18:46:46+00:00 | 58,657 | `7796bc0ed306e0a8...` |
+| price_binancecoin.json | 2026-11-02T18:46:26+00:00 | 62,254 | `c103f06ec212a4b0...` |
+| price_bitcoin-cash.json | 2026-11-02T18:46:40+00:00 | 63,796 | `cd11f6a98821ff99...` |
+| price_bitcoin.json | 2026-11-02T18:45:45+00:00 | 63,129 | `0b371d2c48fd0ca6...` |
+| price_dogecoin.json | 2026-11-02T18:46:09+00:00 | 67,257 | `47d956b0b59ba6ea...` |
+| price_ethereum.json | 2026-11-02T18:45:52+00:00 | 63,382 | `9c31082e5da37119...` |
+| price_litecoin.json | 2026-11-02T18:46:21+00:00 | 61,014 | `4e8ba28e2f295d39...` |
+| price_near.json | 2026-11-02T18:45:39+00:00 | 58,947 | `726df37ca1a0d65c...` |
+| price_ripple.json | 2026-11-02T18:46:04+00:00 | 64,585 | `f97c5d1891bf4b08...` |
+| price_solana.json | 2026-11-02T18:45:58+00:00 | 61,396 | `dd10743a7ab31369...` |
+| price_sui.json | 2026-11-02T18:46:34+00:00 | 140 | `ace94461d266f09c...` |
+| price_tron.json | 2026-11-02T18:46:33+00:00 | 65,449 | `71a0ca2fe6fbe144...` |
+| price_zcash.json | 2026-11-02T18:46:16+00:00 | 61,811 | `1caedd205413316e...` |
 | rpc_status.json | 2026-11-02T04:30:45+00:00 | 4,926 | `d9ffbe1a9b418605...` |
 | rpc_validators.json | 2026-11-02T04:30:48+00:00 | 26,255 | `4c0dcfb195fb5ea6...` |

@@ -42,3 +42,15 @@ def test_parse_and_roles_and_metrics():
     assert r["withdraw_events"] == 1
     m = intents.monthly_estimates(daily, n_boot=50)
     assert abs(m.iloc[0]["volume_est_usd"] - 3000 * 31) < 1e-6
+
+
+def test_token_diff_single_object_and_registry(monkeypatch):
+    from near_thesis import intents
+    monkeypatch.setattr(intents, "_REGISTRY", {"nep141:eth-0xa0b8.omft.near": ("usdc", 6, "usd-coin"), "nep141:sol.omft.near": ("sol", 9, "solana")})
+    log = 'EVENT_JSON:{"standard":"dip4","version":"0.1.0","event":"token_diff","data":{"account_id":"a.near","diff":{"nep141:eth-0xa0b8.omft.near":"-7000000","nep141:sol.omft.near":"2000000000"}}}'
+    df = pd.DataFrame([{"block_date": "2024-12-04", "receipt_id": "r1", "log": log}])
+    legs = intents.batches_from_events(df)
+    assert len(legs) == 2 and set(legs["account"]) == {"a.near"}
+    assert intents.price_leg("nep141:eth-0xa0b8.omft.near", -7000000, {}) == 7.0
+    assert intents.price_leg("nep141:sol.omft.near", 2000000000, {"solana": 150.0}) == 300.0
+    assert intents.price_leg("nep141:unknown.near", 1, {}) is None

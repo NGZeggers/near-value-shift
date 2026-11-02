@@ -113,8 +113,8 @@ Must ship: L0 + L1 + L3 + deliverables. Next: L2 (sampled). Last: L4 scenarios, 
 | Layer | State |
 |---|---|
 | L0 | done: 45 hashed snapshots, derived tables, `make fetch` |
-| L1 | code + synthetic test done; runs on BigQuery extract (`make bq`) or on sampled blocks (`make blocks`, FastNear neardata, no credentials) |
-| L2 | code + synthetic test done; same two data paths; expansion factors and solver thresholds documented in `near_thesis/intents.py` |
+| L1 | computed on a partial block sample (743 of 4,900 blocks, 2024-11 to 2025-02): QAA ~24% of active accounts, the rest clusters as mini-app farming; `make blocks` extends the sample (~5 h), `make bq` replaces it |
+| L2 | computed on the same partial sample: real DIP-4 events parsed and priced via the 1Click token registry; independent 2025-01 volume $5.2M vs DefiLlama $6.4M; solver concentration needs the full sample |
 | L3 | done: breaks, ADF, VAR/Granger, Johansen, correlations |
 | L4 | done: IC with block bootstrap, peer panel, Monte Carlo scenarios |
 | Out | THESIS.md generated and deterministic, dashboard (light/dark, tooltips, table views, range filter), executed notebook, CI + Pages workflow, demo script |

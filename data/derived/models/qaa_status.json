@@ -1,4 +1,40 @@
 {
- "computed": false,
- "reason": "data/bigquery/l1_account_month_features.csv missing. Run `make bq` after docs/SETUP_BIGQUERY.md."
+ "computed": true,
+ "source": "neardata block sample",
+ "n": 13077,
+ "fit_sample": 13077,
+ "algorithm": "hdbscan",
+ "noise_share": 0.044276210139940354,
+ "silhouette_sample": 0.9432977963316996,
+ "months": 4,
+ "labels": {
+  "-1": "noise",
+  "0": "miniapp_farming",
+  "1": "miniapp_farming",
+  "2": "human_light",
+  "3": "human_light",
+  "4": "human_light",
+  "5": "human_light",
+  "6": "miniapp_farming",
+  "7": "human_light",
+  "8": "human_light",
+  "9": "miniapp_farming",
+  "10": "miniapp_farming",
+  "11": "human_light",
+  "12": "human_light",
+  "13": "human_light",
+  "14": "human_light",
+  "15": "human_light",
+  "16": "human_light",
+  "17": "human_light",
+  "18": "human_light",
+  "19": "human_light",
+  "20": "human_light",
+  "21": "human_light"
+ },
+ "quality_labels": [
+  "human_light",
+  "human_multi_app",
+  "intents_participant"
+ ]
 }

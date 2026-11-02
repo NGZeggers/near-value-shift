@@ -1,0 +1,3 @@
+month,sampled_days,volume_est_usd,volume_ci_lo,volume_ci_hi,users_per_day,solvers_per_day,hhi_solver,top1_solver_share,median_trade_usd
+2024-12-01,1,674351.2081613999,674351.2081613999,674351.2081613999,1523.28,0.0,,,7.0
+2025-01-01,1,5158816.98750628,5158816.98750628,5158816.98750628,3118.64,0.0,,,106.72180900000001

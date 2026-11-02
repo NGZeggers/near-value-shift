@@ -61,30 +61,42 @@ def fetch_rpc() -> None:
 LLAMA_COINS = "https://coins.llama.fi"
 
 
+PRICE_COINS = ["near", "bitcoin", "ethereum"]  # benchmarks used by features/signal tests
+INTENTS_PRICE_COINS = ["solana", "ripple", "dogecoin", "zcash", "litecoin", "binancecoin", "tron", "sui", "bitcoin-cash",
+                       "avalanche-2", "aptos", "arbitrum"]  # majors seen in Intents token_diff legs (priced in L2)
+ONECLICK_TOKENS = "https://1click.chaindefuser.com/v0/tokens"
+
+
+def _llama_daily(cid: str) -> list[list[float]]:
+    start, now, pts = 1593561600, int(time.time()), {}  # 2020-07-01
+    while start < now:
+        url = f"{LLAMA_COINS}/chart/coingecko:{cid}?start={start}&span=500&period=1d"
+        prices = fetch_json(url).get("coins", {}).get(f"coingecko:{cid}", {}).get("prices", [])
+        if not prices:
+            break
+        for pnt in prices:
+            pts[int(pnt["timestamp"])] = float(pnt["price"])
+        start = int(prices[-1]["timestamp"]) + 86400
+        time.sleep(0.3)
+    return [[t, p] for t, p in sorted(pts.items())]
+
+
 def fetch_prices() -> None:
-    """Daily USD prices for NEAR, BTC, ETH since 2020 from DefiLlama's coins API (free, no key, 500 points per call)
-    plus peer market caps from CoinGecko's free /coins/markets endpoint."""
-    print("Prices: NEAR, BTC, ETH daily since 2020 (DefiLlama coins API) + peer market caps (CoinGecko)")
-    start0 = 1593561600  # 2020-07-01
-    now = int(time.time())
-    for cid in ["near", "bitcoin", "ethereum"]:
-        pts: dict[int, float] = {}
-        start = start0
-        while start < now:
-            url = f"{LLAMA_COINS}/chart/coingecko:{cid}?start={start}&span=500&period=1d"
-            d = fetch_json(url)
-            prices = d.get("coins", {}).get(f"coingecko:{cid}", {}).get("prices", [])
-            if not prices:
-                break
-            for pnt in prices:
-                pts[int(pnt["timestamp"])] = float(pnt["price"])
-            start = int(prices[-1]["timestamp"]) + 86400
-            time.sleep(0.3)
-        save_raw(f"price_{cid}", f"{LLAMA_COINS}/chart/coingecko:{cid}?period=1d (paginated)",
-                 [[t, p] for t, p in sorted(pts.items())])
+    """Daily USD prices since 2020 from DefiLlama's coins API (free, no key, 500 points per call): NEAR, BTC, ETH
+    (benchmarks) and the majors that show up in Intents settlements (L2 pricing), plus peer market caps (CoinGecko)."""
+    print("Prices: daily since 2020 (DefiLlama coins API) for benchmarks and Intents majors + peer market caps (CoinGecko)")
+    for cid in PRICE_COINS + INTENTS_PRICE_COINS:
+        save_raw(f"price_{cid}", f"{LLAMA_COINS}/chart/coingecko:{cid}?period=1d (paginated)", _llama_daily(cid))
     ids = ",".join(v for v in PEER_GECKO.values() if v)
     url = f"{COINGECKO}/coins/markets?vs_currency=usd&ids={ids}"
     save_raw("gecko_peer_markets", url, fetch_json(url))
+
+
+def fetch_intents_tokens() -> None:
+    """Token registry of NEAR Intents (1Click API, public): asset id -> symbol, decimals, CoinGecko id. Used to price
+    token_diff legs in L2; the `price` field is the current quote and is not used for history."""
+    print("Intents tokens: asset registry from the 1Click API (symbols, decimals, CoinGecko ids)")
+    save_raw("intents_tokens", ONECLICK_TOKENS, fetch_json(ONECLICK_TOKENS), note="current prices in this file are not used; history comes from DefiLlama")
 
 
 def fetch_github() -> None:
@@ -115,7 +127,7 @@ def fetch_intents_explorer() -> None:
 
 def run(only: list[str] | None = None) -> None:
     steps = {"nearblocks": fetch_nearblocks, "defillama": fetch_defillama, "rpc": fetch_rpc,
-             "prices": fetch_prices, "github": fetch_github, "intents": fetch_intents_explorer}
+             "prices": fetch_prices, "tokens": fetch_intents_tokens, "github": fetch_github, "intents": fetch_intents_explorer}
     failed: list[str] = []
     for name, fn in steps.items():
         if only and name not in only:
