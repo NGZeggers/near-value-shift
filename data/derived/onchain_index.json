@@ -2,11 +2,11 @@
  "as_of": "2026-11-01",
  "month": "2026-10",
  "active_accounts_daily_mean": 72046,
- "qaa": 163368,
+ "qaa": 44634,
  "intents_volume_usd": 3985641601,
  "usd_per_txn": 345.98,
  "ic_intents_12w_vs_btc": -0.576,
- "thesis_sha256": "67a33ee65cc8a766533b2e629aa22528f04707e8ae1601214fcbc6fc1be9f9f2",
- "raw_manifest_sha256": "b57da45f38e8362966122d8f893360b2f2a5aa2a004879aca6287534017698d4",
+ "thesis_sha256": "d754676ce76bc2e06729e9f7980005b881030661d3ca5862b602179a2e422282",
+ "raw_manifest_sha256": "173442f81549c05fe49938f6e9e4f5fc940492349859bdcd88a7b91e7b55f4f3",
  "repo": "https://github.com/NGZeggers/near-value-shift"
 }

@@ -3,11 +3,12 @@
 PY := uv run
 
 BLOCKS ?= 50   # blocks per sampling window for `make blocks` (budget: ~0.35 blocks/s)
-.PHONY: all build setup fetch bq blocks onchain onchain-verify features models charts thesis site notebook test clean
+.PHONY: all build setup fetch bq blocks onchain onchain-verify features models charts thesis site notebook index check-generated test clean
+.NOTPARALLEL:
 
 all: fetch build
 
-build: features models charts thesis site notebook   ## offline rebuild from the committed snapshots (what judges run)
+build: features models charts thesis site notebook index   ## offline rebuild from committed inputs
 
 setup:
 	uv sync --all-extras
@@ -36,6 +37,12 @@ site:             ## assemble the static dashboard in site/
 notebook:         ## regenerate notebooks/walkthrough.ipynb and execute it to site/walkthrough.html
 	$(PY) python -c "from near_thesis import notebook; notebook.run()"
 	$(PY) jupyter nbconvert --to html --execute --ExecutePreprocessor.timeout=600 --output-dir site notebooks/walkthrough.ipynb
+
+index:            ## local index only; no RPC call, signing or keys
+	$(PY) python -c "import json; from near_thesis.onchain import payload; from near_thesis.config import DERIVED; (DERIVED / 'onchain_index.json').write_text(json.dumps(payload(), indent=1))"
+
+check-generated:  ## run after build: analytical results must match the committed snapshots
+	$(PY) python -m near_thesis.check_generated
 
 blocks:           ## sample full blocks from FastNear (no credentials) for L1/L2 without BigQuery
 	$(PY) near-thesis blocks --blocks $(BLOCKS)

@@ -43,3 +43,19 @@ def test_expansion_factor_uses_blocks_per_day(tmp_path, monkeypatch):
     raw = pd.DataFrame({"window_day": ["2025-03-01"]})
     ef = intents.expansion_factors(raw)
     assert abs(ef[pd.Timestamp("2025-03-01").date()] - 300.0) < 1e-9
+
+
+def test_self_calls_and_window_denominator(tmp_path, monkeypatch):
+    blocks = _write_sample(tmp_path)
+    f = blocks / 'tx_sampled.csv'
+    t = pd.read_csv(f)
+    t.loc[t.signer == 'alice.near', 'receiver'] = 'alice.near'
+    t.to_csv(f, index=False)
+    monkeypatch.setattr(qaa, 'DATA', tmp_path)
+    monkeypatch.setattr(blocks_mod, 'BLOCKS', blocks)
+    df = qaa.load_sampled().set_index('account')
+    assert df.loc['alice.near', 'self_txns'] == 2
+    x = qaa.featurize(df)
+    assert x.loc['alice.near', 'self_share'] == 1
+    assert x.loc['alice.near', 'active_day_share'] == 1
+    assert df.loc['u1.tg', 'self_txns'] == 0

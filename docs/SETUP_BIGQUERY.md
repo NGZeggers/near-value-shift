@@ -34,3 +34,9 @@ Results are cached in `data/bigquery/*.csv` and committed, so judges never need 
 ## Budget rule of thumb
 Sandbox: 1 TiB/month. Filter on `block_date` always. Prefer aggregated outputs (per account-month,
 per day) over row dumps. Check the dry-run estimate before every new query.
+
+## Runner safeguards
+
+The current runner always executes Q0 before L1/L2, including when selecting a subset of extract names. A null last date or data older than `BQ_MAX_STALENESS_DAYS` (7 by default) stops the run. It does not silently reuse stale output as current coverage.
+
+`BQ_MAX_GB_PER_QUERY` is enforced both with a dry-run and server-side `maximum_bytes_billed`. `BQ_MAX_GB_PER_RUN` (default 300) stops additional queries once one invocation would exceed that ceiling. Neither setting tracks your accumulated monthly Google usage. Check that quota in Google Cloud before optional extraction.

@@ -1,59 +1,55 @@
-# From clicks to settlement: a reproducible, quality-adjusted investment thesis on NEAR
+# From clicks to settlement: a reproducible investment thesis on NEAR
 
-Built for the NEAR Hackathon 2026, track **Investment Thesis** (`thesis`). Work in progress until 2026-11-14.
+Built for NEAR Hackathon 2026, track **Investment Thesis** (`thesis`).
 
-**Claim under test.** NEAR's economic activity is shifting from high-count, low-value retail transactions
-(the 2024 mini-app era) to lower-count, higher-value cross-chain settlement through NEAR Intents. Raw activity
-metrics (transactions, active accounts) understate the network; value-weighted and quality-adjusted metrics
-show growth decoupled from the token price. `THESIS.md` holds the claim, the evidence for it, the evidence
-against it, and the result that would change our mind.
+**Question:** do falling account counts obscure a shift toward cross-chain settlement, and does the evidence support a token investment case? The project compares activity, behavioral proxies, Intents flows, net captured fees and forward associations. It reports failed cross-checks and inconclusive statistical tests. Settlement growth alone does not establish undervaluation.
 
-![dashboard](docs/dashboard.png)
+[Dashboard](https://ngzeggers.github.io/near-value-shift/) · [Generated argument](THESIS.md) · [Sampling and limits](docs/SAMPLING.md) · [Audit and corrections](docs/VALIDACION_HACKATHON.md)
 
-## What is in the box
-| Layer | What it does | Where |
+## What is implemented
+
+| Layer | Behavior | Code |
 |---|---|---|
-| L0 | Pulls public, key-less sources (NearBlocks, DefiLlama, NEAR RPC, CoinGecko, GitHub) into hashed raw snapshots | `near_thesis/fetch.py`, `data/raw/` |
-| L1 | Quality-Adjusted Active Accounts: behavioral clustering of accounts (BigQuery account-months, or sampled blocks) | `sql/l1_*.sql`, `near_thesis/qaa.py`, `near_thesis/blocks.py` |
-| L2 | NEAR Intents microstructure parsed from raw on-chain `token_diff` events (solver concentration, users, trade size) | `sql/l2_*.sql`, `near_thesis/intents.py`, `near_thesis/blocks.py` |
-| L3 | Structural breaks, VAR / Granger, cointegration, rolling correlations | `near_thesis/econ.py` |
-| L4 | Forward-return signal test and peer-chain relative valuation | `near_thesis/signal.py` |
-| Out | `THESIS.md`, static dashboard in `site/`, executed notebook, on-chain index (stretch) | `near_thesis/thesis.py`, `near_thesis/site.py`, `near_thesis/onchain.py` |
+| L0 | Hashed public snapshots, including gross Intents fees, net captured receipts and buyback-labelled revenue | `near_thesis/fetch.py`, `data/raw/` |
+| L1 | Retrospective HDBSCAN; separate frozen past-only GMM for predictive QAA, with next-month availability | `near_thesis/qaa.py` |
+| L2 | Multi-participant token-diff flow estimate, zero-event days, observed user counts, heuristic solver sensitivity | `near_thesis/intents.py`, `data/blocks/` |
+| L3 | Breaks, correlations, stationarity-gated VAR, stability/residual checks, explicit Johansen ranks | `near_thesis/econ.py` |
+| L4 | Forward associations with block-bootstrap and familywise intervals; descriptive peer panel; capture-based scenarios | `near_thesis/signal.py` |
+| Output | Generated thesis, static dashboard, executed notebook, complete input hashes, regression tests | `THESIS.md`, `site/`, `tests/` |
 
-## Reproduce (do X, see Y)
-Requirements: [uv](https://docs.astral.sh/uv/) (it installs Python 3.12 itself). No Google credentials needed.
+QAA labels are behavioral assumptions, not verified human identities. The Intents sample is not a validated total or guaranteed lower bound. Buyback-labelled receipts are not proof of burning or holder dividends. The generated argument names the current consistency-test result and remaining limitations.
 
-1. `uv sync --all-extras` -> a `.venv` is created with every dependency.
-2. `make build` -> rebuilds every table, model output, chart and `THESIS.md`
-   from the raw snapshots committed in `data/raw/`, `data/blocks/` and `data/bigquery/`. It takes about 15 minutes on a
-   laptop (HDBSCAN on 32K account-months plus the bootstraps); no network is used. You should see
-   `data/derived/daily.csv`, `data/derived/models/*.json`, `site/index.html`, and a regenerated `THESIS.md` with no
-   diff against the committed one (the build is deterministic; CI checks this).
-3. `make serve` -> open http://localhost:8080 and you should see the dashboard: every chart with its source
-   query and one plain sentence.
-4. `make test` -> unit tests for the metric functions pass.
-5. Open `site/walkthrough.html` -> the executed notebook with every model output.
-6. Optional, refresh data: `make fetch` (public APIs) and either `make blocks` (samples full blocks from FastNear's
-   public block API, no credentials; the API allows ~0.35 blocks/s, so the default 4,900-block sample takes 4-5 hours,
-   is cached and resumable, and `BLOCKS=100` tops it up) or `make bq` (BigQuery, see `docs/SETUP_BIGQUERY.md`; dry-runs every
-   query and refuses any above `BQ_MAX_GB_PER_QUERY`). L1 and L2 use the BigQuery extract when present and the
-   block sample otherwise; THESIS.md states which.
-7. Optional, on-chain index: `make onchain` writes `data/derived/onchain_index.json` and prints the payload that `make onchain SEND=1` would write to NEAR Social; `make onchain-verify` reads it back from the chain by RPC and checks that its `THESIS.md` hash matches this checkout
-   on testnet (needs `NEAR_ACCOUNT_ID` and `NEAR_PRIVATE_KEY` in `.env`; signing is a human decision).
+## Reproduce: do X, see Y
 
-## What NEAR does in this product
-NEAR is both the subject and the data layer: NEAR RPC and FastNear's block API supply raw blocks, receipts and
-`intents.near` event logs; the public BigQuery dataset `crypto_near_mainnet_us` supplies account-level history;
-NEAR Social on testnet is where the index is published so the key numbers can be verified without trusting this repo.
+Requirements: [uv](https://docs.astral.sh/uv/); Python 3.12 is configured by CI. No Google account or wallet keys are needed.
 
-## Data sources and integrity
-Every number in `THESIS.md` and the dashboard is produced by the pipeline from the snapshots in `data/`.
-Nothing is typed by hand. If a metric cannot be computed from these sources, `THESIS.md` says so.
-Snapshot hashes are listed in `docs/REPRODUCIBILITY.md` (generated).
+1. `uv sync --all-extras` → installs the locked dependencies.
+2. `make build` → rebuilds tables, models, chart data, `THESIS.md`, `site/index.html`, `site/walkthrough.html` and the local index from committed inputs. It uses no external HTTP requests. Jupyter opens localhost ports for its kernel, so environments must permit that. The build reuses matching fitted descriptive assignments and the serialized past-only model. `QAA_REFIT=1 make models` explicitly retrains them.
+3. `make test` → runs metric, causal-availability, pricing, solver-mode, freshness, index-verification and regression tests.
+4. `make check-generated` → exits successfully with no analytical changes against the committed artifacts. Run this after a build; a changed raw snapshot requires regenerating and committing its outputs.
+5. `make serve` → open http://localhost:8080. Each chart provides its source/query, a table view and a short explanation. Theme and date-range controls are available.
+6. Open http://localhost:8080/walkthrough.html → see the executed model walkthrough, diagnostics and revenue definitions.
 
-## Disclosure
-Libraries: see `pyproject.toml`. Parts of the code were written with Claude Code (Anthropic); all queries,
-models and conclusions were reviewed by the team. No pre-existing project was reused.
+Generated text and source hashes are compared exactly. Numerical arrays allow only `rtol=1e-9`, `atol=1e-11` for machine precision; stale market caps and changed methods still fail the check.
 
-## License
-MIT. See `LICENSE`.
+Build time varies by machine; price tables are loaded once and bootstrap correlations are batched. Retraining clustering costs more than a normal cached build. Snapshot acquisition is separate from build time.
+
+## Refreshing data and optional integrations
+
+`make fetch` refreshes public APIs. `make blocks BLOCKS=100` tops up the cached FastNear block plan; acquiring thousands of public blocks can take hours under rate limits. Rebuild afterward. Snapshot acquisition timestamps and complete SHA-256 hashes are generated into `docs/REPRODUCIBILITY.md`.
+
+`make bq` is optional. It checks dataset freshness **before** L1/L2, estimates query size, sets a server-side byte ceiling and limits each run. See `docs/SETUP_BIGQUERY.md`; actual Google query/schema execution is not claimed for the block-sample build. Q0–Q3 auxiliary extracts are available for manual cross-checks; QAA and Intents consume L1/L2 extracts when present.
+
+`make onchain` prints a dry-run NEAR Social payload. `make onchain SEND=1` signs only with an explicitly configured account/key. `make onchain-verify` compares all local index fields against the published record, including hashes. The index is **not claimed published** without a transaction reference. Keys belong only in `.env`, which is ignored.
+
+## NEAR's concrete role
+
+NEAR is both the subject and the evidence layer: FastNear supplies NEAR blocks and receipts, and `intents.near` logs expose settlement activity. NearBlocks supplies daily activity; DefiLlama/Dune supplies reported settlement and revenue-wallet series. NEAR Social publication is an optional stretch. BigQuery, Explorer JWT and a deployed contract are not mandatory integrations for this track.
+
+## Submission
+
+Official rules: [HACKATHON.md](https://nearhackathon.com/HACKATHON.md). Deadline: 14 November 2026, 23:59 UTC. The public repository and an actual demo post on X are both required. `docs/DEMO.md` contains a storyboard and draft; the team supplies identity/contact details, mainnet payout address, demo-post link and consent before reviewing the final submission payload.
+
+## Disclosure and license
+
+Libraries and locked versions: `pyproject.toml` and `uv.lock`. Parts of the original implementation used Claude Code; the correction pass and regression checks used Codex. No pre-existing product is declared reused. This is research software; its statistical and sampling limits are part of the deliverable. MIT; see `LICENSE`.

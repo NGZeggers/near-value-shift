@@ -130,7 +130,7 @@ def batches_from_events(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["block_date", "receipt_id", "account", "intent_hash", "token", "amount"])
 
 
-def identify_solvers(legs: pd.DataFrame) -> pd.DataFrame:
+def identify_solvers(legs: pd.DataFrame, *, sampled: bool = False, min_share: float = SOLVER_MIN_BATCH_SHARE) -> pd.DataFrame:
     """Per (day, account): batches, distinct counterparties, is_solver."""
     pairs = legs[["block_date", "receipt_id", "account"]].drop_duplicates()
     cp = pairs.merge(pairs, on=["block_date", "receipt_id"], suffixes=("", "_other"))
@@ -139,8 +139,8 @@ def identify_solvers(legs: pd.DataFrame) -> pd.DataFrame:
     per_day = pairs.groupby("block_date")["receipt_id"].nunique()
     stats["batch_share"] = stats["batches"] / stats["block_date"].map(per_day)
     absolute = (stats["batches"] >= SOLVER_MIN_BATCHES) & (stats["counterparties"] >= SOLVER_MIN_COUNTERPARTIES)
-    relative = (stats["batch_share"] >= SOLVER_MIN_BATCH_SHARE) & (stats["counterparties"] >= 5) & (stats["batches"] >= 5)
-    stats["is_solver"] = absolute | relative
+    relative = (stats["batch_share"] >= min_share) & (stats["counterparties"] >= 5) & (stats["batches"] >= 5)
+    stats["is_solver"] = (absolute | relative) if sampled else absolute
     return stats
 
 
@@ -174,10 +174,16 @@ def daily_metrics(legs: pd.DataFrame, roles: pd.DataFrame, events: pd.DataFrame,
     wd = events[events["event"].str.endswith("_withdraw", na=False)].groupby("block_date").size()
     for day, g in legs.groupby("block_date"):
         users = g[~g["is_solver"]]
-        # value of a batch = the largest priced outflow of any party (for a two-party swap, the notional once);
-        # independent of who is classified as a solver, so thin samples do not drop or double-count batches
-        out = g[(g["amount"] < 0)].dropna(subset=["usd"])
-        per_batch = out.groupby(["receipt_id", "account"])["usd"].sum().groupby("receipt_id").max()
+        # Half the gross participant notional: for each account-intent take the larger
+        # priced inflow/outflow, then sum both sides and divide by two. This retains
+        # multiple trades in a receipt and works when only the common stable leg is priced.
+        # This is a flow estimator, not a guaranteed swap reconstruction for routed batches.
+        priced = g.dropna(subset=["usd"]).copy()
+        priced["intent_key"] = priced["intent_hash"].fillna("legacy")
+        priced["direction"] = np.where(priced["amount"] < 0, "out", "in")
+        flows = priced.groupby(["receipt_id", "account", "intent_key", "direction"])["usd"].sum().unstack(fill_value=0)
+        per_batch = flows.max(axis=1).groupby("receipt_id").sum() / 2
+        complete = g.groupby("receipt_id")["usd"].apply(lambda a: a.notna().all())
         solver_vol = g[g["is_solver"] & (g["amount"] < 0)].dropna(subset=["usd"]).groupby("account")["usd"].sum()
         solver_batches = g[g["is_solver"]].groupby("account")["receipt_id"].nunique()
         conc = solver_vol if len(solver_vol) else solver_batches
@@ -186,6 +192,7 @@ def daily_metrics(legs: pd.DataFrame, roles: pd.DataFrame, events: pd.DataFrame,
             "date": pd.Timestamp(day), "batches": int(g["receipt_id"].nunique()), "users": int(users["account"].nunique()),
             "solvers": int(g.loc[g["is_solver"], "account"].nunique()),
             "volume_priced_usd": float(per_batch.sum()), "priced_batch_share": float(len(per_batch) / max(1, g["receipt_id"].nunique())),
+            "fully_priced_batch_share": float(complete.mean()), "priced_legs": int(g["usd"].notna().sum()), "total_legs": int(len(g)),
             "median_trade_usd": float(per_batch.median()) if len(per_batch) else np.nan,
             "p90_trade_usd": float(per_batch.quantile(0.9)) if len(per_batch) else np.nan,
             "hhi_solver": hhi(top.to_numpy(dtype=float)) if len(top) else np.nan,
@@ -205,7 +212,7 @@ def monthly_estimates(daily: pd.DataFrame, n_boot: int = 2000, seed: int = 11) -
         dim = month.days_in_month
         v = g["volume_priced_usd"].to_numpy()
         est = v.mean() * dim
-        boots = [rng.choice(v, size=len(v), replace=True).mean() * dim for _ in range(n_boot)] if len(v) > 1 else [est]
+        boots = [rng.choice(v, size=len(v), replace=True).mean() * dim for _ in range(n_boot)] if len(v) > 1 else [np.nan]
         rows.append({"month": month.to_timestamp(), "sampled_days": int(len(v)), "volume_est_usd": float(est),
                      "volume_ci_lo": float(np.quantile(boots, 0.025)), "volume_ci_hi": float(np.quantile(boots, 0.975)),
                      "users_per_day": float(g["users"].mean()), "solvers_per_day": float(g["solvers"].mean()),
@@ -223,7 +230,7 @@ def quarterly_estimates(daily: pd.DataFrame, llama: pd.Series, n_boot: int = 200
         days = int(len(ll_q)) or (q.end_time - q.start_time).days + 1  # a partial quarter is compared on the days DefiLlama has
         v = g["volume_priced_usd"].to_numpy()
         est = v.mean() * days
-        boots = [rng.choice(v, size=len(v), replace=True).mean() * days for _ in range(n_boot)] if len(v) > 1 else [est]
+        boots = [rng.choice(v, size=len(v), replace=True).mean() * days for _ in range(n_boot)] if len(v) > 1 else [np.nan]
         ll = ll_q.sum()
         rows.append({"quarter": q.start_time, "sampled_days": int(len(v)), "days": days, "volume_est_usd": float(est),
                      "volume_ci_lo": float(np.quantile(boots, 0.025)), "volume_ci_hi": float(np.quantile(boots, 0.975)),
@@ -286,15 +293,21 @@ def run() -> dict:
         (MODELS / "intents_status.json").write_text(json.dumps(status, indent=1))
         print("L2: no token_diff events found")
         return status
-    roles = identify_solvers(legs)
-    daily = daily_metrics(legs, roles, events, _daily_prices())
+    roles = identify_solvers(legs, sampled=source != "bigquery")
+    prices = _daily_prices()
+    daily = daily_metrics(legs, roles, events, prices)
     if source != "bigquery":
         ef = expansion_factors(raw)
+        # All usable sampled days belong to the sampling frame, including observed zero-event days.
+        daily = daily.set_index("date").reindex(pd.DatetimeIndex(sorted(pd.Timestamp(day) for day in ef.index))).rename_axis("date").reset_index()
+        zero_cols = ["batches", "users", "solvers", "volume_priced_usd", "withdraw_events", "priced_legs", "total_legs"]
+        daily[zero_cols] = daily[zero_cols].fillna(0)
         f_ = daily["date"].dt.date.map(ef).fillna(1.0)
         daily["expansion_factor"] = f_
-        for c in ["batches", "users", "volume_priced_usd", "withdraw_events"]:
+        daily["users_sampled"] = daily["users"]
+        for c in ["batches", "volume_priced_usd", "withdraw_events"]:
             daily[c + "_sampled"] = daily[c]
-            daily[c] = daily[c] * f_          # users expanded is an upper bound (the same user can appear in other windows)
+            daily[c] = daily[c] * f_
     monthly = monthly_estimates(daily)
     llama = pd.read_csv(DERIVED / "daily.csv", parse_dates=["date"]).set_index("date")["intents_volume_usd"]
     quarterly = quarterly_estimates(daily, llama)
@@ -309,16 +322,33 @@ def run() -> dict:
         man = json.loads((DATA / "blocks" / "sample_manifest.json").read_text())
         coverage = {"blocks_fetched": man.get("blocks_fetched"), "blocks_requested": man.get("blocks_requested"), "sample_complete": man.get("complete"),
                     "days_with_blocks": len({w["day"] for w in man["windows"] if w.get("usable", True) and w.get("fetched", w["n"])})}
-    out_ = legs[legs["amount"] < 0].copy()
-    out_["usd"] = [price_leg(t, a, _daily_prices().get(str(d), {})) for t, a, d in zip(out_["token"], out_["amount"], out_["block_date"])]
-    pb = out_.dropna(subset=["usd"]).groupby(["receipt_id", "account"])["usd"].sum().groupby("receipt_id").max()
+    out_ = legs.copy()
+    out_["usd"] = [price_leg(t, a, prices.get(str(d), {})) for t, a, d in zip(out_["token"], out_["amount"], out_["block_date"])]
+    out_["intent_key"] = out_["intent_hash"].fillna("legacy")
+    out_["direction"] = np.where(out_["amount"] < 0, "out", "in")
+    pb = out_.dropna(subset=["usd"]).groupby(["receipt_id", "account", "intent_key", "direction"])["usd"].sum().unstack(fill_value=0).max(axis=1).groupby("receipt_id").sum() / 2
     tail = {"priced_batches": int(len(pb)), "max_batch_usd": float(pb.max()) if len(pb) else None,
             "top1pct_share": float(pb[pb >= pb.quantile(0.99)].sum() / pb.sum()) if len(pb) else None,
             "top10pct_share": float(pb[pb >= pb.quantile(0.90)].sum() / pb.sum()) if len(pb) else None}
-    status = {"computed": True, "source": source, "coverage": coverage, "ratio_to_defillama": ratio, "sample_tail": tail, "sampled_days": int(daily["date"].nunique()), "events": int(len(raw)), "token_diff_legs": int(len(legs)),
+    sensitivity = []
+    if source != "bigquery":
+        for share in [0.01, 0.02, 0.05]:
+            rr = identify_solvers(legs, sampled=True, min_share=share)
+            dm = daily_metrics(legs, rr, events, prices)
+            sensitivity.append({"min_batch_share": share, "solver_accounts": int(rr.loc[rr.is_solver, "account"].nunique()),
+                                "mean_hhi": float(dm.hhi_solver.mean())})
+    (MODELS / "intents_solver_sensitivity.json").write_text(json.dumps(sensitivity, indent=1) + "\n")
+    status = {"computed": True, "source": source, "coverage": coverage, "ratio_to_defillama": ratio, "sample_tail": tail, "sampled_days": int(daily["date"].nunique()), "days_with_token_diff": int(legs.block_date.nunique()), "events": int(len(raw)), "token_diff_legs": int(len(legs)),
               "solver_accounts": int(len(solvers)), "priced_batch_share_mean": float(daily["priced_batch_share"].mean()),
+              "fully_priced_batch_share_mean": float(daily["fully_priced_batch_share"].mean()),
+              "priced_leg_share": float(out_["usd"].notna().mean()),
+              "volume_method": "half gross participant notional: sum max(priced inflow, priced outflow) per account-intent / 2; fixed-window expansion; not a validated total or guaranteed lower bound",
+              "cross_check_passed": bool(ratio and ratio["ci_lo"] <= 1 <= ratio["ci_hi"]),
               "event_counts": events["event"].value_counts().to_dict(),
-              "assumptions": {"solver_min_batches_per_day": SOLVER_MIN_BATCHES, "solver_min_counterparties": SOLVER_MIN_COUNTERPARTIES}}
+              "assumptions": {"solver_min_batches_per_day": SOLVER_MIN_BATCHES, "solver_min_counterparties": SOLVER_MIN_COUNTERPARTIES,
+                              "mode": "absolute or (batch share >= 2%, batches >= 5, counterparties >= 5)" if source != "bigquery" else "absolute only",
+                              "users": "observed unique accounts in windows; never expanded to daily unique users",
+                              "intervals": "conditional day bootstrap; excludes intraday, routing and price uncertainty; not a population confidence guarantee"}}
     (MODELS / "intents_status.json").write_text(json.dumps(status, indent=1, default=str))
     print(f"L2: {len(raw):,} events on {status['sampled_days']} days -> {len(solvers)} solver accounts, priced share {status['priced_batch_share_mean']:.0%}")
     return status

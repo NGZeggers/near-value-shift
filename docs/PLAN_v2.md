@@ -1,5 +1,7 @@
 # Plan v2: "From clicks to settlement" (NEAR Investment Thesis, track `thesis`)
 
+> Historical planning checkpoint. Current implementation, results and remaining limits are described in README.md, THESIS.md and docs/VALIDACION_HACKATHON.md.
+
 Status: proposal after the first checkpoint. Supersedes the descriptive-only plan in DATA_PLAN.md.
 Team: two data-science master's students + Claude Code. Deadline 2026-11-14 23:59 UTC.
 
@@ -120,3 +122,15 @@ Must ship: L0 + L1 + L3 + deliverables. Next: L2 (sampled). Last: L4 scenarios, 
 | Out | THESIS.md generated and deterministic, dashboard (light/dark, tooltips, table views, range filter), executed notebook, CI + Pages workflow, demo script |
 | Stretch | on-chain index publisher to NEAR Social testnet implemented as dry run; signing waits for the team's keys |
 | Pending on the team | BigQuery sandbox (optional now), GitHub repo + push, X post, mainnet payout account, video |
+
+## Correction pass after validation (supersedes the status table above)
+
+The historical status table is retained as the original checkpoint; its claims of stable quarterly recovery, a guaranteed volume lower bound and completed predictive validation are superseded by `THESIS.md` and `docs/VALIDACION_HACKATHON.md`.
+
+- QAA self-calls and observation-window normalization corrected; magnitude/schema/key-preserving cache hashes replace the old normalization. Descriptive assignments are regenerated.
+- A separate frozen calibration model releases subsequent monthly QAA only after month-end; future samples cannot alter its calibration. Proxy-anchor profiles and strict/ambiguous sensitivity are output.
+- Intents retains multiple account-intents, observed zero-event days and unexpanded users. Relative solver rules apply only in sampled mode; pricing is loaded once; role sensitivity is generated. Full-population validation remains unresolved unless the computed consistency criterion passes.
+- Net-captured and buyback-labelled revenue snapshots replace the outdated assumption that no capture mechanism exists. Purchase execution and burning are not independently audited.
+- VAR stationarity/stability/residual checks gate inference; Johansen reports full rank separately. IC intervals distinguish exploratory from familywise results; half splits are not called walk-forward evaluation.
+- CI checks all relevant committed analytical artifacts, not just rounded thesis text. Deployment errors fail the deploy job.
+- Repository, public demo and CI status are verified during release; final team details and the X demo-post URL are supplied by the human. See `docs/DEMO.md`.

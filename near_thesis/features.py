@@ -50,8 +50,11 @@ def nearblocks_daily() -> pd.DataFrame:
     return out.sort_values("date").reset_index(drop=True)
 
 
-def _llama_chart(name: str, key: str = "totalDataChart") -> pd.Series:
-    d = load_raw(name)["data"]
+def _llama_chart(name: str, key: str = "totalDataChart", *, optional: bool = False) -> pd.Series:
+    raw = load_raw(name, optional=optional)
+    if raw is None:
+        return pd.Series(dtype=float)
+    d = raw["data"]
     pts = d[key]
     s = pd.Series({pd.Timestamp(int(t), unit="s"): float(v) for t, v in pts if v is not None})
     return s.sort_index()
@@ -78,6 +81,8 @@ def build_daily() -> pd.DataFrame:
     nb = nearblocks_daily().set_index("date")
     nb["intents_volume_usd"] = _llama_chart("llama_intents_volume")
     nb["intents_fees_usd"] = _llama_chart("llama_intents_fees")
+    nb["intents_revenue_usd"] = _llama_chart("llama_intents_revenue", optional=True)
+    nb["intents_holders_revenue_usd"] = _llama_chart("llama_intents_holders_revenue", optional=True)
     nb["near_dex_volume_usd"] = _llama_chart("llama_dexs_near")
     nb["near_app_fees_usd"] = _llama_chart("llama_fees_near")      # DefiLlama "fees" = app-level fees on NEAR (Intents dominates)
     nb["tvl_usd"] = _llama_tvl("near")
@@ -97,10 +102,10 @@ def build_daily() -> pd.DataFrame:
 def build_monthly(daily: pd.DataFrame) -> pd.DataFrame:
     d = daily.set_index("date")
     sums = ["txns", "new_accounts", "tx_fee_usd", "tx_volume_usd", "intents_volume_usd", "intents_fees_usd",
-            "near_dex_volume_usd", "near_app_fees_usd", "tx_fee_near"]
+            "near_dex_volume_usd", "near_app_fees_usd", "tx_fee_near", "intents_revenue_usd", "intents_holders_revenue_usd"]
     means = ["active_accounts", "active_contracts", "near_price", "market_cap_usd", "tvl_usd", "stablecoins_usd",
              "usd_per_txn", "price_near", "price_bitcoin", "price_ethereum"]
-    m = pd.concat([d[sums].resample("MS").sum(min_count=1), d[means].resample("MS").mean()], axis=1)
+    m = pd.concat([d.reindex(columns=sums).resample("MS").sum(min_count=1), d[means].resample("MS").mean()], axis=1)
     m["days"] = d["txns"].resample("MS").count()
     m["fees_to_mcap_annualized"] = (m["tx_fee_usd"] * 12) / m["market_cap_usd"]
     m["app_fees_to_mcap_annualized"] = (m["near_app_fees_usd"] * 12) / m["market_cap_usd"]

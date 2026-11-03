@@ -95,9 +95,10 @@ def verify(account_id: str | None = None, network: str | None = None) -> bool:
         print(f"no index published under {account_id}/near_thesis/index on {network}")
         return False
     local = payload()
-    same = chain.get("thesis_sha256") == local["thesis_sha256"]
+    mismatches = [k for k, v in local.items() if chain.get(k) != v]
+    same = not mismatches
     print(json.dumps({"network": network, "account": account_id, "published_at": chain.get("published_at"), "as_of_chain": chain.get("as_of"),
-                      "as_of_local": local["as_of"], "thesis_sha256_matches": same, "chain": chain}, indent=1))
+                      "as_of_local": local["as_of"], "index_matches": same, "mismatched_fields": mismatches, "chain": chain}, indent=1))
     return same
 
 

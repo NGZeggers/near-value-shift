@@ -34,13 +34,13 @@
    "Sui"
   ],
   "values": {
-   "Polygon": 0.5010223674999261,
-   "Arbitrum": 0.2031857127807601,
-   "Solana": 0.08440364589278372,
-   "Avalanche": 0.029441102297920647,
-   "Aptos": 0.028916344420164965,
-   "Near": 0.01669593650384804,
-   "Sui": 0.010785818769831836
+   "Polygon": 0.4982191414268992,
+   "Arbitrum": 0.20586535551197227,
+   "Solana": 0.08399142917022855,
+   "Avalanche": 0.029176908656029645,
+   "Aptos": 0.02888851970381948,
+   "Near": 0.01673970594918126,
+   "Sui": 0.01072217328090579
   },
   "near_rank": 6,
   "n": 7
@@ -76,10 +76,10 @@
    "dex_volume_30d_usd": 4200673428.86,
    "app_fees_30d_usd": 7070275.350000001,
    "stablecoins_usd": 129030765.27,
-   "market_cap_usd": 5081673866.0,
+   "market_cap_usd": 5068386772.0,
    "has_native_token": true,
    "dex_volume_to_tvl_30d": 21.40264221717312,
-   "fees_to_mcap_annualized": 0.01669593650384804,
+   "fees_to_mcap_annualized": 0.01673970594918126,
    "stables_to_tvl": 0.6574182332548792
   },
   {
@@ -88,10 +88,10 @@
    "dex_volume_30d_usd": 56152425258.22997,
    "app_fees_30d_usd": 381163645.1199987,
    "stablecoins_usd": 15359951592.78,
-   "market_cap_usd": 54191542238.0,
+   "market_cap_usd": 54457505803.0,
    "has_native_token": true,
    "dex_volume_to_tvl_30d": 10.204552990912726,
-   "fees_to_mcap_annualized": 0.08440364589278372,
+   "fees_to_mcap_annualized": 0.08399142917022855,
    "stables_to_tvl": 2.7913565486364287
   },
   {
@@ -112,10 +112,10 @@
    "dex_volume_30d_usd": 4826993164.210005,
    "app_fees_30d_usd": 18205289.440000076,
    "stablecoins_usd": 3795336415.99,
-   "market_cap_usd": 1075191116.0,
+   "market_cap_usd": 1061195910.0,
    "has_native_token": true,
    "dex_volume_to_tvl_30d": 3.323997605837055,
-   "fees_to_mcap_annualized": 0.2031857127807601,
+   "fees_to_mcap_annualized": 0.20586535551197227,
    "stables_to_tvl": 2.6135709604141644
   },
   {
@@ -124,10 +124,10 @@
    "dex_volume_30d_usd": 5722358980.61,
    "app_fees_30d_usd": 38874234.35000025,
    "stablecoins_usd": 3342906099.99,
-   "market_cap_usd": 931077817.0,
+   "market_cap_usd": 936316519.0,
    "has_native_token": true,
    "dex_volume_to_tvl_30d": 8.42270421938111,
-   "fees_to_mcap_annualized": 0.5010223674999261,
+   "fees_to_mcap_annualized": 0.4982191414268992,
    "stables_to_tvl": 4.920402478905506
   },
   {
@@ -136,10 +136,10 @@
    "dex_volume_30d_usd": 3046493771.48,
    "app_fees_30d_usd": 9060032.759999996,
    "stablecoins_usd": 1345135990.85,
-   "market_cap_usd": 3692809869.0,
+   "market_cap_usd": 3726247849.0,
    "has_native_token": true,
    "dex_volume_to_tvl_30d": 5.195239366234746,
-   "fees_to_mcap_annualized": 0.029441102297920647,
+   "fees_to_mcap_annualized": 0.029176908656029645,
    "stables_to_tvl": 2.2938840440196113
   },
   {
@@ -148,10 +148,10 @@
    "dex_volume_30d_usd": 926558389.28,
    "app_fees_30d_usd": 3225748.659999998,
    "stablecoins_usd": 467921173.57,
-   "market_cap_usd": 3588877650.0,
+   "market_cap_usd": 3610180782.0,
    "has_native_token": true,
    "dex_volume_to_tvl_30d": 2.0014622451148845,
-   "fees_to_mcap_annualized": 0.010785818769831836,
+   "fees_to_mcap_annualized": 0.01072217328090579,
    "stables_to_tvl": 1.0107582786206812
   },
   {
@@ -160,10 +160,10 @@
    "dex_volume_30d_usd": 172918059.55,
    "app_fees_30d_usd": 1315416.32,
    "stablecoins_usd": 791992267.71,
-   "market_cap_usd": 545884902.0,
+   "market_cap_usd": 546410685.0,
    "has_native_token": true,
    "dex_volume_to_tvl_30d": 4.171638428379689,
-   "fees_to_mcap_annualized": 0.028916344420164965,
+   "fees_to_mcap_annualized": 0.02888851970381948,
    "stables_to_tvl": 19.106768764099343
   }
  ]

@@ -23,6 +23,7 @@ NUMERIC = ["log_txns", "active_day_share", "log_receivers", "self_share", "log_g
            "fc_share", "transfer_share", "log_methods", "log_contracts", "intents_share", "log_deposit"]
 NAME_CLASSES = ["tg", "sweat", "implicit", "named", "other"]
 SAMPLE_MAX = 250_000
+METHOD_VERSION = "qaa-v3-self-calls-windows"
 
 
 def load_inputs() -> pd.DataFrame | None:
@@ -54,9 +55,10 @@ def load_sampled() -> pd.DataFrame | None:
     t["month"] = pd.to_datetime(t["window_day"]).dt.to_period("M").dt.to_timestamp()
     t["window"] = t["window_day"] + "T" + t["window_hour"].astype(str)
     t["deposit"] = pd.to_numeric(t["deposit"], errors="coerce").fillna(0)
+    t["is_self"] = t["signer"].eq(t["receiver"])
     g = t.sort_values("block_timestamp").groupby(["month", "signer"])
     base = g.agg(txns=("receiver", "size"), active_days=("window", "nunique"), distinct_receivers=("receiver", "nunique"),
-                 self_txns=("receiver", lambda r: int((r == r.name[1]).sum()) if hasattr(r, "name") else 0),
+                 self_txns=("is_self", "sum"),
                  actions=("action_kind", "size"), function_calls=("action_kind", lambda a: int((a == "FUNCTION_CALL").sum())),
                  transfers=("action_kind", lambda a: int((a == "TRANSFER").sum())), distinct_methods=("method", "nunique"),
                  distinct_contracts=("receiver", "nunique"), intents_actions=("receiver", lambda r: int((r == "intents.near").sum())),
@@ -65,6 +67,8 @@ def load_sampled() -> pd.DataFrame | None:
     gaps = t.sort_values("block_timestamp").groupby(["month", "signer", "window"])["block_timestamp"].apply(lambda x: x.diff().dropna() / 1e9)
     gs = gaps.groupby(level=[0, 1]).agg(gap_median_s="median", gap_cv=lambda x: float(x.std() / x.mean()) if len(x) > 1 and x.mean() else np.nan).reset_index().rename(columns={"signer": "account"})
     df = base.merge(gs, on=["month", "account"], how="left")
+    windows = t.groupby("month")["window"].nunique()
+    df["observation_periods"] = df["month"].map(windows)
     a = df["account"].astype(str)
     df["name_class"] = np.select([a.str.endswith(".tg"), a.str.endswith(".sweat"), a.str.fullmatch(r"[0-9a-f]{64}"), a.str.endswith(".near")],
                                  ["tg", "sweat", "implicit", "named"], "other")
@@ -75,7 +79,7 @@ def featurize(df: pd.DataFrame) -> pd.DataFrame:
     x = pd.DataFrame(index=df.index)
     days = df["month"].dt.days_in_month
     x["log_txns"] = np.log1p(df["txns"])
-    x["active_day_share"] = df["active_days"] / days
+    x["active_day_share"] = df["active_days"] / df.get("observation_periods", days)
     x["log_receivers"] = np.log1p(df["distinct_receivers"])
     x["self_share"] = df["self_txns"] / df["txns"].clip(lower=1)
     x["log_gap_median"] = np.log1p(df.get("gap_median_s", pd.Series(np.nan, index=df.index)).fillna(days * 86400))
@@ -119,7 +123,7 @@ def fit_clusters(x: pd.DataFrame, *, k_range=range(3, 9)) -> tuple[np.ndarray, d
                 best, best_bic = g, b
         labels = best.predict(z)
         info["algorithm"] = f"gmm_diag_k{best.n_components}_bic"
-    ev = np.random.default_rng(3).choice(n, size=min(20_000, n), replace=False)
+    ev = np.random.default_rng(3).choice(n, size=min(3_000, n), replace=False)
     mask = labels[ev] >= 0
     if mask.sum() > 100 and len(np.unique(labels[ev][mask])) > 1:
         info["silhouette_sample"] = float(silhouette_score(z[ev][mask], labels[ev][mask]))
@@ -156,11 +160,76 @@ QUALITY = {"human_multi_app", "human_light", "intents_participant"}
 
 
 def _input_hash(x: pd.DataFrame) -> str:
-    """Hash of the feature matrix rounded to 6 significant digits (stable across platforms, sensitive to real changes)."""
-    arr = np.asarray(x.to_numpy(dtype=float))
-    with np.errstate(all="ignore"):
-        rounded = np.where(arr == 0, 0.0, np.round(arr / 10.0 ** np.floor(np.log10(np.abs(arr) + 1e-300)), 5))
-    return hashlib.sha256(np.ascontiguousarray(np.nan_to_num(rounded)).tobytes()).hexdigest()
+    """Canonical decimal serialization retains exponents, schema, row keys and method version."""
+    h = hashlib.sha256(json.dumps([METHOD_VERSION, list(x.columns), [str(i) for i in x.index]], separators=(",", ":")).encode())
+    for row in x.to_numpy(dtype=float):
+        h.update((",".join(format(float(v), ".6g") if v else "0" for v in row) + "\n").encode())
+    return h.hexdigest()
+
+
+def causal_monthly(df: pd.DataFrame, x: pd.DataFrame, *, sampled: bool, calibration_months: int = 6) -> dict:
+    """Freeze a GMM on the first six months; later months never change the calibration.
+
+    Labels describe behavior, not verified people. Publish each result only on the first day
+    of the following month. The model parameters and calibration hash are committed JSON.
+    """
+    months = sorted(df["month"].unique())
+    if len(months) <= calibration_months:
+        pd.DataFrame(columns=["month", "available_at", "qaa"]).to_csv(MODELS / "qaa_causal_monthly.csv", index=False)
+        return {"computed": False, "reason": "not enough months after calibration"}
+    cutoff = pd.Timestamp(months[calibration_months])
+    train = df["month"] < cutoff
+    calibration = x.loc[train].copy()
+    calibration.index = pd.MultiIndex.from_frame(df.loc[train, ["month", "account"]])
+    key = _input_hash(calibration)
+    path = MODELS / "qaa_causal_model.json"
+    saved = json.loads(path.read_text()) if path.exists() else {}
+    if saved.get("calibration_sha256") != key or os.getenv("QAA_REFIT"):
+        scaler = RobustScaler().fit(x.loc[train, NUMERIC])
+        z = np.hstack([scaler.transform(x.loc[train, NUMERIC]), x.loc[train, [f"name_{c}" for c in NAME_CLASSES]].to_numpy()])
+        # Bound calibration work without using any price/return data to choose the model.
+        ix = np.sort(np.random.default_rng(19).choice(len(z), min(10_000, len(z)), replace=False))
+        models = [GaussianMixture(k, covariance_type="diag", random_state=19, n_init=2).fit(z[ix]) for k in range(3, 7) if k <= len(ix)]
+        model = min(models, key=lambda a: a.bic(z[ix]))
+        prof = label_clusters(df.loc[train].reset_index(drop=True), x.loc[train].reset_index(drop=True), model.predict(z))
+        saved = {"method": "frozen_calibration_gmm_diag_bic", "calibration_sha256": key,
+                 "training_start": str(pd.Timestamp(months[0]).date()), "training_end": str((cutoff - pd.Timedelta(days=1)).date()),
+                 "first_prediction_month": str(cutoff.date()), "calibration_months": calibration_months,
+                 "center": scaler.center_.tolist(), "scale": scaler.scale_.tolist(),
+                 "means": model.means_.tolist(), "variances": model.covariances_.tolist(), "weights": model.weights_.tolist(),
+                 "labels": {str(int(r.cluster)): r.label for r in prof.itertuples()}, "k": model.n_components}
+        # Serialize before inference, so persisted parameter precision is exactly what predictions use.
+        saved = json.loads(json.dumps(saved, default=lambda v: int(v)))
+        path.write_text(json.dumps(saved, indent=1) + "\n")
+    pred = df.loc[~train].copy()
+    xp = x.loc[~train]
+    z = np.hstack([(xp[NUMERIC].to_numpy() - np.array(saved["center"])) / np.array(saved["scale"]),
+                   xp[[f"name_{c}" for c in NAME_CLASSES]].to_numpy()])
+    means, var = np.array(saved["means"]), np.array(saved["variances"])
+    scores = np.array([np.log(w) - 0.5 * (np.log(2 * np.pi * v).sum() + ((z - mu) ** 2 / v).sum(axis=1))
+                       for w, mu, v in zip(saved["weights"], means, var)])
+    pred["label"] = [saved["labels"][str(int(k))] for k in scores.argmax(axis=0)]
+    result = pred.groupby("month").agg(accounts=("account", "nunique"))
+    result["qaa_share"] = pred.assign(quality=pred["label"].isin(QUALITY)).groupby("month")["quality"].mean()
+    if sampled:
+        nb = pd.read_csv(DERIVED / "monthly.csv", parse_dates=["month"]).set_index("month")["active_accounts"]
+        result["accounts"] = nb.reindex(result.index)
+    result["qaa"] = result["accounts"] * result["qaa_share"]
+    result["available_at"] = result.index + pd.offsets.MonthBegin(1)
+    result.reset_index().to_csv(MODELS / "qaa_causal_monthly.csv", index=False)
+    return {"computed": True, "method": saved["method"], "training_end": saved["training_end"],
+            "first_available_at": str(result["available_at"].min().date()), "months": len(result), "k": saved["k"]}
+
+
+def available_series(index: pd.DatetimeIndex) -> pd.Series | None:
+    """Only the frozen, out-of-calibration QAA is allowed in predictive models."""
+    f = MODELS / "qaa_causal_monthly.csv"
+    if not f.exists():
+        return None
+    q = pd.read_csv(f, parse_dates=["available_at"])
+    if q.empty:
+        return None
+    return q.set_index("available_at")["qaa"].reindex(index, method="ffill")
 
 
 def run() -> dict:
@@ -176,7 +245,11 @@ def run() -> dict:
         return status
     if source != "bigquery":
         df = df[df["txns"] >= 1]
+    df = df.sort_values(["month", "account"]).reset_index(drop=True)
     x = featurize(df)
+    keyed = x.copy()
+    keyed.index = pd.MultiIndex.from_frame(df[["month", "account"]])
+    input_key = _input_hash(keyed)
     # The fitted assignment is a committed model artifact: HDBSCAN flips a few borderline points between platforms
     # (BLAS differences), which would make THESIS.md differ by a fraction of a percent per machine. The build reuses
     # the committed assignment when it matches the input exactly; `QAA_REFIT=1 make models` refits and rewrites it.
@@ -186,15 +259,14 @@ def run() -> dict:
     if reuse:
         prev = pd.read_csv(assign_path, parse_dates=["month"])
         same_rows = len(prev) == len(df) and prev[key_cols].merge(df[key_cols], on=key_cols).shape[0] == len(df)
-        reuse = same_rows and prev["input_sha256"].iloc[0] == _input_hash(x)
+        reuse = same_rows and prev["input_sha256"].iloc[0] == input_key
     if reuse:
         labels = df[key_cols].merge(prev, on=key_cols, how="left")["cluster"].to_numpy()
         info = json.loads(prev["fit_info"].iloc[0])
-        info["reused_committed_assignment"] = True
     else:
         labels, info = fit_clusters(x)
         pd.DataFrame({"month": df["month"].to_numpy(), "account": df["account"].to_numpy(), "cluster": labels,
-                      "input_sha256": _input_hash(x), "fit_info": json.dumps(info, default=str)}).to_csv(assign_path, index=False)
+                      "input_sha256": input_key, "fit_info": json.dumps(info, default=str)}).to_csv(assign_path, index=False)
     prof = label_clusters(df, x, labels)
     df = df.assign(cluster=labels).merge(prof[["cluster", "label"]], on="cluster", how="left")
     monthly = df.groupby("month").agg(active_accounts_bq=("account", "nunique"))
@@ -202,6 +274,8 @@ def run() -> dict:
     monthly = monthly.join(shares)
     monthly["qaa"] = shares[[c for c in shares.columns if c in QUALITY]].sum(axis=1)
     monthly["qaa_share"] = monthly["qaa"] / monthly["active_accounts_bq"]
+    monthly["quality_share_strict"] = shares.get("human_multi_app", pd.Series(0, index=shares.index)) / monthly["active_accounts_bq"]
+    monthly["quality_share_including_ambiguous"] = 1 - shares[[c for c in shares if c in {"automation", "miniapp_farming"}]].sum(axis=1) / monthly["active_accounts_bq"]
     if source != "bigquery":
         # sampled mode: the share is the estimate; scale it by NearBlocks' monthly mean of daily active accounts
         nb = pd.read_csv(DERIVED / "monthly.csv", parse_dates=["month"]).set_index("month")["active_accounts"]
@@ -210,8 +284,14 @@ def run() -> dict:
         monthly["qaa"] = monthly["qaa_share"] * monthly["active_accounts_bq"]
     monthly.reset_index().to_csv(MODELS / "qaa_monthly.csv", index=False)
     prof.to_csv(MODELS / "qaa_clusters.csv", index=False)
+    # Proxy anchors are assumptions; never report this as human/bot ground-truth accuracy.
+    anchors = np.where(df["account"].str.endswith((".tg", ".sweat")), "miniapp_name_proxy", "unverified")
+    pd.crosstab(pd.Series(anchors, name="anchor_proxy"), df["label"]).to_csv(MODELS / "qaa_anchor_profiles.csv")
+    causal = causal_monthly(df, x, sampled=source != "bigquery")
     status = {"computed": True, "source": source, **info, "months": int(monthly.shape[0]),
-              "labels": prof.set_index("cluster")["label"].to_dict(), "quality_labels": sorted(QUALITY)}
+              "labels": prof.set_index("cluster")["label"].to_dict(), "quality_labels": sorted(QUALITY),
+              "method_version": METHOD_VERSION, "causal": causal,
+              "validation": "silhouette is geometric separation; anchor profiles use name proxies, not verified people; sensitivity shares reported monthly"}
     (MODELS / "qaa_status.json").write_text(json.dumps(status, indent=1, default=str))
     print(f"L1: {info['algorithm']} on {info['n']:,} account-months -> {len(prof)} clusters, QAA for {len(monthly)} months")
     return status

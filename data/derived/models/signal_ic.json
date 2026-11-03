@@ -9,11 +9,19 @@
   "spearman_ic": 0.0844104865871842,
   "p_value_naive": 0.14880918474749838,
   "ci95_block_bootstrap": [
-   -0.09694993702860141,
-   0.2616057305655746
+   -0.10832194153168152,
+   0.27437725552147163
   ],
   "ic_first_half": 0.1410966459890139,
   "ic_second_half": -0.028953751067254004,
+  "ci95_familywise_bonferroni": [
+   -0.2101225122188574,
+   0.40010389454316725
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 8,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -26,11 +34,19 @@
   "spearman_ic": 0.041622641999473485,
   "p_value_naive": 0.47711677093271004,
   "ci95_block_bootstrap": [
-   -0.13966171805584712,
-   0.20908072072542175
+   -0.15558060735465387,
+   0.2335290017929484
   ],
   "ic_first_half": 0.11315159162517283,
   "ic_second_half": -0.06758267912866739,
+  "ci95_familywise_bonferroni": [
+   -0.2784146718538537,
+   0.330863711895685
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 8,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -43,11 +59,19 @@
   "spearman_ic": -0.025109934994402255,
   "p_value_naive": 0.6724014244400941,
   "ci95_block_bootstrap": [
-   -0.25217943309455415,
-   0.1795835792351734
+   -0.2517067275631539,
+   0.18945336968944723
   ],
   "ic_first_half": -0.03041793886864309,
   "ic_second_half": -0.05619439246199809,
+  "ci95_familywise_bonferroni": [
+   -0.3753794087690245,
+   0.32690957278153693
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 12,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -60,11 +84,19 @@
   "spearman_ic": -0.008532930484149995,
   "p_value_naive": 0.8857566486990283,
   "ci95_block_bootstrap": [
-   -0.2885804703790835,
-   0.2620088836116473
+   -0.276545834678016,
+   0.24391874080113596
   ],
   "ic_first_half": -0.0658097770773827,
   "ic_second_half": 0.09067106602317869,
+  "ci95_familywise_bonferroni": [
+   -0.40090830624094687,
+   0.4073891870016132
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 12,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -77,11 +109,19 @@
   "spearman_ic": -0.06848014846593466,
   "p_value_naive": 0.24177469095145263,
   "ci95_block_bootstrap": [
-   -0.25370674903018114,
-   0.128684683539728
+   -0.28159640214124965,
+   0.15505006077120193
   ],
   "ic_first_half": -0.2132996849239511,
   "ic_second_half": 0.11146287467226802,
+  "ci95_familywise_bonferroni": [
+   -0.3885900012533084,
+   0.26355652110782546
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 8,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -94,11 +134,19 @@
   "spearman_ic": -0.05117376157381446,
   "p_value_naive": 0.3819645646211453,
   "ci95_block_bootstrap": [
-   -0.25208249514421277,
-   0.1436952842756004
+   -0.2746701174504964,
+   0.1866084000689906
   ],
   "ic_first_half": -0.17348449931620188,
   "ic_second_half": 0.08373316005409939,
+  "ci95_familywise_bonferroni": [
+   -0.38967084173601035,
+   0.2651362156637618
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 8,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -111,11 +159,19 @@
   "spearman_ic": -0.04811696647383425,
   "p_value_naive": 0.4175737574671468,
   "ci95_block_bootstrap": [
-   -0.3007100233451395,
-   0.22139617070124665
+   -0.30537860234142866,
+   0.21438476897879621
   ],
   "ic_first_half": -0.041765159722906196,
   "ic_second_half": -0.12534472569683835,
+  "ci95_familywise_bonferroni": [
+   -0.4322532095447112,
+   0.36631390860186386
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 12,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -128,11 +184,19 @@
   "spearman_ic": 0.007174596905020525,
   "p_value_naive": 0.9038465789703541,
   "ci95_block_bootstrap": [
-   -0.2606308472367252,
-   0.26938877228073416
+   -0.2536459537312662,
+   0.27835754393159823
   ],
   "ic_first_half": 0.0206630224235858,
   "ic_second_half": -0.04147788830887422,
+  "ci95_familywise_bonferroni": [
+   -0.38626665076231453,
+   0.44393269775086586
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 12,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -145,11 +209,19 @@
   "spearman_ic": -0.07908856838275312,
   "p_value_naive": 0.17623817913772122,
   "ci95_block_bootstrap": [
-   -0.26582437386550745,
-   0.11183546532678097
+   -0.29635810279746877,
+   0.15136589709351247
   ],
   "ic_first_half": -0.26763708074862674,
   "ic_second_half": 0.20727394993539808,
+  "ci95_familywise_bonferroni": [
+   -0.4231586015159213,
+   0.26955488334268823
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 8,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -162,11 +234,19 @@
   "spearman_ic": -0.0923395308259244,
   "p_value_naive": 0.11412393848319924,
   "ci95_block_bootstrap": [
-   -0.29505892260564587,
-   0.11794961656352043
+   -0.3340854177442154,
+   0.16160376408432017
   ],
   "ic_first_half": -0.3070895888899803,
   "ic_second_half": 0.19967661259246386,
+  "ci95_familywise_bonferroni": [
+   -0.4777774692051731,
+   0.25609630946926926
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 8,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -179,11 +259,19 @@
   "spearman_ic": -0.020182385009085906,
   "p_value_naive": 0.7339657629304571,
   "ci95_block_bootstrap": [
-   -0.28066019881816634,
-   0.2398303126424778
+   -0.27246100061346895,
+   0.2379387716052838
   ],
   "ic_first_half": 0.024036409599789883,
   "ic_second_half": -0.1745173840244263,
+  "ci95_familywise_bonferroni": [
+   -0.3998858776725156,
+   0.3899635125248996
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 12,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -196,11 +284,19 @@
   "spearman_ic": 0.00045833498978556744,
   "p_value_naive": 0.9938426242646282,
   "ci95_block_bootstrap": [
-   -0.25575678887417047,
-   0.2536231946357721
+   -0.25834170957265645,
+   0.26595098738210154
   ],
   "ic_first_half": 0.03940132637315736,
   "ic_second_half": -0.14344282478085293,
+  "ci95_familywise_bonferroni": [
+   -0.39273097476221475,
+   0.438693062367077
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 12,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -213,11 +309,19 @@
   "spearman_ic": -0.002561556814546262,
   "p_value_naive": 0.9651160273613648,
   "ci95_block_bootstrap": [
-   -0.16941280297144232,
-   0.16002905158839917
+   -0.18731341913791155,
+   0.1811789510550678
   ],
   "ic_first_half": -0.017918533574110874,
   "ic_second_half": -0.00714399050993963,
+  "ci95_familywise_bonferroni": [
+   -0.2763104867978211,
+   0.31503380912761814
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 8,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -230,11 +334,19 @@
   "spearman_ic": -0.0038096339941657235,
   "p_value_naive": 0.948139302856231,
   "ci95_block_bootstrap": [
-   -0.17273429521290115,
-   0.16099730199753115
+   -0.18457490201912202,
+   0.1668583477939631
   ],
   "ic_first_half": 0.03930139253035535,
   "ic_second_half": -0.0968462171984677,
+  "ci95_familywise_bonferroni": [
+   -0.2683384645382716,
+   0.27234884815862265
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 8,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -247,11 +359,19 @@
   "spearman_ic": -0.163711769616776,
   "p_value_naive": 0.005516091760699107,
   "ci95_block_bootstrap": [
-   -0.3699113642613662,
-   0.03978930240724857
+   -0.3663501978806804,
+   0.03822571051910126
   ],
   "ic_first_half": -0.17871975442397978,
   "ic_second_half": -0.16923979776092452,
+  "ci95_familywise_bonferroni": [
+   -0.47396606281261955,
+   0.14156587958111988
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 12,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -264,11 +384,19 @@
   "spearman_ic": -0.2096883860683604,
   "p_value_naive": 0.0003564415956832179,
   "ci95_block_bootstrap": [
-   -0.40791636254119695,
-   -0.010054339744404103
+   -0.4124777455392536,
+   -0.009717086002349816
   ],
   "ic_first_half": -0.19442529301684228,
   "ic_second_half": -0.23948176236908628,
+  "ci95_familywise_bonferroni": [
+   -0.5160650439053686,
+   0.0951856129401502
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 12,
+  "significant_familywise": false,
   "significant_bootstrap": true
  },
  {
@@ -281,11 +409,19 @@
   "spearman_ic": -0.15246028671057732,
   "p_value_naive": 0.15617336924137498,
   "ci95_block_bootstrap": [
-   -0.43992079205197115,
-   0.16922494526885173
+   -0.40911957062189463,
+   0.15517271837268332
   ],
   "ic_first_half": -0.015926708949964764,
   "ic_second_half": 0.13643410852713178,
+  "ci95_familywise_bonferroni": [
+   -0.5685046896288861,
+   0.33505788794862584
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 8,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -298,11 +434,19 @@
   "spearman_ic": -0.160367722165475,
   "p_value_naive": 0.13555478073686386,
   "ci95_block_bootstrap": [
-   -0.4761628268680182,
-   0.17735934087895702
+   -0.4879161703838252,
+   0.20764120886690196
   ],
   "ic_first_half": -0.010852713178294573,
   "ic_second_half": 0.24059196617336148,
+  "ci95_familywise_bonferroni": [
+   -0.6598805653993716,
+   0.40597052338752776
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 8,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
@@ -315,11 +459,19 @@
   "spearman_ic": -0.5764885138302861,
   "p_value_naive": 2.193237544856489e-08,
   "ci95_block_bootstrap": [
-   -0.7247789542675522,
-   -0.12308337084701047
+   -0.7278614178023446,
+   -0.13153001584337673
   ],
   "ic_first_half": 0.04746716697936211,
   "ic_second_half": -0.5193245778611634,
+  "ci95_familywise_bonferroni": [
+   -0.7841744579447607,
+   0.20281186279293237
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 12,
+  "significant_familywise": false,
   "significant_bootstrap": true
  },
  {
@@ -332,79 +484,119 @@
   "spearman_ic": -0.6170651664322552,
   "p_value_naive": 1.0913993930611905e-09,
   "ci95_block_bootstrap": [
-   -0.7343460406680092,
-   -0.24125219920179294
+   -0.7370890227830333,
+   -0.2552954239683826
   ],
   "ic_first_half": -0.0013133208255159477,
   "ic_second_half": -0.5397748592870545,
+  "ci95_familywise_bonferroni": [
+   -0.8011094492383296,
+   0.013042198487852714
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 12,
+  "significant_familywise": false,
   "significant_bootstrap": true
  },
  {
   "metric": "qaa",
   "horizon_weeks": 4,
   "benchmark": "btc",
-  "n": 94,
-  "start": "2024-12-22",
+  "n": 64,
+  "start": "2025-07-20",
   "end": "2026-10-04",
-  "spearman_ic": 0.023501788101000617,
-  "p_value_naive": 0.8221032816373163,
+  "spearman_ic": -0.03612637362637362,
+  "p_value_naive": 0.776864613062766,
   "ci95_block_bootstrap": [
-   -0.3397733834285702,
-   0.3521672775244759
+   -0.5063267609740385,
+   0.5214952364972054
   ],
-  "ic_first_half": 0.04451896392229418,
-  "ic_second_half": -0.09666975023126735,
+  "ic_first_half": 0.6605571847507331,
+  "ic_second_half": -0.4798387096774193,
+  "ci95_familywise_bonferroni": [
+   -0.6706928633923178,
+   0.7164334486572025
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 8,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
   "metric": "qaa",
   "horizon_weeks": 4,
   "benchmark": "eth",
-  "n": 94,
-  "start": "2024-12-22",
+  "n": 64,
+  "start": "2025-07-20",
   "end": "2026-10-04",
-  "spearman_ic": -0.012896001155944081,
-  "p_value_naive": 0.9018192041421482,
+  "spearman_ic": 0.010576923076923076,
+  "p_value_naive": 0.9338913192204192,
   "ci95_block_bootstrap": [
-   -0.341642823702327,
-   0.2934218167608107
+   -0.5046707271178921,
+   0.566732023538152
   ],
-  "ic_first_half": -0.10256706753006474,
-  "ic_second_half": -0.052960222016651244,
+  "ic_first_half": 0.782991202346041,
+  "ic_second_half": -0.5227272727272727,
+  "ci95_familywise_bonferroni": [
+   -0.7093148910037925,
+   0.7643242950854261
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 8,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
   "metric": "qaa",
   "horizon_weeks": 12,
   "benchmark": "btc",
-  "n": 86,
-  "start": "2024-12-22",
+  "n": 56,
+  "start": "2025-07-20",
   "end": "2026-08-09",
-  "spearman_ic": -0.09148544742676541,
-  "p_value_naive": 0.4021738102806089,
+  "spearman_ic": 0.31708817498291186,
+  "p_value_naive": 0.01725839515071182,
   "ci95_block_bootstrap": [
-   -0.4881809676298977,
-   0.329532367162274
+   -0.024685820325474988,
+   0.71690745209269
   ],
-  "ic_first_half": -0.03382663847780127,
-  "ic_second_half": -0.14119601328903653,
+  "ic_first_half": 0.4805692391899289,
+  "ic_second_half": 0.3130815544608648,
+  "ci95_familywise_bonferroni": [
+   -0.36045705747675605,
+   0.8806444662063131
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 12,
+  "significant_familywise": false,
   "significant_bootstrap": false
  },
  {
   "metric": "qaa",
   "horizon_weeks": 12,
   "benchmark": "eth",
-  "n": 86,
-  "start": "2024-12-22",
+  "n": 56,
+  "start": "2025-07-20",
   "end": "2026-08-09",
-  "spearman_ic": 0.2258880135855465,
-  "p_value_naive": 0.036504981111163945,
+  "spearman_ic": 0.36151742993848257,
+  "p_value_naive": 0.006189076133679036,
   "ci95_block_bootstrap": [
-   -0.3673417521342715,
-   0.6394929028767196
+   -0.03896010017443191,
+   0.7145391842915687
   ],
-  "ic_first_half": 0.6750226517668377,
-  "ic_second_half": -0.226819691935971,
+  "ic_first_half": 0.539135194307608,
+  "ic_second_half": 0.38149972632731255,
+  "ci95_familywise_bonferroni": [
+   -0.3058699993501281,
+   0.8673046221537872
+  ],
+  "family_tests": 24,
+  "bootstrap_draws": 4000,
+  "block_weeks": 12,
+  "significant_familywise": false,
   "significant_bootstrap": false
  }
 ]

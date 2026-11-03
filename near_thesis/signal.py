@@ -3,7 +3,7 @@
 Outputs (data/derived/models/):
 - signal_ic.json      Spearman information coefficient of 4-week usage changes vs 4/12-week forward NEAR returns
                       in excess of BTC and ETH, with circular block-bootstrap confidence intervals and a
-                      first-half / second-half split (walk-forward sanity check)
+                      first-half / second-half descriptive stability split
 - peer_valuation.json NEAR's rank among peers on velocity (DEX volume / TVL) and fee yield (fees / market cap)
 - scenarios.json      Monte Carlo *scenarios* (not forecasts) for fee accrual to the NEAR token
 """
@@ -19,39 +19,49 @@ from .config import DERIVED, MODELS
 
 METRICS = ["active_accounts", "txns", "tx_fee_near", "tx_volume_usd", "intents_volume_usd", "qaa"]
 HORIZONS = [4, 12]
-RNG = np.random.default_rng(20261114)
+SEED = 20261114
 
 
 def _weekly() -> pd.DataFrame:
     d = pd.read_csv(DERIVED / "daily.csv", parse_dates=["date"]).set_index("date")
-    qaa = MODELS / "qaa_monthly.csv"
-    if qaa.exists():
-        q = pd.read_csv(qaa, parse_dates=["month"]).set_index("month")["qaa"]
-        d["qaa"] = q.reindex(d.index, method="ffill")
+    from .qaa import available_series
+    q = available_series(d.index)
+    if q is not None:
+        d["qaa"] = q
     cols = [m for m in METRICS if m in d.columns] + ["near_price", "price_bitcoin", "price_ethereum"]
     w = d[cols].resample("W-SUN").mean()
-    return w
+    return w.loc[w.index <= d.index.max()]
+
+
+def _bootstrap_rhos(x: np.ndarray, y: np.ndarray, block: int, n_boot: int) -> np.ndarray:
+    n = len(x)
+    rng = np.random.default_rng(SEED + block)
+    if n < 2 * block:
+        return np.array([])
+    nblocks = int(np.ceil(n / block))
+    starts = rng.integers(0, n, size=(n_boot, nblocks))
+    idx = ((starts[:, :, None] + np.arange(block)) % n).reshape(n_boot, -1)[:, :n]
+    a, b = stats.rankdata(x[idx], axis=1), stats.rankdata(y[idx], axis=1)
+    a -= a.mean(axis=1, keepdims=True)
+    b -= b.mean(axis=1, keepdims=True)
+    denom = np.sqrt((a * a).sum(axis=1) * (b * b).sum(axis=1))
+    rho = np.divide((a * b).sum(axis=1), denom, out=np.full(n_boot, np.nan), where=denom > 0)
+    return rho[np.isfinite(rho)]
+
+
+def _interval(rhos: np.ndarray, alpha: float) -> tuple[float, float]:
+    return tuple(float(v) for v in np.quantile(rhos, [alpha / 2, 1 - alpha / 2])) if len(rhos) else (float("nan"), float("nan"))
 
 
 def block_bootstrap_ci(x: np.ndarray, y: np.ndarray, block: int, n_boot: int = 2000, alpha: float = 0.05) -> tuple[float, float]:
-    n = len(x)
-    if n < 2 * block:
-        return (float("nan"), float("nan"))
-    nblocks = int(np.ceil(n / block))
-    rhos = []
-    for _ in range(n_boot):
-        starts = RNG.integers(0, n, size=nblocks)
-        idx = np.concatenate([(s + np.arange(block)) % n for s in starts])[:n]
-        r = stats.spearmanr(x[idx], y[idx]).statistic
-        if np.isfinite(r):
-            rhos.append(r)
-    return (float(np.quantile(rhos, alpha / 2)), float(np.quantile(rhos, 1 - alpha / 2)))
+    return _interval(_bootstrap_rhos(x, y, block, n_boot), alpha)
 
 
 def ic_table(w: pd.DataFrame) -> list[dict]:
     out = []
     lp = np.log(w["near_price"])
     bench = {"btc": np.log(w["price_bitcoin"]), "eth": np.log(w["price_ethereum"])}
+    family = len([c for c in METRICS if c in w]) * len(HORIZONS) * len(bench)
     for m in [c for c in METRICS if c in w.columns]:
         sig = np.log(w[m].rolling(4, min_periods=4).mean()).diff(4)  # 4-week change of the 4-week mean
         for h in HORIZONS:
@@ -62,7 +72,11 @@ def ic_table(w: pd.DataFrame) -> list[dict]:
                     out.append({"metric": m, "horizon_weeks": h, "benchmark": bname, "n": int(len(df)), "note": "too few weeks"})
                     continue
                 rho, p = stats.spearmanr(df["sig"], df["fwd"])
-                lo, hi = block_bootstrap_ci(df["sig"].to_numpy(), df["fwd"].to_numpy(), block=h)
+                # Four-week smoothing plus four-week differencing adds signal dependence.
+                block = max(h, 8)
+                draws = _bootstrap_rhos(df["sig"].to_numpy(), df["fwd"].to_numpy(), block=block, n_boot=4000)
+                lo, hi = _interval(draws, 0.05)
+                flo, fhi = _interval(draws, 0.05 / family)
                 half = len(df) // 2
                 r1 = stats.spearmanr(df["sig"].iloc[:half], df["fwd"].iloc[:half]).statistic
                 r2 = stats.spearmanr(df["sig"].iloc[half:], df["fwd"].iloc[half:]).statistic
@@ -70,6 +84,8 @@ def ic_table(w: pd.DataFrame) -> list[dict]:
                             "start": str(df.index[0].date()), "end": str(df.index[-1].date()),
                             "spearman_ic": float(rho), "p_value_naive": float(p),
                             "ci95_block_bootstrap": [lo, hi], "ic_first_half": float(r1), "ic_second_half": float(r2),
+                            "ci95_familywise_bonferroni": [flo, fhi], "family_tests": family, "bootstrap_draws": 4000, "block_weeks": block,
+                            "significant_familywise": bool(np.isfinite(flo) and (flo > 0 or fhi < 0)),
                             "significant_bootstrap": bool(np.isfinite(lo) and (lo > 0 or hi < 0))})
     return out
 
@@ -97,18 +113,24 @@ def scenarios(n: int = 20000) -> dict:
     gas_fees_12m = float(y["tx_fee_usd"].sum())
     # assumption ranges (documented in THESIS.md): volume multiplier lognormal(median 1.0, sigma 0.6) clipped to [0.25, 4],
     # take rate uniform between half and 1.5x the observed rate, share accruing to NEAR holders uniform [0, 0.5]
-    growth = np.clip(np.exp(RNG.normal(0.0, 0.6, n)), 0.25, 4.0)
-    take = RNG.uniform(0.5 * take_bps_obs, 1.5 * take_bps_obs, n)
-    share = RNG.uniform(0.0, 0.5, n)
+    rng = np.random.default_rng(SEED)
+    revenue = float(y["intents_revenue_usd"].sum(min_count=1)) if "intents_revenue_usd" in y else float("nan")
+    holders = float(y["intents_holders_revenue_usd"].sum(min_count=1)) if "intents_holders_revenue_usd" in y else float("nan")
+    capture_obs = revenue / fees_12m if fees_12m and np.isfinite(revenue) else None
+    growth = np.clip(np.exp(rng.normal(0.0, 0.6, n)), 0.25, 4.0)
+    take = rng.uniform(0.5 * take_bps_obs, 1.5 * take_bps_obs, n)
+    share = rng.uniform(max(0, capture_obs * 0.5), min(1, capture_obs * 1.5), n) if capture_obs is not None else rng.uniform(0, 0.5, n)
     token_fees = vol_12m * growth * take / 1e4 * share + gas_fees_12m
     pf = mcap / token_fees
     q = lambda a: {f"p{int(k)}": float(np.quantile(a, k / 100)) for k in [5, 25, 50, 75, 95]}
     return {"as_of": str(last.date()), "inputs": {"intents_volume_12m_usd": vol_12m, "intents_fees_12m_usd": fees_12m,
+            "intents_net_revenue_12m_usd": revenue if np.isfinite(revenue) else None,
+            "intents_holders_revenue_12m_usd": holders if np.isfinite(holders) else None, "observed_capture_share": capture_obs,
             "observed_take_rate_bps": take_bps_obs, "gas_fees_12m_usd": gas_fees_12m, "market_cap_usd": mcap,
             "current_price_to_gas_fees": mcap / gas_fees_12m if gas_fees_12m else None},
             "assumptions": {"volume_multiplier": "lognormal(median 1, sigma 0.6) clipped [0.25, 4]",
-                            "take_rate_bps": "uniform [0.5x, 1.5x] of observed", "share_to_token": "uniform [0, 0.5]",
-                            "note": "scenarios, not forecasts; no fee-sharing mechanism exists on NEAR today"},
+                            "take_rate_bps": "uniform [0.5x, 1.5x] of observed", "share_to_token": "uniform [0.5x, 1.5x] observed net capture, bounded [0,1]" if capture_obs is not None else "uniform [0,0.5]; net capture unavailable",
+                            "note": "scenarios, not forecasts: fee switch and governance-controlled buybacks are live; net capture and buyback-labelled revenue are not dividends or proof of token burning; future allocation is discretionary"},
             "token_fees_usd": q(token_fees), "price_to_fees": q(pf), "n": n}
 
 

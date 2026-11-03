@@ -30,3 +30,30 @@ def test_block_bootstrap_ci_contains_rho_and_is_wide_for_independent_series():
     assert lo > 0.3 and hi < 0.8
     lo2, hi2 = signal.block_bootstrap_ci(x, rng.normal(size=200), block=4, n_boot=300)
     assert lo2 < 0 < hi2
+
+
+def test_var_does_not_infer_when_stationarity_is_unestablished(monkeypatch):
+    idx = pd.date_range('2024-01-01', periods=800)
+    d = pd.DataFrame({'near_price':np.arange(800)+10., 'usage':np.arange(800)+20.}, index=idx)
+    monkeypatch.setattr(econ, 'adf', lambda s: {'stationary_5pct':False,'p_value':0.5})
+    r = econ.var_granger(d, 'usage', None)
+    assert r['inference_valid'] is False
+    assert 'usage_granger_causes_price' not in r
+
+
+def test_johansen_full_rank_is_not_reported_as_absence(monkeypatch):
+    from types import SimpleNamespace
+    idx = pd.date_range('2024-01-01', periods=800)
+    d = pd.DataFrame({'near_price':np.arange(800)+10., 'usage':np.arange(800)+20.}, index=idx)
+    monkeypatch.setattr(econ, 'coint_johansen', lambda *a,**k: SimpleNamespace(lr1=np.array([25.,6.]), cvt=np.array([[10,15,20],[2,3.8,5]])))
+    r = econ.johansen(d, 'usage', None)
+    assert r['rank_5pct'] == 2
+    assert r['cointegrated_5pct'] is None and r['inference_valid'] is False
+
+
+def test_bootstrap_is_reproducible_between_calls():
+    rng = np.random.default_rng(42)
+    x,y = rng.normal(size=(2,80))
+    first = signal.block_bootstrap_ci(x,y,8,n_boot=100)
+    signal.block_bootstrap_ci(y,x,4,n_boot=150)
+    assert signal.block_bootstrap_ci(x,y,8,n_boot=100) == first

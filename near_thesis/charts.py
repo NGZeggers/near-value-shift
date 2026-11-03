@@ -54,6 +54,7 @@ def build() -> dict:
     NB = "NearBlocks API, GET https://api.nearblocks.io/v1/charts (data/raw/nearblocks_charts.json)"
     LL_I = "DefiLlama, GET https://api.llama.fi/summary/dexs/near-intents (data/raw/llama_intents_volume.json); DefiLlama sources Dune table dune.near.dataset_near_intents_metrics"
 
+    full_months = m.index + pd.offsets.MonthEnd(0) <= d.index.max()
     specs = []
     # ---- Section 1: the activity collapse (raw metrics)
     specs.append(_spec("active_accounts", "1. Raw activity", "Daily active accounts, 30-day mean",
@@ -72,12 +73,12 @@ def build() -> dict:
 
     # ---- Section 2: value-weighted activity
     specs.append(_spec("intents_volume_monthly", "2. Value-weighted activity", "NEAR Intents swap volume per month",
-        "Cross-chain settlement through NEAR Intents grew from a few million dollars a month in late 2024 to billions a month in 2026.",
-        "column", [{"name": "Intents volume (USD, monthly)", "points": _pts(d["intents_volume_usd"], freq="MS", how="sum", round_to=0)}],
+        "Reported cross-chain settlement grew from millions to billions per month. Only complete months are shown; the independent sample reconciliation remains unresolved.",
+        "column", [{"name": "Intents volume (USD, monthly)", "points": _pts(m.loc[full_months, "intents_volume_usd"], round_to=0)}],
         unit="USD", source=LL_I, query="sum of totalDataChart by calendar month"))
     specs.append(_spec("fees_split", "2. Value-weighted activity", "Fees on NEAR per month: protocol gas fees vs application fees",
-        "Application-level fees (mostly Intents) are now an order of magnitude larger than the gas fees burned by the protocol.",
-        "line", [{"name": "gas fees burned (USD)", "points": _pts(m["tx_fee_usd"], round_to=0)},
+        "Application-level fees (mostly Intents) are now an order of magnitude larger than the gas fees paid to the protocol.",
+        "line", [{"name": "gas fees paid (USD)", "points": _pts(m["tx_fee_usd"], round_to=0)},
                  {"name": "application fees (USD)", "points": _pts(m.loc[m.index >= INTENTS_START, "near_app_fees_usd"], round_to=0)}],
         unit="USD", y_log=True, source=f"{NB}; DefiLlama GET https://api.llama.fi/overview/fees/near (data/raw/llama_fees_near.json)",
         query="monthly sums of charts[].txn_fee_usd and DefiLlama totalDataChart",
@@ -99,12 +100,12 @@ def build() -> dict:
         bq1 = qaa_status.get("source") == "bigquery"
         partial = "" if bq1 or len(q) >= 12 else f" Sampled mode, {len(q)} months covered so far (partial block sample; see docs/SAMPLING.md)."
         specs.append(_spec("qaa", "3. Quality-adjusted", "Active accounts vs Quality-Adjusted Active Accounts (QAA)",
-            "QAA keeps only account-months whose behavior clusters as human-like or Intents participation; the rest is automation and mini-app farming." + partial,
+            "Retrospective behavioral proxy, not a count of verified humans. Sensitivity and anchor-name profiles are reported separately; predictive tests use a frozen past-only model." + partial,
             "line", [{"name": "active accounts (BigQuery)" if bq1 else "active accounts (NearBlocks)", "points": _pts(q["active_accounts_bq"], round_to=0)},
                      {"name": "QAA", "points": _pts(q["qaa"], round_to=0)}],
             unit="accounts", y_log=True, source=("BigQuery crypto_near_mainnet_us (sql/l1_*.sql)" if qaa_status.get("source") == "bigquery" else "FastNear neardata sampled blocks (data/blocks/tx_sampled.csv, near_thesis/blocks.py)") + "; clustering in near_thesis/qaa.py",
             query=("sql/l1_account_month_features.sql + sql/l1_account_month_actions.sql; " if qaa_status.get("source") == "bigquery" else "per (month, signer) features inside sampled windows; QAA = human-like share x NearBlocks active accounts; ") + qaa_status.get("algorithm", "")))
-        labels = [c for c in q.columns if c not in ("active_accounts_bq", "qaa") and not c.startswith("qaa_share")]
+        labels = [c for c in q.columns if c in {"noise", "automation", "miniapp_farming", "heavy_unlabeled", "human_light", "human_multi_app", "intents_participant"}]
         specs.append(_spec("qaa_shares", "3. Quality-adjusted", "Account-months by behavioral cluster",
             "Account-months in each behavioral cluster; mini-app farming dominates the 2024 mini-app era." + (" Sampled windows only." if not bq1 else ""),
             "stacked", [{"name": c.replace("_", " "), "points": _pts(q[c], round_to=0)} for c in labels[:6]],
@@ -126,15 +127,15 @@ def build() -> dict:
         else:
             specs.append(_spec("intents_conc", "3. Quality-adjusted", "Solver concentration in NEAR Intents (HHI and top-1 share)",
                 "Not estimable yet: no sampled day has enough batches to classify solvers." + partial2, "empty", [], source=L2SRC, query="daily HHI of solver outflow USD, monthly mean"))
-        specs.append(_spec("intents_users", "3. Quality-adjusted", "Unique Intents users per day (sampled days)",
-            "Distinct non-solver accounts that executed a swap on a sampled day." + partial2,
-            "line", [{"name": "users per day", "points": _pts(im["users_per_day"], round_to=0)}],
-            unit="accounts", source=L2SRC, query="count of accounts not classified as solvers, per sampled day (expanded by blocks-in-day / blocks-sampled in sampled mode; an upper bound)"))
+        specs.append(_spec("intents_users", "3. Quality-adjusted", "Observed non-solver accounts in sampled windows",
+            "Counts inside the observed windows; not an estimate of daily unique users. Solver roles are behavioral assumptions." + partial2,
+            "line", [{"name": "observed accounts", "points": _pts(im["users_per_day"], round_to=0)}],
+            unit="accounts", source=L2SRC, query="unique non-solver accounts inside each day's sampled windows; monthly mean; no expansion of users"))
         iq = pd.read_csv(MODELS / "intents_quarterly.csv", parse_dates=["quarter"]).set_index("quarter")
         rr = intents_status.get("ratio_to_defillama") or {}
         specs.append(_spec("intents_xcheck", "3. Quality-adjusted", "Intents quarterly volume: on-chain estimate vs DefiLlama",
             "Our independent estimate from raw token_diff events (priced legs, expanded from sampled blocks) against the DefiLlama/Dune series, by quarter. "
-            + (f"Pooled over all sampled days the estimate recovers {rr['ratio']*100:.0f}% of DefiLlama (95% CI {rr['ci_lo']*100:.0f}% to {rr['ci_hi']*100:.0f}%)." if rr else "") + partial2,
+            + (f"Pooled ratio {rr['ratio']*100:.0f}% (conditional day-bootstrap interval {rr['ci_lo']*100:.0f}% to {rr['ci_hi']*100:.0f}%). Discrepancy unresolved: this does not independently validate the reported total or its trend." if rr else "") + partial2,
             "line", [{"name": "on-chain estimate (priced)", "points": _pts(iq["volume_est_usd"], round_to=0)},
                      {"name": "DefiLlama", "points": _pts(iq["defillama_usd"], round_to=0)}],
             unit="USD", y_log=True, source=L2SRC + "; DefiLlama", query="near_thesis/intents.py quarterly_estimates and pooled_ratio (ratio of sums, day bootstrap)"))
@@ -153,12 +154,12 @@ def build() -> dict:
         "line", [{"name": c, "points": _pts(rc[c], round_to=2)} for c in ["active_accounts", "tx_volume_usd", "intents_volume_usd"] if c in rc.columns],
         unit="Pearson r", y_domain=[-1, 1], source="data/derived/daily.csv", query="rolling(90).corr on log levels (near_thesis/econ.py)"))
     specs.append(_spec("granger", "4. Price and usage", "Granger causality p-values (weekly, lag by AIC)",
-        "Low p-values mean the past of one series helps predict the other. Transactions and gas fees show two-way links; Intents volume shows none at this sample size.",
-        "ranked", [{"name": "usage -> price", "points": [[r["metric"], round(r["usage_granger_causes_price"]["p_value"], 3)] for r in vg if "usage_granger_causes_price" in r]},
-                   {"name": "price -> usage", "points": [[r["metric"], round(r["price_granger_causes_usage"]["p_value"], 3)] for r in vg if "price_granger_causes_usage" in r]}],
+        "Only models passing stationarity, stability and residual-whiteness checks are shown. Holm-adjusted p-values; omitted tests are inconclusive, not evidence of no relation.",
+        "ranked", [{"name": "usage -> price", "points": [[r["metric"], round(r["usage_granger_causes_price"]["p_value_holm"], 3)] for r in vg if r.get("inference_valid")]},
+                   {"name": "price -> usage", "points": [[r["metric"], round(r["price_granger_causes_usage"]["p_value_holm"], 3)] for r in vg if r.get("inference_valid")]}],
         unit="p-value", y_domain=[0, 1], source="data/derived/daily.csv", query="VAR on weekly d-log series, statsmodels test_causality (near_thesis/econ.py)"))
     specs.append(_spec("ic", "4. Price and usage", "Does a 4-week change in usage predict 12-week excess returns vs BTC?",
-        "Spearman information coefficient with block-bootstrap 95% intervals. A negative, significant value for Intents volume is evidence AGAINST usage leading price.",
+        "Exploratory Spearman association; overlapping returns and multiple tests limit inference. QAA is trained only on past calibration months and released after month-end. This is not a trading backtest.",
         "ranked", [{"name": "IC (12w, vs BTC)", "points": [[r["metric"], round(r["spearman_ic"], 2)] for r in ic if r.get("horizon_weeks") == 12 and r.get("benchmark") == "btc" and "spearman_ic" in r]}],
         unit="Spearman IC", y_domain=[-1, 1], source="data/derived/daily.csv", query="near_thesis/signal.py ic_table",
         note=json.dumps({r["metric"]: r["ci95_block_bootstrap"] for r in ic if r.get("horizon_weeks") == 12 and r.get("benchmark") == "btc" and "spearman_ic" in r})))
@@ -166,11 +167,11 @@ def build() -> dict:
     # ---- Section 5: peers
     p = peers.set_index("chain")
     specs.append(_spec("peer_velocity", "5. Peers", "DEX volume (30d) divided by TVL",
-        "NEAR turns over its locked value more times than any peer: a settlement layer, not a vault.",
+        "Descriptive ratio only: cross-chain Intents settlement and local DEX activity have different coverage; this ranking does not establish relative undervaluation.",
         "ranked", [{"name": "velocity", "points": [[c, round(float(v), 1)] for c, v in p["dex_volume_to_tvl_30d"].sort_values(ascending=False).items()]}],
         unit="x", source="DefiLlama overview/dexs/<chain>, v2/chains", query="total30d / tvl", note="emphasis:Near"))
     specs.append(_spec("peer_fees", "5. Peers", "Annualized application fees divided by market cap",
-        "On fee yield NEAR sits near the bottom of the peer group: high throughput, low capture.",
+        "Gross application fees are not token-holder yield. Intents net capture and buyback-labelled revenue are tracked separately in the revenue chart.",
         "ranked", [{"name": "fees / mcap", "points": [[c, round(float(v), 3)] for c, v in p["fees_to_mcap_annualized"].dropna().sort_values(ascending=False).items()]}],
         unit="ratio", source="DefiLlama overview/fees/<chain>; CoinGecko coins/markets", query="total30d x 12 / market_cap", note="emphasis:Near"))
 
@@ -183,9 +184,18 @@ def build() -> dict:
             "column", [{"name": "commits", "points": _pts(core, round_to=0)}], unit="commits",
             source="GitHub REST repos/near/nearcore/stats/commit_activity", query="weekly totals"))
 
+    if "intents_revenue_usd" in m and m["intents_revenue_usd"].notna().any():
+        specs.append(_spec("intents_capture", "2. Value-weighted activity", "Intents: gross fees, net captured revenue and buyback-labelled revenue",
+            "Net capture is already observed. The adapter labels post-fee-switch receipts as buyback revenue; this is not proof of burning or dividends, and future allocation remains discretionary.",
+            "line", [{"name": title, "points": _pts(m.loc[full_months, col], round_to=0)} for title, col in [
+                ("gross fees", "intents_fees_usd"), ("net captured revenue", "intents_revenue_usd"),
+                ("buyback-labelled revenue", "intents_holders_revenue_usd")]],
+            unit="USD", source="DefiLlama summary/fees/near-intents: dailyFees, dailyRevenue, dailyHoldersRevenue (Dune/wallet receipts)",
+            query="monthly sums of matched-cutoff raw snapshots; methodology included in each response"))
     kpis = _kpis(d, m)
-    return {"built_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "data_through": str(d.index.max().date()),
-            "kpis": kpis, "charts": specs, "raw_manifest": raw_manifest()}
+    manifest = raw_manifest()
+    return {"built_at": max(r["fetched_at"] for r in manifest), "data_through": str(d.index.max().date()),
+            "kpis": kpis, "charts": specs, "raw_manifest": manifest}
 
 
 def _indexed(m: pd.DataFrame) -> list[tuple[str, list]]:
@@ -209,7 +219,7 @@ def _kpis(d: pd.DataFrame, m: pd.DataFrame) -> list[dict]:
             kpi("Daily active accounts, monthly mean", float(last["active_accounts"]), float(prev["active_accounts"]), "accounts"),
             kpi("USD moved per transaction", float(last["usd_per_txn"]), float(prev["usd_per_txn"]), "USD"),
             kpi("Application fees, last full month", float(last["near_app_fees_usd"]), float(prev["near_app_fees_usd"]), "USD"),
-            kpi("Gas fees burned, last full month", float(last["tx_fee_usd"]), float(prev["tx_fee_usd"]), "USD"),
+            kpi("Gas fees paid, last full month", float(last["tx_fee_usd"]), float(prev["tx_fee_usd"]), "USD"),
             kpi("NEAR price, monthly mean", float(last["near_price"]), float(prev["near_price"]), "USD", up_is_good=True)]
 
 

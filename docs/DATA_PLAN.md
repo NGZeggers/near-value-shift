@@ -1,5 +1,7 @@
 # Data plan (track checkpoint)
 
+> Historical planning checkpoint. Current implementation, results and remaining limits are described in README.md, THESIS.md and docs/VALIDACION_HACKATHON.md.
+
 Status: DRAFT, awaiting human approval before any code is built (required by the `thesis` track prompt).
 Date: 2026-11-01
 

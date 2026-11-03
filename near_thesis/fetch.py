@@ -34,6 +34,10 @@ def fetch_defillama() -> None:
              fetch_json(f"{LLAMA}/summary/dexs/near-intents?dataType=dailyVolume"))
     save_raw("llama_intents_fees", f"{LLAMA}/summary/fees/near-intents?dataType=dailyFees",
              fetch_json(f"{LLAMA}/summary/fees/near-intents?dataType=dailyFees"))
+    for name, kind in [("revenue", "dailyRevenue"), ("holders_revenue", "dailyHoldersRevenue")]:
+        url = f"{LLAMA}/summary/fees/near-intents?dataType={kind}"
+        save_raw(f"llama_intents_{name}", url, fetch_json(url),
+                 note="Net wallet receipts; holders revenue is adapter-classified buyback revenue, not proof of burns or holder dividends. Internal wallet transfers excluded by adapter.")
     save_raw("llama_near_dexs", f"{LLAMA}/overview/dexs/near",
              fetch_json(f"{LLAMA}/overview/dexs/near?excludeTotalDataChart=false&excludeTotalDataChartBreakdown=false&dataType=dailyVolume"))
     save_raw("llama_chains", f"{LLAMA}/v2/chains", fetch_json(f"{LLAMA}/v2/chains"))

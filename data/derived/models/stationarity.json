@@ -97,17 +97,17 @@
  },
  "qaa": {
   "log_level_weekly": {
-   "n": 103,
-   "adf_stat": -2.02821728126788,
-   "p_value": 0.274339467332568,
-   "lags": 1,
+   "n": 70,
+   "adf_stat": -2.1328888586180867,
+   "p_value": 0.23149706664258873,
+   "lags": 4,
    "stationary_5pct": false
   },
   "dlog_weekly": {
-   "n": 103,
-   "adf_stat": -8.401091966331652,
-   "p_value": 2.2303766713146775e-13,
-   "lags": 0,
+   "n": 70,
+   "adf_stat": -5.5485653509784925,
+   "p_value": 1.639507846950696e-06,
+   "lags": 3,
    "stationary_5pct": true
   }
  },

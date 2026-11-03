@@ -40,3 +40,29 @@ def test_featurize_and_cluster_recovers_groups():
     df2 = df.assign(cluster=labels).merge(prof[["cluster", "label"]], on="cluster")
     human = df2[df2["account"].str.startswith("alice")]
     assert (human["label"].str.startswith("human")).mean() > 0.9
+
+
+def test_assignment_hash_preserves_magnitude_schema_and_keys():
+    x = pd.DataFrame([[0.01, 2.]], columns=['share', 'count'], index=['alice'])
+    assert qaa._input_hash(x) != qaa._input_hash(x * 10)
+    assert qaa._input_hash(x) != qaa._input_hash(x.rename(index={'alice': 'bob'}))
+    assert qaa._input_hash(x) != qaa._input_hash(x.rename(columns={'share': 'other'}))
+
+
+def test_frozen_qaa_cannot_use_future_months(tmp_path, monkeypatch):
+    df = synthetic(n=800)
+    df['month'] = pd.date_range('2025-01-01', periods=8, freq='MS').repeat(100)
+    monkeypatch.setattr(qaa, 'MODELS', tmp_path)
+    first = df[df.month < '2025-08-01'].copy()
+    qaa.causal_monthly(first, qaa.featurize(first), sampled=False)
+    before = pd.read_csv(tmp_path / 'qaa_causal_monthly.csv')
+    model = (tmp_path / 'qaa_causal_model.json').read_bytes()
+    df.loc[df.month == '2025-08-01', 'txns'] *= 100
+    qaa.causal_monthly(df, qaa.featurize(df), sampled=False)
+    after = pd.read_csv(tmp_path / 'qaa_causal_monthly.csv')
+    pd.testing.assert_frame_equal(before, after.iloc[:1].reset_index(drop=True))
+    assert model == (tmp_path / 'qaa_causal_model.json').read_bytes()
+    index = pd.date_range('2025-07-01', '2025-08-02')
+    series = qaa.available_series(index)
+    assert series.loc[:'2025-07-31'].isna().all()
+    assert pd.notna(series.loc['2025-08-01'])

@@ -54,3 +54,61 @@ def test_token_diff_single_object_and_registry(monkeypatch):
     assert intents.price_leg("nep141:eth-0xa0b8.omft.near", -7000000, {}) == 7.0
     assert intents.price_leg("nep141:sol.omft.near", 2000000000, {"solana": 150.0}) == 300.0
     assert intents.price_leg("nep141:unknown.near", 1, {}) is None
+
+
+def test_multiple_users_in_receipt_with_only_stable_leg_priced(monkeypatch):
+    monkeypatch.setattr(intents, '_REGISTRY', {})
+    legs = pd.DataFrame([
+        ('2026-03-01', 'r', 'alice', 'a', 'usdc', -10_000_000),
+        ('2026-03-01', 'r', 'alice', 'a', 'unknown', 10),
+        ('2026-03-01', 'r', 'bob', 'b', 'usdc', -20_000_000),
+        ('2026-03-01', 'r', 'bob', 'b', 'unknown', 20),
+        ('2026-03-01', 'r', 'solver', 's', 'usdc', 30_000_000),
+        ('2026-03-01', 'r', 'solver', 's', 'unknown', -30),
+    ], columns=['block_date','receipt_id','account','intent_hash','token','amount'])
+    roles = pd.DataFrame([('2026-03-01', a, a == 'solver') for a in ['alice','bob','solver']], columns=['block_date','account','is_solver'])
+    events = pd.DataFrame({'block_date':['2026-03-01'], 'event':['token_diff']})
+    r = intents.daily_metrics(legs, roles, events, {}).iloc[0]
+    assert r.volume_priced_usd == 30  # both users retained, independent of solver identity
+    assert r.priced_batch_share == 1
+    assert r.fully_priced_batch_share == 0
+    assert r.priced_legs / r.total_legs == 0.5
+
+
+def test_sample_run_retains_zero_days_and_loads_prices_once(tmp_path, monkeypatch):
+    from near_thesis import blocks as blocks_mod
+    for p in ['blocks', 'bq', 'derived', 'models']:
+        (tmp_path / p).mkdir()
+    df = make_df()
+    df['window_day'] = df.block_date
+    df['window_hour'] = 3
+    df.to_csv(tmp_path / 'blocks/intents_events_sampled.csv', index=False)
+    manifest = {'windows': [{'day': d, 'hour': 3, 'n': 50, 'fetched': 50, 'usable': True} for d in ['2026-03-01','2026-03-02']]}
+    (tmp_path / 'blocks/sample_manifest.json').write_text(json.dumps(manifest))
+    pd.DataFrame({'date':['2026-03-01','2026-03-02'], 'blocks':[100_000,100_000], 'intents_volume_usd':[6_000_000,6_000_000]}).to_csv(tmp_path / 'derived/daily.csv', index=False)
+    monkeypatch.setattr(intents, 'DATA', tmp_path)
+    monkeypatch.setattr(intents, 'BQ_DIR', tmp_path / 'bq')
+    monkeypatch.setattr(intents, 'DERIVED', tmp_path / 'derived')
+    monkeypatch.setattr(intents, 'MODELS', tmp_path / 'models')
+    monkeypatch.setattr(blocks_mod, 'BLOCKS', tmp_path / 'blocks')
+    calls = []
+    def prices():
+        calls.append(1)
+        return {'2026-03-01': {'near':4.0}}
+    monkeypatch.setattr(intents, '_daily_prices', prices)
+    status = intents.run()
+    daily = pd.read_csv(tmp_path / 'models/intents_daily.csv')
+    assert status['sampled_days'] == 2 and status['days_with_token_diff'] == 1
+    assert daily.iloc[1].volume_priced_usd == 0
+    assert daily.iloc[0].users == 30  # observed users must not be multiplied by 2,000
+    assert len(calls) == 1
+
+
+def test_solver_relative_threshold_is_sampled_only():
+    rows = []
+    for i in range(5):
+        for a in ['mm', f'u{i}']:
+            rows.append(('2026-03-01', str(i), a))
+    legs = pd.DataFrame(rows, columns=['block_date','receipt_id','account'])
+    assert not intents.identify_solvers(legs).is_solver.any()
+    assert intents.identify_solvers(legs, sampled=True).is_solver.any()

@@ -21,6 +21,7 @@ import ruptures as rpt
 from statsmodels.tsa.api import VAR
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.vector_ar.vecm import coint_johansen
+from statsmodels.stats.multitest import multipletests
 
 from .config import DERIVED, MODELS
 
@@ -31,10 +32,10 @@ PRICE = "near_price"
 def _load_daily() -> pd.DataFrame:
     d = pd.read_csv(DERIVED / "daily.csv", parse_dates=["date"]).set_index("date")
     # QAA (L1) is merged if present so the same tests run on the quality-adjusted series
-    qaa = MODELS / "qaa_monthly.csv"
-    if qaa.exists():
-        q = pd.read_csv(qaa, parse_dates=["month"]).set_index("month")["qaa"]
-        d["qaa"] = q.reindex(d.index, method="ffill")
+    from .qaa import available_series
+    q = available_series(d.index)
+    if q is not None:
+        d["qaa"] = q
     return d
 
 
@@ -70,6 +71,8 @@ def adf(s: pd.Series) -> dict:
     s = s.dropna()
     if len(s) < 30:
         return {"n": int(len(s)), "note": "too short"}
+    if s.nunique() < 2:
+        return {"n": int(len(s)), "stationary_5pct": False, "note": "constant series; test not identified"}
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         stat, p, lags, nobs, crit, _ = adfuller(s, autolag="AIC")
@@ -81,6 +84,7 @@ def adf(s: pd.Series) -> dict:
 
 def weekly_dlogs(d: pd.DataFrame, cols: list[str], start: str | None = None) -> pd.DataFrame:
     w = d[cols].resample("W-SUN").mean()
+    w = w.loc[w.index <= d.index.max()]
     if start:
         w = w.loc[w.index >= pd.Timestamp(start)]
     return _logs_df(w).diff().dropna()
@@ -96,16 +100,22 @@ def var_granger(d: pd.DataFrame, metric: str, start: str | None) -> dict:
     w = w.replace([np.inf, -np.inf], np.nan).dropna()
     if len(w) < 40:
         return {"metric": metric, "n_weeks": int(len(w)), "note": "fewer than 40 weekly observations"}
+    diagnostics = {c: adf(w[c]) for c in cols}
+    base = {"metric": metric, "start": str(w.index[0].date()), "end": str(w.index[-1].date()), "n_weeks": len(w),
+            "stationarity": diagnostics, "inference_valid": False}
+    if not all(r.get("stationary_5pct", False) for r in diagnostics.values()):
+        return {**base, "note": "inconclusive: ADF does not establish stationary log differences for both series"}
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         model = VAR(w)
         res = model.fit(maxlags=min(8, len(w) // 10), ic="aic")
         lag = int(res.k_ar) if res.k_ar > 0 else 1
         if res.k_ar == 0:
-            res = model.fit(1)
+            return {**base, "lag_aic": 0, "note": "AIC selects zero lags; no lagged Granger test"}
         g_usage_to_price = res.test_causality(PRICE, [metric], kind="f")
         g_price_to_usage = res.test_causality(metric, [PRICE], kind="f")
-        irf = res.irf(8)
+        stable = bool(res.is_stable())
+        white_p = float(res.test_whiteness(nlags=max(12, lag + 2), adjusted=True).pvalue)
     # cumulative response of price to a one-sd shock in usage (orthogonalized, usage ordered first)
     order = [metric, PRICE]
     res2 = VAR(w[order]).fit(lag)
@@ -113,6 +123,9 @@ def var_granger(d: pd.DataFrame, metric: str, start: str | None) -> dict:
     k = order.index(PRICE)
     j = order.index(metric)
     return {
+        **base, "stable": stable, "residual_whiteness_p": white_p,
+        "inference_valid": bool(stable and white_p >= 0.05),
+        "note": "predictive association, not economic causality" if stable and white_p >= 0.05 else "inconclusive: stability or residual-whiteness check failed",
         "metric": metric, "start": str(w.index[0].date()), "end": str(w.index[-1].date()), "n_weeks": int(len(w)),
         "lag_aic": lag,
         "usage_granger_causes_price": {"F": float(g_usage_to_price.test_statistic), "p_value": float(g_usage_to_price.pvalue)},
@@ -125,19 +138,26 @@ def var_granger(d: pd.DataFrame, metric: str, start: str | None) -> dict:
 def johansen(d: pd.DataFrame, metric: str, start: str | None) -> dict:
     cols = [PRICE, metric]
     w = d[cols].resample("W-SUN").mean()
+    w = w.loc[w.index <= d.index.max()]
     if start:
         w = w.loc[w.index >= pd.Timestamp(start)]
     lw = _logs_df(w).replace([np.inf, -np.inf], np.nan).dropna()
     if len(lw) < 40:
         return {"metric": metric, "n_weeks": int(len(lw)), "note": "fewer than 40 weekly observations"}
+    integration = {c: {"level": adf(lw[c]), "difference": adf(lw[c].diff())} for c in cols}
+    integration_ok = all(not r["level"].get("stationary_5pct", True) and r["difference"].get("stationary_5pct", False) for r in integration.values())
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         jr = coint_johansen(lw, det_order=0, k_ar_diff=2)
     trace0, trace1 = float(jr.lr1[0]), float(jr.lr1[1])
     cv0, cv1 = jr.cvt[0], jr.cvt[1]  # 90, 95, 99
+    rank = 0 if trace0 <= cv0[1] else 1 if trace1 <= cv1[1] else 2
+    valid = integration_ok and rank < 2
     return {"metric": metric, "n_weeks": int(len(lw)), "start": str(lw.index[0].date()), "end": str(lw.index[-1].date()),
             "trace_r0": trace0, "cv95_r0": float(cv0[1]), "trace_r1": trace1, "cv95_r1": float(cv1[1]),
-            "cointegrated_5pct": bool(trace0 > cv0[1] and trace1 <= cv1[1])}
+            "rank_5pct": rank, "integration_checks": integration, "inference_valid": valid,
+            "cointegrated_5pct": bool(rank == 1) if valid else None,
+            "note": "rank 1 detected" if valid and rank == 1 else "rank 0: no rejection" if valid else "inconclusive: I(1) prerequisites not established or full rank"}
 
 
 # ---------- correlations ----------
@@ -179,6 +199,11 @@ def run() -> dict:
     (MODELS / "stationarity.json").write_text(json.dumps(stat, indent=1))
 
     vg = [var_granger(d, m, starts[m]) for m in metrics]
+    cells = [(r, field) for r in vg if r.get("inference_valid") for field in ["usage_granger_causes_price", "price_granger_causes_usage"]]
+    if cells:
+        adjusted = multipletests([r[f]["p_value"] for r, f in cells], method="holm")[1]
+        for (r, f), p in zip(cells, adjusted):
+            r[f]["p_value_holm"] = float(p)
     (MODELS / "var_granger.json").write_text(json.dumps(vg, indent=1))
 
     jo = [johansen(d, m, starts[m]) for m in metrics]

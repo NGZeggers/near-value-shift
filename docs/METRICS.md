@@ -2,20 +2,18 @@
 
 | Column | Source | Definition |
 |---|---|---|
-| `txns` | NearBlocks | transactions included per day |
-| `active_accounts` | NearBlocks | distinct accounts that signed a transaction that day |
-| `new_accounts` | NearBlocks | accounts created that day |
-| `active_contracts` | NearBlocks | contracts that received a call that day |
-| `tx_fee_usd / tx_fee_near` | NearBlocks | gas fees burned, in USD and NEAR |
-| `tx_volume_usd` | NearBlocks | USD value of native NEAR transferred |
-| `usd_per_txn` | derived | tx_volume_usd / txns |
-| `near_price, market_cap_usd` | NearBlocks | daily price and market cap |
-| `intents_volume_usd` | DefiLlama (Dune) | NEAR Intents swap volume |
-| `intents_fees_usd` | DefiLlama | fees paid on NEAR Intents swaps |
-| `near_dex_volume_usd` | DefiLlama | all DEX volume attributed to NEAR, Intents included |
-| `near_app_fees_usd` | DefiLlama | application fees on NEAR (all protocols) |
-| `tvl_usd` | DefiLlama | total value locked on NEAR |
-| `stablecoins_usd` | DefiLlama | circulating stablecoin supply on NEAR |
-| `price_bitcoin, price_ethereum` | DefiLlama coins | daily benchmark prices |
-| `qaa` | BigQuery + clustering | quality-adjusted active accounts (L1) |
-| `hhi_solver, top1_solver_share` | BigQuery events | solver concentration in Intents (L2) |
+| `txns / active_accounts` | NearBlocks | daily transactions / distinct signing accounts |
+| `tx_fee_near / tx_fee_usd` | NearBlocks | gas fees paid; not audited net supply burn |
+| `tx_volume_usd / usd_per_txn` | NearBlocks | native NEAR transferred in USD / ratio to transactions |
+| `intents_volume_usd` | DefiLlama/Dune | reported cross-chain settlement volume |
+| `intents_fees_usd` | DefiLlama/Dune | gross swap fees |
+| `intents_revenue_usd` | DefiLlama/Dune wallet-receipt adapter | net captured revenue; internal revenue-wallet hops excluded |
+| `intents_holders_revenue_usd` | same adapter | buyback-labelled net revenue; not proof of each purchase, dividends or burning |
+| `near_app_fees_usd` | DefiLlama | gross application fees; not token-holder income |
+| `tvl_usd / stablecoins_usd` | DefiLlama | chain TVL / circulating stablecoin USD supply |
+| `near_price / price_bitcoin / price_ethereum` | NearBlocks / DefiLlama coins | daily prices; benchmark histories |
+| `qaa_monthly.qaa` | sampled blocks or BigQuery; retrospective HDBSCAN | behavioral quality proxy; sampled share multiplied by mean daily active accounts |
+| `qaa_causal_monthly.qaa` | frozen past-only calibration GMM | out-of-calibration proxy; available on next-month first day; used for predictive tests |
+| `hhi_solver / top1_solver_share` | sampled token_diff events or BigQuery | within-observation heuristic solver concentration |
+| `volume_priced_usd` | same events | half sum of max priced inflow/outflow by account-intent; expanded only for additive flows |
+| `users` | same events | observed unique non-solver accounts, never expanded |

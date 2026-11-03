@@ -24,9 +24,8 @@ jobs:
         run: make build
       - name: Tests
         run: make test
-      - name: Thesis must be regenerated identically from the snapshots
-        run: |
-          git diff --exit-code -- THESIS.md || { echo "THESIS.md is out of date (run make thesis and commit)"; exit 1; }
+      - name: All analytical artifacts must match committed inputs
+        run: make check-generated
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
@@ -34,10 +33,10 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
-    continue-on-error: true  # GitHub Pages is unavailable while the repo is private; the build job is the gate
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/configure-pages@v5
       - id: deployment
         uses: actions/deploy-pages@v4

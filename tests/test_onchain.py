@@ -19,3 +19,11 @@ def test_read_index_handles_missing(monkeypatch):
     import requests
     monkeypatch.setattr(requests, "post", lambda *a, **k: R())
     assert onchain.read_index("nobody.testnet") is None
+
+
+def test_verify_rejects_modified_numbers_even_with_matching_hash(monkeypatch):
+    from near_thesis import onchain
+    local = {'thesis_sha256':'same', 'intents_volume_usd':100, 'as_of':'2026-11-01'}
+    monkeypatch.setattr(onchain, 'payload', lambda: local)
+    monkeypatch.setattr(onchain, 'read_index', lambda *a: {**local, 'intents_volume_usd':999})
+    assert onchain.verify('audit.testnet','testnet') is False

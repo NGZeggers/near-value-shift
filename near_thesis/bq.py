@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import sys
 from datetime import datetime, timezone
+import os
 from pathlib import Path
 
 from .config import BQ_DIR, BQ_MAX_GB_PER_QUERY, GOOGLE_CLOUD_PROJECT, SQL_DIR
@@ -38,7 +39,9 @@ def run_query(sql_file: Path, *, force: bool = False) -> Path | None:
     if gb > BQ_MAX_GB_PER_QUERY and not force:
         print(f"  refused: above BQ_MAX_GB_PER_QUERY={BQ_MAX_GB_PER_QUERY} GB. Narrow the date window or sample days.")
         return None
-    job = client.query(sql_file.read_text())
+    # Enforce the byte ceiling server-side too, in case the estimate changes before execution.
+    limit = None if force else int(BQ_MAX_GB_PER_QUERY * 1e9)
+    job = client.query(sql_file.read_text(), job_config=bigquery.QueryJobConfig(maximum_bytes_billed=limit))
     df = job.result().to_dataframe()
     out = BQ_DIR / f"{sql_file.stem}.csv"
     df.to_csv(out, index=False)
@@ -53,8 +56,27 @@ def run(names: list[str] | None = None, *, dry: bool = False, force: bool = Fals
     files = sorted(SQL_DIR.glob("*.sql"))
     if names:
         files = [f for f in files if f.stem in names or f.name in names]
+    freshness = SQL_DIR / "q0_freshness.sql"
+    files = [freshness] + [f for f in files if f != freshness]
+    total_gb = 0.0
+    max_run = float(os.getenv("BQ_MAX_GB_PER_RUN", "300"))
     for f in files:
         if dry:
-            print(f"{f.name}: dry run = {dry_run(f):,.1f} GB")
+            gb = dry_run(f)
+            total_gb += gb
+            print(f"{f.name}: dry run = {gb:,.1f} GB (run total {total_gb:,.1f} GB)")
         else:
-            run_query(f, force=force)
+            gb = dry_run(f)
+            if total_gb + gb > max_run and not force:
+                raise SystemExit(f"run budget would exceed BQ_MAX_GB_PER_RUN={max_run}; no further queries executed")
+            output = run_query(f, force=force)
+            if output is None:
+                raise SystemExit(f"query refused: {f.name}; stopping instead of mixing incomplete extracts")
+            total_gb += gb
+            if f == freshness:
+                import pandas as pd
+                frame = pd.read_csv(output)
+                last = pd.to_datetime(frame["last_block_date"], errors="coerce").max()
+                max_lag = int(os.getenv("BQ_MAX_STALENESS_DAYS", "7"))
+                if pd.isna(last) or (datetime.now(timezone.utc).date() - last.date()).days > max_lag:
+                    raise SystemExit(f"BigQuery is stale (last block: {last}); L1/L2 not executed. Use make blocks or narrow the analysis explicitly.")

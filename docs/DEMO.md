@@ -1,20 +1,28 @@
-# Demo script (video, 2-3 minutes) and X post draft
+# Demo storyboard and X draft
 
-## Video storyboard
-1. (0:00) The user problem, one sentence: "NEAR's headline activity fell 90%. Is the network dying, or are we reading the wrong metric?"
-2. (0:15) Terminal: `git clone ... && uv sync --all-extras && make features models charts thesis site test`. Show the pipeline finishing and `3+ tests passed`.
-3. (0:45) Open `site/index.html`. Hero: Intents monthly volume. KPI row. Toggle range "Since Intents" and dark mode.
-4. (1:10) Section 1 vs Section 2: active accounts down, Intents volume up, USD per transaction up. Hover a chart: crosshair tooltip. Open "Source and query".
-5. (1:40) Section 4: the honest part. Rolling correlation chart, Granger table, the negative information coefficient for Intents volume. "The data does not say usage leads price."
-6. (2:05) Section 3: QAA clustering and solver concentration from raw on-chain events (sampled blocks from FastNear, or BigQuery). Show `docs/SAMPLING.md` and the cluster profile table.
-7. (2:30) THESIS.md: claim, for, against, what would change our mind. "Every number is generated; nothing is typed by hand."
-8. (2:50) What NEAR does in the product: the public BigQuery dataset, NEAR RPC and the Intents contract events are the data layer; the thesis is about NEAR itself.
+## Two-minute storyboard
 
-## X post draft (to be posted by a human; tag @NEARProtocol and #NEARHackathon)
-Built at NEAR HACKATHON: "From clicks to settlement", a reproducible investment thesis on @NEARProtocol.
+1. Problem: "NEAR's account counts and cross-chain settlement tell different stories. Which claims survive a reproducible test?"
+2. Run `uv sync --all-extras`, `make build`, `make test`; show the generated files and passing test count.
+3. Open the dashboard; compare account activity, Intents volume and the separate gross-fee/net-revenue/buyback-labelled series. Open Source and query.
+4. Show the on-chain/reference reconciliation and the explicit failed or passing consistency check. Explain that fixed windows cannot validate full-market totals by themselves.
+5. Show retrospective QAA next to the past-only model's training end and release dates. Labels describe behavior, not verified humans.
+6. Show statistical diagnostics, exploratory IC and the generated current verdict. Emphasize the evidence against the claim as well as the descriptive shift.
+7. Close with NEAR's concrete role: its blocks, receipt logs and Intents events are the evidence. BigQuery and the on-chain index are optional paths, not claimed deployed results.
 
-NEAR's active accounts fell ~90% from the 2024 peak. Intents volume went from $3M/month to ~$4B/month. We asked which metric the market should price, and tested it: structural breaks, Granger/VAR, cointegration, forward-return signals, and behavioral clustering of accounts from the public BigQuery dataset.
+A hosted demo plus screenshots is allowed. If only a local demo is available, record video: the official rule says screenshots alone are insufficient in that case. The human publishes the demo on X.
 
-Every chart shows its query. Every number in THESIS.md is generated. One command rebuilds it all.
+## Draft
 
-Repo: <link> · Dashboard: <link> · Video below. #NEARHackathon
+Built at NEAR HACKATHON: From clicks to settlement.
+
+Do falling account counts tell the whole story of @NEARProtocol? We built a reproducible thesis comparing raw activity, behavioral proxies, Intents settlement and net fee capture—with past-only features, statistical diagnostics and the evidence against our own hypothesis.
+
+Repo: https://github.com/NGZeggers/near-value-shift
+Dashboard: https://ngzeggers.github.io/near-value-shift/
+
+Every chart has its source. One command rebuilds the results. Demo attached. #NEARHackathon
+
+## Final submission information still supplied by the team
+
+Project and lead names, contact email, team-size category, mainnet payout account, actual X demo-post URL, and agreement to the official contact notice. Never put keys or personal submission payloads in Git. The final payload must be reviewed before it is submitted; a submission cannot be edited afterward.
