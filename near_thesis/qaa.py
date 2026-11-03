@@ -7,7 +7,9 @@ downstream consumer (THESIS.md, dashboard) says "not computed" instead of invent
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 
 import numpy as np
 import pandas as pd
@@ -153,6 +155,14 @@ def label_clusters(df: pd.DataFrame, x: pd.DataFrame, labels: np.ndarray) -> pd.
 QUALITY = {"human_multi_app", "human_light", "intents_participant"}
 
 
+def _input_hash(x: pd.DataFrame) -> str:
+    """Hash of the feature matrix rounded to 6 significant digits (stable across platforms, sensitive to real changes)."""
+    arr = np.asarray(x.to_numpy(dtype=float))
+    with np.errstate(all="ignore"):
+        rounded = np.where(arr == 0, 0.0, np.round(arr / 10.0 ** np.floor(np.log10(np.abs(arr) + 1e-300)), 5))
+    return hashlib.sha256(np.ascontiguousarray(np.nan_to_num(rounded)).tobytes()).hexdigest()
+
+
 def run() -> dict:
     df = load_inputs()
     source = "bigquery"
@@ -167,7 +177,24 @@ def run() -> dict:
     if source != "bigquery":
         df = df[df["txns"] >= 1]
     x = featurize(df)
-    labels, info = fit_clusters(x)
+    # The fitted assignment is a committed model artifact: HDBSCAN flips a few borderline points between platforms
+    # (BLAS differences), which would make THESIS.md differ by a fraction of a percent per machine. The build reuses
+    # the committed assignment when it matches the input exactly; `QAA_REFIT=1 make models` refits and rewrites it.
+    assign_path = MODELS / "qaa_assignments.csv"
+    key_cols = ["month", "account"]
+    reuse = assign_path.exists() and not os.getenv("QAA_REFIT")
+    if reuse:
+        prev = pd.read_csv(assign_path, parse_dates=["month"])
+        same_rows = len(prev) == len(df) and prev[key_cols].merge(df[key_cols], on=key_cols).shape[0] == len(df)
+        reuse = same_rows and prev["input_sha256"].iloc[0] == _input_hash(x)
+    if reuse:
+        labels = df[key_cols].merge(prev, on=key_cols, how="left")["cluster"].to_numpy()
+        info = json.loads(prev["fit_info"].iloc[0])
+        info["reused_committed_assignment"] = True
+    else:
+        labels, info = fit_clusters(x)
+        pd.DataFrame({"month": df["month"].to_numpy(), "account": df["account"].to_numpy(), "cluster": labels,
+                      "input_sha256": _input_hash(x), "fit_info": json.dumps(info, default=str)}).to_csv(assign_path, index=False)
     prof = label_clusters(df, x, labels)
     df = df.assign(cluster=labels).merge(prof[["cluster", "label"]], on="cluster", how="left")
     monthly = df.groupby("month").agg(active_accounts_bq=("account", "nunique"))
