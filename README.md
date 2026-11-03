@@ -25,8 +25,10 @@ Requirements: [uv](https://docs.astral.sh/uv/) (it installs Python 3.12 itself).
 
 1. `uv sync --all-extras` -> a `.venv` is created with every dependency.
 2. `make build` -> rebuilds every table, model output, chart and `THESIS.md`
-   from the raw snapshots committed in `data/raw/` and `data/bigquery/`. You should see
-   `data/derived/daily.csv`, `data/derived/models/*.json`, `site/index.html`, and a regenerated `THESIS.md`.
+   from the raw snapshots committed in `data/raw/`, `data/blocks/` and `data/bigquery/`. It takes about 15 minutes on a
+   laptop (HDBSCAN on 32K account-months plus the bootstraps); no network is used. You should see
+   `data/derived/daily.csv`, `data/derived/models/*.json`, `site/index.html`, and a regenerated `THESIS.md` with no
+   diff against the committed one (the build is deterministic; CI checks this).
 3. `make serve` -> open http://localhost:8080 and you should see the dashboard: every chart with its source
    query and one plain sentence.
 4. `make test` -> unit tests for the metric functions pass.
