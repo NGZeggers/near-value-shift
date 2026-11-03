@@ -25,7 +25,8 @@ jobs:
       - name: Tests
         run: make test
       - name: Thesis must be regenerated identically from the snapshots
-        run: git diff --exit-code -- THESIS.md || (echo "THESIS.md is out of date: run make thesis and commit" && exit 1)
+        run: |
+          git diff --exit-code -- THESIS.md || { echo "THESIS.md is out of date (run make thesis and commit)"; exit 1; }
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
