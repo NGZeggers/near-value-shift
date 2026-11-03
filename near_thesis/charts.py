@@ -100,7 +100,7 @@ def build() -> dict:
         partial = "" if bq1 or len(q) >= 12 else f" Sampled mode, {len(q)} months covered so far (partial block sample; see docs/SAMPLING.md)."
         specs.append(_spec("qaa", "3. Quality-adjusted", "Active accounts vs Quality-Adjusted Active Accounts (QAA)",
             "QAA keeps only account-months whose behavior clusters as human-like or Intents participation; the rest is automation and mini-app farming." + partial,
-            "line", [{"name": "active accounts (BigQuery)" if bq1 else "active accounts (NearBlocks monthly mean)", "points": _pts(q["active_accounts_bq"], round_to=0)},
+            "line", [{"name": "active accounts (BigQuery)" if bq1 else "active accounts (NearBlocks)", "points": _pts(q["active_accounts_bq"], round_to=0)},
                      {"name": "QAA", "points": _pts(q["qaa"], round_to=0)}],
             unit="accounts", y_log=True, source=("BigQuery crypto_near_mainnet_us (sql/l1_*.sql)" if qaa_status.get("source") == "bigquery" else "FastNear neardata sampled blocks (data/blocks/tx_sampled.csv, near_thesis/blocks.py)") + "; clustering in near_thesis/qaa.py",
             query=("sql/l1_account_month_features.sql + sql/l1_account_month_actions.sql; " if qaa_status.get("source") == "bigquery" else "per (month, signer) features inside sampled windows; QAA = human-like share x NearBlocks active accounts; ") + qaa_status.get("algorithm", "")))
@@ -130,11 +130,14 @@ def build() -> dict:
             "Distinct non-solver accounts that executed a swap on a sampled day." + partial2,
             "line", [{"name": "users per day", "points": _pts(im["users_per_day"], round_to=0)}],
             unit="accounts", source=L2SRC, query="count of accounts not classified as solvers, per sampled day (expanded by blocks-in-day / blocks-sampled in sampled mode; an upper bound)"))
-        specs.append(_spec("intents_xcheck", "3. Quality-adjusted", "Intents monthly volume: on-chain estimate vs DefiLlama",
-            "Our independent estimate from raw events (priced legs only, with a day-bootstrap 95% interval) against the DefiLlama/Dune series." + partial2,
-            "line", [{"name": "on-chain estimate (priced)", "points": _pts(im["volume_est_usd"], round_to=0)},
-                     {"name": "DefiLlama", "points": _pts(d["intents_volume_usd"], freq="MS", how="sum", round_to=0)}],
-            unit="USD", y_log=True, source=L2SRC + "; DefiLlama", query="see near_thesis/intents.py monthly_estimates"))
+        iq = pd.read_csv(MODELS / "intents_quarterly.csv", parse_dates=["quarter"]).set_index("quarter")
+        rr = intents_status.get("ratio_to_defillama") or {}
+        specs.append(_spec("intents_xcheck", "3. Quality-adjusted", "Intents quarterly volume: on-chain estimate vs DefiLlama",
+            "Our independent estimate from raw token_diff events (priced legs, expanded from sampled blocks) against the DefiLlama/Dune series, by quarter. "
+            + (f"Pooled over all sampled days the estimate recovers {rr['ratio']*100:.0f}% of DefiLlama (95% CI {rr['ci_lo']*100:.0f}% to {rr['ci_hi']*100:.0f}%)." if rr else "") + partial2,
+            "line", [{"name": "on-chain estimate (priced)", "points": _pts(iq["volume_est_usd"], round_to=0)},
+                     {"name": "DefiLlama", "points": _pts(iq["defillama_usd"], round_to=0)}],
+            unit="USD", y_log=True, source=L2SRC + "; DefiLlama", query="near_thesis/intents.py quarterly_estimates and pooled_ratio (ratio of sums, day bootstrap)"))
     else:
         specs.append(_spec("intents_conc", "3. Quality-adjusted", "Intents microstructure (solver concentration, users, trade size)",
             "Not computed: " + intents_status.get("reason", ""), "empty", [], source="BigQuery execution_outcomes.logs", query=SQL_NOTE))

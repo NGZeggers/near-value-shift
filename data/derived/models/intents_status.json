@@ -2,19 +2,39 @@
  "computed": true,
  "source": "neardata block sample",
  "coverage": {
-  "blocks_fetched": 743,
+  "blocks_fetched": 4892,
   "blocks_requested": 4900,
-  "sample_complete": false,
-  "days_with_blocks": 7
+  "sample_complete": true,
+  "days_with_blocks": 49
  },
- "sampled_days": 2,
- "events": 28,
- "token_diff_legs": 28,
- "solver_accounts": 0,
- "priced_batch_share_mean": 1.0,
+ "ratio_to_defillama": {
+  "days": 38,
+  "ratio": 0.2607730726336675,
+  "ci_lo": 0.18074334044198156,
+  "ci_hi": 0.34360238917564145,
+  "median_daily_ratio": 0.17072433531838313
+ },
+ "sample_tail": {
+  "priced_batches": 578,
+  "max_batch_usd": 32490.113597516684,
+  "top1pct_share": 0.3641102052294575,
+  "top10pct_share": 0.941902868786191
+ },
+ "sampled_days": 39,
+ "events": 7280,
+ "token_diff_legs": 3844,
+ "solver_accounts": 9,
+ "priced_batch_share_mean": 0.9983974358974359,
  "event_counts": {
-  "token_diff": 14,
-  "intents_executed": 5
+  "token_diff": 1952,
+  "intents_executed": 1503,
+  "transfer": 1053,
+  "ft_withdraw": 389,
+  "mt_withdraw": 90,
+  "nft_withdraw": 43,
+  "native_withdraw": 33,
+  "public_key_added": 28,
+  "storage_deposit": 23
  },
  "assumptions": {
   "solver_min_batches_per_day": 20,

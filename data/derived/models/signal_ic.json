@@ -346,14 +346,14 @@
   "n": 94,
   "start": "2024-12-22",
   "end": "2026-10-04",
-  "spearman_ic": -0.14037559693009166,
-  "p_value_naive": 0.17718466160888197,
+  "spearman_ic": 0.023501788101000617,
+  "p_value_naive": 0.8221032816373163,
   "ci95_block_bootstrap": [
-   -0.48403127016551306,
-   0.25818971237546046
+   -0.3397733834285702,
+   0.3521672775244759
   ],
-  "ic_first_half": -0.23535167309127494,
-  "ic_second_half": NaN,
+  "ic_first_half": 0.04451896392229418,
+  "ic_second_half": -0.09666975023126735,
   "significant_bootstrap": false
  },
  {
@@ -363,15 +363,15 @@
   "n": 94,
   "start": "2024-12-22",
   "end": "2026-10-04",
-  "spearman_ic": -0.24146375739179804,
-  "p_value_naive": 0.019049521832560506,
+  "spearman_ic": -0.012896001155944081,
+  "p_value_naive": 0.9018192041421482,
   "ci95_block_bootstrap": [
-   -0.4280877279319845,
-   -0.009728401735480327
+   -0.341642823702327,
+   0.2934218167608107
   ],
-  "ic_first_half": -0.36146356596278434,
-  "ic_second_half": NaN,
-  "significant_bootstrap": true
+  "ic_first_half": -0.10256706753006474,
+  "ic_second_half": -0.052960222016651244,
+  "significant_bootstrap": false
  },
  {
   "metric": "qaa",
@@ -380,14 +380,14 @@
   "n": 86,
   "start": "2024-12-22",
   "end": "2026-08-09",
-  "spearman_ic": -0.13778384303760252,
-  "p_value_naive": 0.20583512629499015,
+  "spearman_ic": -0.09148544742676541,
+  "p_value_naive": 0.4021738102806089,
   "ci95_block_bootstrap": [
-   -0.5733033643190882,
-   0.358022506599165
+   -0.4881809676298977,
+   0.329532367162274
   ],
-  "ic_first_half": -0.2818094073150426,
-  "ic_second_half": NaN,
+  "ic_first_half": -0.03382663847780127,
+  "ic_second_half": -0.14119601328903653,
   "significant_bootstrap": false
  },
  {
@@ -397,14 +397,14 @@
   "n": 86,
   "start": "2024-12-22",
   "end": "2026-08-09",
-  "spearman_ic": 0.032582033611363186,
-  "p_value_naive": 0.765847413504821,
+  "spearman_ic": 0.2258880135855465,
+  "p_value_naive": 0.036504981111163945,
   "ci95_block_bootstrap": [
-   -0.2626416217933598,
-   0.17794067007699638
+   -0.3673417521342715,
+   0.6394929028767196
   ],
-  "ic_first_half": 0.09774470433900127,
-  "ic_second_half": NaN,
+  "ic_first_half": 0.6750226517668377,
+  "ic_second_half": -0.226819691935971,
   "significant_bootstrap": false
  }
 ]

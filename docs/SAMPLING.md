@@ -23,6 +23,9 @@ That limit sets the sample budget: about 5,000 blocks take 4-5 hours. Fetched bl
   share x NearBlocks' monthly mean of daily active accounts.
 
 ## Known biases, stated in THESIS.md
+- Tail coverage: each window is about 30 seconds of chain (0.07% of a day), so the sample almost never contains the
+  very large trades that dominate Intents volume; the volume level is a lower bound (26% of DefiLlama on the same days,
+  stable across quarters) and only the trend is validated. Full days (`make bq`) remove this.
 - Time-of-day: two fixed hours per day; activity with a strong intraday pattern is over- or under-weighted.
 - Short windows under-count low-frequency accounts (a human with one transaction a week is rarely in a 30-second window),
   so the sampled human-like share is biased downward; QAA in sampled mode is conservative.

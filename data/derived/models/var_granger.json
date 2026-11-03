@@ -108,14 +108,14 @@
   "n_weeks": 104,
   "lag_aic": 1,
   "usage_granger_causes_price": {
-   "F": 0.10867390981581616,
-   "p_value": 0.7420039522667352
+   "F": 0.572350266012257,
+   "p_value": 0.45021673366465254
   },
   "price_granger_causes_usage": {
-   "F": 0.07386137235415496,
-   "p_value": 0.7860757591139461
+   "F": 0.4502776503473516,
+   "p_value": 0.5029773523438332
   },
-  "cum_price_response_to_usage_shock_8w": 0.03938088286402889,
-  "contemporaneous_corr_dlog": 0.2768411011625718
+  "cum_price_response_to_usage_shock_8w": -0.005863009256215928,
+  "contemporaneous_corr_dlog": -0.0824114304417234
  }
 ]

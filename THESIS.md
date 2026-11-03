@@ -35,6 +35,7 @@ Three falsifiable predictions were tested:
 - **The regime change is statistically detectable.** PELT structural-break detection on log daily active accounts finds breaks at 2021-04-11, 2021-08-27, 2022-09-14, 2023-09-04, 2025-02-24, 2026-02-25; on log Intents volume at 2025-04-14, 2025-10-01.
 - **Price has not tracked the new activity.** Within-year correlation of log price with log Intents volume in 2025 was -0.69; with log active accounts it was 0.80 in 2025 and -0.71 in 2026.
 - **Peers.** NEAR ranks 1 of 8 on 30-day DEX volume divided by TVL (velocity): 21.4x against 10.2x for Solana.
+- **Part of the headcount decline is a bot wash-out, but only part.** From the 2024-12 peak to 2026-10, raw active accounts fell 92% while quality-adjusted active accounts (L1) fell 81%; the human-like share of account-months rose from 26% to 61%. The accounts that left were mostly mini-app farming; the human-like base also shrank, so the shift is in composition more than in scale.
 
 ## Evidence against
 
@@ -44,15 +45,17 @@ Three falsifiable predictions were tested:
 - **No lead-lag found for Intents.** Granger tests on weekly log changes (lag 1 by AIC, n=98): Intents volume to price p=0.47, price to Intents volume p=0.42. Transactions and gas fees do show two-way Granger links with price (see table), consistent with price driving speculative activity rather than the reverse.
 - **No cointegration.** Johansen trace tests find no cointegrating relation at 5% between log price and active_accounts, txns, tx_fee_usd, tx_volume_usd, intents_volume_usd, near_app_fees_usd, qaa.
 - **The 2024 baseline is inflated.** A large share of 2024 activity was mini-app and airdrop traffic; a fall from an inflated base is not itself evidence of a shift to higher-value use. The quality-adjusted series (below) is the honest comparison.
-- **The Intents volume series is third-party.** DefiLlama sources it from a Dune table maintained by the NEAR team. Our independent on-chain recomputation is the cross-check; where it is not computed, the volume figures above rest on one source.
+- **The Intents volume series is third-party.** DefiLlama sources it from a Dune table maintained by the NEAR team. Our on-chain recomputation from sampled blocks (L2) recovers 26% of it (95% CI 18% to 34%) with a roughly stable ratio across quarters: it confirms the trend, not the level, because one-minute windows cannot see the largest trades.
 
 ## Quality-adjusted active accounts (L1)
 
-Source: neardata block sample. Block sample: 743 of 4,900 planned blocks (partial run, 15% of the planned sample; the numbers cover only the months with sampled days), 7 sampled days from 2024-11-04 to 2025-02-02, 2 windows per day at UTC hours 3, 15, every 15 days (`docs/SAMPLING.md`). In sampled mode the features are computed inside the sampled block windows, the cluster shares are the estimate, and QAA = share x NearBlocks monthly active accounts. Behavioral clustering (hdbscan) of 13,077 account-months. Clusters labeled as automation, mini-app farming, heavy unlabeled, human (multi-app), human (light) and Intents participants; QAA counts the last three. At the 2024-12 peak QAA was 226,088 of 925,074 active accounts (24%); in 2025-02 it was 163,368 of 724,470 (23%). Silhouette on a 20K sample: 0.94.
+Source: neardata block sample. Block sample: 4,892 of 4,900 planned blocks (complete), 49 sampled days from 2024-11-04 to 2026-10-25, 2 windows per day at UTC hours 3, 15, every 15 days (`docs/SAMPLING.md`). In sampled mode the features are computed inside the sampled block windows, the cluster shares are the estimate, and QAA = share x NearBlocks monthly active accounts. Behavioral clustering (hdbscan) of 32,173 account-months. Clusters labeled as automation, mini-app farming, heavy unlabeled, human (multi-app), human (light) and Intents participants; QAA counts the last three. At the 2024-12 peak QAA was 237,071 of 925,074 active accounts (26%); in 2026-10 it was 44,282 of 72,046 (61%). Silhouette on a 20K sample: 0.89.
 
 ## Intents microstructure from raw events (L2)
 
-Source: neardata block sample. Block sample: 743 of 4,900 planned blocks (partial run, 15% of the planned sample; the numbers cover only the months with sampled days), 7 sampled days from 2024-11-04 to 2025-02-02, 2 windows per day at UTC hours 3, 15, every 15 days (`docs/SAMPLING.md`). Sampled counts and volumes are expanded to daily totals by blocks-in-day / blocks-sampled (users are an upper bound). Parsed 28 DIP-4 events on 2 sampled days; 0 accounts classified as solvers (>= 20 batches and >= 10 counterparties in a day). Share of batches with a priced leg: 100%. In 2025-01: 3,119 users per day, solver concentration not estimable (too few batches per sampled day), median priced trade $106.72. Independent monthly volume estimate $5.2M (95% day-bootstrap interval $5.2M to $5.2M) against DefiLlama $6.4M.
+Source: neardata block sample. Block sample: 4,892 of 4,900 planned blocks (complete), 49 sampled days from 2024-11-04 to 2026-10-25, 2 windows per day at UTC hours 3, 15, every 15 days (`docs/SAMPLING.md`). Sampled counts and volumes are expanded to daily totals by blocks-in-day / blocks-sampled (users are an upper bound). Parsed 7,280 DIP-4 events on 39 sampled days; 9 accounts classified as solvers (>= 20 batches and >= 10 counterparties in a day). Share of batches with a priced leg: 100%. In 2026-10: 34,715 users per day, 1.5 solvers per day, solver HHI 0.72, top-1 solver share 83%, median priced trade $44.08.
+
+**Cross-check against DefiLlama.** Daily Intents volume is heavy-tailed (a single block trade can be most of a day), so monthly estimates from two sampled days are only indicative; the honest comparison pools days. Over 38 sampled days the on-chain priced estimate recovers 26% of DefiLlama's volume on the same days (bootstrap 95% CI 18% to 34%; median daily ratio 17%). Latest quarter (2026-10, 2 sampled days): $1.8B (95% CI $1.5B to $2.0B) against DefiLlama $4.0B. The gap is a tail-coverage problem, not a pricing one: the sample covers about 0.07% of each sampled day, its largest priced batch is $32.5K and the top 10% of batches carry 94% of sampled volume, while Intents volume is known to be driven by trades far larger than anything a one-minute window catches. The level is therefore a lower bound; the ratio is roughly stable across quarters (table in `data/derived/models/intents_quarterly.csv`), so the on-chain sample confirms the trend DefiLlama reports, which is what the thesis needs, and cannot confirm the level. `make bq` replaces the sample with full days and removes this limit.
 
 ## Econometrics summary (L3)
 
@@ -64,7 +67,7 @@ Source: neardata block sample. Block sample: 743 of 4,900 planned blocks (partia
 | tx_volume_usd | 304 | 3 | 0.154 | 0.000 | 22.7 (15.5) |
 | intents_volume_usd | 98 | 1 | 0.465 | 0.420 | 12.1 (15.5) |
 | near_app_fees_usd | 128 | 2 | 0.282 | 0.826 | 6.2 (15.5) |
-| qaa | 104 | 1 | 0.742 | 0.786 | 13.7 (15.5) |
+| qaa | 104 | 1 | 0.450 | 0.503 | 18.9 (15.5) |
 
 Weekly means, log differences, VAR lag selected by AIC up to 8, F-test for Granger causality, Johansen with 2 lagged differences and no deterministic trend. Gas fees in USD correlate with price mechanically (fees are paid in NEAR); `tx_fee_near` is the activity measure in the signal tests.
 
@@ -77,7 +80,7 @@ Weekly means, log differences, VAR lag selected by AIC up to 8, F-test for Grang
 | tx_fee_near | -0.02 | -0.28 to +0.24 | +0.02 | -0.17 | 286 |
 | tx_volume_usd | -0.16 | -0.37 to +0.04 | -0.18 | -0.17 | 286 |
 | intents_volume_usd | -0.58 | -0.72 to -0.12 | +0.05 | -0.52 | 80 |
-| qaa | -0.14 | -0.57 to +0.36 | -0.28 | +nan | 86 |
+| qaa | -0.09 | -0.49 to +0.33 | -0.03 | -0.14 | 86 |
 
 Signal: 4-week log change of the 4-week mean. Target: 12-week forward log return of NEAR minus BTC. Circular block bootstrap with 12-week blocks, 2,000 draws. With 20 tests at 5%, one spurious rejection is expected; treat single significant cells as suggestive.
 
@@ -101,7 +104,7 @@ Trailing 12 months: Intents volume $32.8B, Intents fees $54.0M (observed take ra
 - NEAR price: NearBlocks daily series; BTC and ETH benchmarks: DefiLlama coins API. CoinGecko's free tier does not serve full history.
 - Sampling design, estimators and biases of the no-credentials path: `docs/SAMPLING.md`.
 - BigQuery dataset freshness is checked with `sql/q0_freshness.sql` before any L1/L2 run; NEAR Lake was deprecated on 2026-03-24.
-- Raw snapshot hashes: `docs/REPRODUCIBILITY.md` (58 files).
+- Raw snapshot hashes: `docs/REPRODUCIBILITY.md` (63 files).
 
 ## Reproduce
 

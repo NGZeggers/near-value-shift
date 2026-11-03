@@ -144,15 +144,21 @@ def identify_solvers(legs: pd.DataFrame) -> pd.DataFrame:
     return stats
 
 
-def _daily_prices() -> dict[str, dict[str, float]]:
-    """day -> {coingecko id: USD price} from every data/raw/price_<id>.json snapshot."""
-    out: dict[str, dict[str, float]] = {}
+def _daily_prices(max_gap_days: int = 7) -> dict[str, dict[str, float]]:
+    """day -> {coingecko id: USD price} from every data/raw/price_<id>.json snapshot. DefiLlama's daily series have
+    occasional missing days; a price is carried forward for at most `max_gap_days` days."""
+    cols = {}
     for f in sorted((DATA / "raw").glob("price_*.json")):
         cid = f.stem[len("price_"):]
-        for ts, px in json.loads(f.read_text()).get("data") or []:
-            day = pd.Timestamp(int(ts), unit="s").strftime("%Y-%m-%d")
-            out.setdefault(day, {})[cid] = float(px)
-    return out
+        pts = json.loads(f.read_text()).get("data") or []
+        if pts:
+            ser = pd.Series({pd.Timestamp(int(ts), unit="s").normalize(): float(px) for ts, px in pts})
+            cols[cid] = ser[~ser.index.duplicated(keep="last")]
+    if not cols:
+        return {}
+    df = pd.DataFrame(cols).sort_index()
+    df = df.reindex(pd.date_range(df.index.min(), df.index.max(), freq="D")).ffill(limit=max_gap_days)
+    return {day.strftime("%Y-%m-%d"): {k: v for k, v in row.items() if pd.notna(v)} for day, row in df.iterrows()}
 
 
 def hhi(shares: np.ndarray) -> float:
@@ -168,9 +174,10 @@ def daily_metrics(legs: pd.DataFrame, roles: pd.DataFrame, events: pd.DataFrame,
     wd = events[events["event"].str.endswith("_withdraw", na=False)].groupby("block_date").size()
     for day, g in legs.groupby("block_date"):
         users = g[~g["is_solver"]]
-        user_out = users[users["amount"] < 0]
-        priced = user_out.dropna(subset=["usd"])
-        per_batch = priced.groupby("receipt_id")["usd"].sum()
+        # value of a batch = the largest priced outflow of any party (for a two-party swap, the notional once);
+        # independent of who is classified as a solver, so thin samples do not drop or double-count batches
+        out = g[(g["amount"] < 0)].dropna(subset=["usd"])
+        per_batch = out.groupby(["receipt_id", "account"])["usd"].sum().groupby("receipt_id").max()
         solver_vol = g[g["is_solver"] & (g["amount"] < 0)].dropna(subset=["usd"]).groupby("account")["usd"].sum()
         solver_batches = g[g["is_solver"]].groupby("account")["receipt_id"].nunique()
         conc = solver_vol if len(solver_vol) else solver_batches
@@ -190,7 +197,8 @@ def daily_metrics(legs: pd.DataFrame, roles: pd.DataFrame, events: pd.DataFrame,
 
 
 def monthly_estimates(daily: pd.DataFrame, n_boot: int = 2000, seed: int = 11) -> pd.DataFrame:
-    """Sampled days -> monthly totals with a bootstrap CI over days (days treated as exchangeable within month)."""
+    """Sampled days -> monthly totals with a bootstrap CI over days (days treated as exchangeable within month).
+    With two sampled days per month the interval is indicative only; see quarterly_estimates and pooled_ratio."""
     rng = np.random.default_rng(seed)
     rows = []
     for month, g in daily.groupby(daily["date"].dt.to_period("M")):
@@ -204,6 +212,39 @@ def monthly_estimates(daily: pd.DataFrame, n_boot: int = 2000, seed: int = 11) -
                      "hhi_solver": float(g["hhi_solver"].mean()), "top1_solver_share": float(g["top1_solver_share"].mean()),
                      "median_trade_usd": float(g["median_trade_usd"].median())})
     return pd.DataFrame(rows)
+
+
+def quarterly_estimates(daily: pd.DataFrame, llama: pd.Series, n_boot: int = 2000, seed: int = 11) -> pd.DataFrame:
+    """Quarter totals (about six sampled days each) with a day-bootstrap CI, next to DefiLlama's quarter total."""
+    rng = np.random.default_rng(seed)
+    rows = []
+    for q, g in daily.groupby(daily["date"].dt.to_period("Q")):
+        ll_q = llama[(llama.index >= q.start_time) & (llama.index <= q.end_time)].dropna()
+        days = int(len(ll_q)) or (q.end_time - q.start_time).days + 1  # a partial quarter is compared on the days DefiLlama has
+        v = g["volume_priced_usd"].to_numpy()
+        est = v.mean() * days
+        boots = [rng.choice(v, size=len(v), replace=True).mean() * days for _ in range(n_boot)] if len(v) > 1 else [est]
+        ll = ll_q.sum()
+        rows.append({"quarter": q.start_time, "sampled_days": int(len(v)), "days": days, "volume_est_usd": float(est),
+                     "volume_ci_lo": float(np.quantile(boots, 0.025)), "volume_ci_hi": float(np.quantile(boots, 0.975)),
+                     "defillama_usd": float(ll), "ratio": float(est / ll) if ll else np.nan})
+    return pd.DataFrame(rows)
+
+
+def pooled_ratio(daily: pd.DataFrame, llama: pd.Series, n_boot: int = 4000, seed: int = 11) -> dict:
+    """Sum of expanded on-chain volume over all sampled days divided by DefiLlama's volume on the same days,
+    with a bootstrap CI over days (ratio of sums is robust to the heavy right tail of daily volume)."""
+    rng = np.random.default_rng(seed)
+    d = daily.assign(llama=daily["date"].map(llama)).dropna(subset=["llama"])
+    d = d[d["llama"] > 0]
+    if d.empty:
+        return {}
+    a, b = d["volume_priced_usd"].to_numpy(), d["llama"].to_numpy()
+    ratio = a.sum() / b.sum()
+    idx = rng.integers(0, len(a), size=(n_boot, len(a)))
+    boots = a[idx].sum(axis=1) / b[idx].sum(axis=1)
+    return {"days": int(len(d)), "ratio": float(ratio), "ci_lo": float(np.quantile(boots, 0.025)), "ci_hi": float(np.quantile(boots, 0.975)),
+            "median_daily_ratio": float(np.median(a / b))}
 
 
 def expansion_factors(raw: pd.DataFrame) -> pd.Series:
@@ -255,8 +296,12 @@ def run() -> dict:
             daily[c + "_sampled"] = daily[c]
             daily[c] = daily[c] * f_          # users expanded is an upper bound (the same user can appear in other windows)
     monthly = monthly_estimates(daily)
+    llama = pd.read_csv(DERIVED / "daily.csv", parse_dates=["date"]).set_index("date")["intents_volume_usd"]
+    quarterly = quarterly_estimates(daily, llama)
+    ratio = pooled_ratio(daily, llama)
     daily.to_csv(MODELS / "intents_daily.csv", index=False)
     monthly.to_csv(MODELS / "intents_monthly.csv", index=False)
+    quarterly.to_csv(MODELS / "intents_quarterly.csv", index=False)
     solvers = roles[roles["is_solver"]].groupby("account").agg(days=("block_date", "nunique"), batches=("batches", "sum")).sort_values("batches", ascending=False).reset_index()
     solvers.to_csv(MODELS / "intents_solvers.csv", index=False)
     coverage = {}
@@ -264,7 +309,13 @@ def run() -> dict:
         man = json.loads((DATA / "blocks" / "sample_manifest.json").read_text())
         coverage = {"blocks_fetched": man.get("blocks_fetched"), "blocks_requested": man.get("blocks_requested"), "sample_complete": man.get("complete"),
                     "days_with_blocks": len({w["day"] for w in man["windows"] if w.get("usable", True) and w.get("fetched", w["n"])})}
-    status = {"computed": True, "source": source, "coverage": coverage, "sampled_days": int(daily["date"].nunique()), "events": int(len(raw)), "token_diff_legs": int(len(legs)),
+    out_ = legs[legs["amount"] < 0].copy()
+    out_["usd"] = [price_leg(t, a, _daily_prices().get(str(d), {})) for t, a, d in zip(out_["token"], out_["amount"], out_["block_date"])]
+    pb = out_.dropna(subset=["usd"]).groupby(["receipt_id", "account"])["usd"].sum().groupby("receipt_id").max()
+    tail = {"priced_batches": int(len(pb)), "max_batch_usd": float(pb.max()) if len(pb) else None,
+            "top1pct_share": float(pb[pb >= pb.quantile(0.99)].sum() / pb.sum()) if len(pb) else None,
+            "top10pct_share": float(pb[pb >= pb.quantile(0.90)].sum() / pb.sum()) if len(pb) else None}
+    status = {"computed": True, "source": source, "coverage": coverage, "ratio_to_defillama": ratio, "sample_tail": tail, "sampled_days": int(daily["date"].nunique()), "events": int(len(raw)), "token_diff_legs": int(len(legs)),
               "solver_accounts": int(len(solvers)), "priced_batch_share_mean": float(daily["priced_batch_share"].mean()),
               "event_counts": events["event"].value_counts().to_dict(),
               "assumptions": {"solver_min_batches_per_day": SOLVER_MIN_BATCHES, "solver_min_counterparties": SOLVER_MIN_COUNTERPARTIES}}

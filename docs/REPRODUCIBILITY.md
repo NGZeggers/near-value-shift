@@ -4,7 +4,7 @@ Every raw snapshot used by the build, with its SHA-256. `make fetch` refreshes t
 
 | File | Fetched at | Bytes | SHA-256 |
 |---|---|---|---|
-| gecko_peer_markets.json | 2026-11-02T18:46:48+00:00 | 5,798 | `d1e4af307cd86e87...` |
+| gecko_peer_markets.json | 2026-11-03T01:01:20+00:00 | 5,796 | `7cd3329d3bd00838...` |
 | github_commit_activity.json | 2026-11-02T04:31:12+00:00 | 14,166 | `0f9538b6e3f9be10...` |
 | intents_tokens.json | 2026-11-02T18:46:48+00:00 | 53,534 | `c106887f867a105f...` |
 | llama_chains.json | 2026-11-02T04:30:16+00:00 | 57,968 | `1303054ad34ded0a...` |
@@ -45,20 +45,25 @@ Every raw snapshot used by the build, with its SHA-256. `make fetch` refreshes t
 | llama_tvl_sui.json | 2026-11-02T04:30:35+00:00 | 46,332 | `402a3b5021a7ba2c...` |
 | nearblocks_charts.json | 2026-11-02T04:30:13+00:00 | 1,536,710 | `92860b12c39b4c94...` |
 | nearblocks_stats.json | 2026-11-02T04:30:14+00:00 | 575 | `f43d11b5b6387a80...` |
-| price_aptos.json | 2026-11-02T18:46:47+00:00 | 142 | `8499d8f1b4c4b8c9...` |
-| price_arbitrum.json | 2026-11-02T18:46:47+00:00 | 145 | `5492fec3683c6f8c...` |
-| price_avalanche-2.json | 2026-11-02T18:46:46+00:00 | 58,657 | `7796bc0ed306e0a8...` |
-| price_binancecoin.json | 2026-11-02T18:46:26+00:00 | 62,254 | `c103f06ec212a4b0...` |
-| price_bitcoin-cash.json | 2026-11-02T18:46:40+00:00 | 63,796 | `cd11f6a98821ff99...` |
-| price_bitcoin.json | 2026-11-02T18:45:45+00:00 | 63,129 | `0b371d2c48fd0ca6...` |
-| price_dogecoin.json | 2026-11-02T18:46:09+00:00 | 67,257 | `47d956b0b59ba6ea...` |
-| price_ethereum.json | 2026-11-02T18:45:52+00:00 | 63,382 | `9c31082e5da37119...` |
-| price_litecoin.json | 2026-11-02T18:46:21+00:00 | 61,014 | `4e8ba28e2f295d39...` |
-| price_near.json | 2026-11-02T18:45:39+00:00 | 58,947 | `726df37ca1a0d65c...` |
-| price_ripple.json | 2026-11-02T18:46:04+00:00 | 64,585 | `f97c5d1891bf4b08...` |
-| price_solana.json | 2026-11-02T18:45:58+00:00 | 61,396 | `dd10743a7ab31369...` |
-| price_sui.json | 2026-11-02T18:46:34+00:00 | 140 | `ace94461d266f09c...` |
-| price_tron.json | 2026-11-02T18:46:33+00:00 | 65,449 | `71a0ca2fe6fbe144...` |
-| price_zcash.json | 2026-11-02T18:46:16+00:00 | 61,811 | `1caedd205413316e...` |
+| price_aptos.json | 2026-11-03T01:01:05+00:00 | 142 | `beaa9daedada83cd...` |
+| price_arbitrum.json | 2026-11-03T01:01:05+00:00 | 145 | `0f4d114f8a397ca8...` |
+| price_avalanche-2.json | 2026-11-03T01:01:04+00:00 | 58,688 | `162b59bcbc9bbeda...` |
+| price_berachain-bera.json | 2026-11-03T01:01:13+00:00 | 151 | `bb1cabfb079c1c5f...` |
+| price_binancecoin.json | 2026-11-03T01:00:44+00:00 | 62,285 | `79ceda092fc00509...` |
+| price_bitcoin-cash.json | 2026-11-03T01:00:58+00:00 | 63,828 | `53d5832501262956...` |
+| price_bitcoin.json | 2026-11-03T00:59:48+00:00 | 63,160 | `a6387cb1b1b13994...` |
+| price_chainlink.json | 2026-11-03T01:01:20+00:00 | 61,456 | `014daf5c64b46fdb...` |
+| price_dogecoin.json | 2026-11-03T01:00:21+00:00 | 67,290 | `0d9ad236e490f71e...` |
+| price_ethereum.json | 2026-11-03T00:59:57+00:00 | 63,413 | `0fc454fc931b1e05...` |
+| price_litecoin.json | 2026-11-03T01:00:37+00:00 | 61,046 | `bf9b6f9ce11b9566...` |
+| price_near.json | 2026-11-03T00:59:40+00:00 | 58,979 | `3313b02ad1ee19b3...` |
+| price_polygon-ecosystem-token.json | 2026-11-03T01:01:06+00:00 | 160 | `ededa69f99b7b3ef...` |
+| price_ripple.json | 2026-11-03T01:00:10+00:00 | 64,617 | `b1be663d633c462c...` |
+| price_solana.json | 2026-11-03T01:00:02+00:00 | 61,427 | `c940d44d665b5cb5...` |
+| price_sui.json | 2026-11-03T01:00:51+00:00 | 140 | `505a4912cac3e157...` |
+| price_sweatcoin.json | 2026-11-03T01:01:13+00:00 | 146 | `1336b45cea3320c5...` |
+| price_the-open-network.json | 2026-11-03T01:01:12+00:00 | 49,091 | `88b73470c66fcea9...` |
+| price_tron.json | 2026-11-03T01:00:50+00:00 | 65,482 | `5b2eb17e931e6fd6...` |
+| price_zcash.json | 2026-11-03T01:00:28+00:00 | 61,843 | `f5937cf6fc578947...` |
 | rpc_status.json | 2026-11-02T04:30:45+00:00 | 4,926 | `d9ffbe1a9b418605...` |
 | rpc_validators.json | 2026-11-02T04:30:48+00:00 | 26,255 | `4c0dcfb195fb5ea6...` |

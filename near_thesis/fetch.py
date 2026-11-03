@@ -63,7 +63,7 @@ LLAMA_COINS = "https://coins.llama.fi"
 
 PRICE_COINS = ["near", "bitcoin", "ethereum"]  # benchmarks used by features/signal tests
 INTENTS_PRICE_COINS = ["solana", "ripple", "dogecoin", "zcash", "litecoin", "binancecoin", "tron", "sui", "bitcoin-cash",
-                       "avalanche-2", "aptos", "arbitrum"]  # majors seen in Intents token_diff legs (priced in L2)
+                       "avalanche-2", "aptos", "arbitrum", "polygon-ecosystem-token", "the-open-network", "sweatcoin", "berachain-bera", "chainlink"]  # majors seen in Intents token_diff legs (priced in L2)
 ONECLICK_TOKENS = "https://1click.chaindefuser.com/v0/tokens"
 
 

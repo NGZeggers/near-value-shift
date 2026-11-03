@@ -113,8 +113,8 @@ Must ship: L0 + L1 + L3 + deliverables. Next: L2 (sampled). Last: L4 scenarios, 
 | Layer | State |
 |---|---|
 | L0 | done: 45 hashed snapshots, derived tables, `make fetch` |
-| L1 | computed on a partial block sample (743 of 4,900 blocks, 2024-11 to 2025-02): QAA ~24% of active accounts, the rest clusters as mini-app farming; `make blocks` extends the sample (~5 h), `make bq` replaces it |
-| L2 | computed on the same partial sample: real DIP-4 events parsed and priced via the 1Click token registry; independent 2025-01 volume $5.2M vs DefiLlama $6.4M; solver concentration needs the full sample |
+| L1 | computed on the full block sample (4,892 blocks, 49 days, 2024-11 to 2026-10): human-like share 26% at the 2024-12 peak, 61% in 2026-10; QAA fell 81% vs 92% raw; `make bq` replaces the sample with full days |
+| L2 | computed on the full sample: 7,280 DIP-4 events, 9 solver accounts, HHI 0.72 in 2026-10; on-chain volume recovers 26% of DefiLlama (CI 18-34%), stable across quarters: trend confirmed, level is a lower bound (tail coverage) |
 | L3 | done: breaks, ADF, VAR/Granger, Johansen, correlations |
 | L4 | done: IC with block bootstrap, peer panel, Monte Carlo scenarios |
 | Out | THESIS.md generated and deterministic, dashboard (light/dark, tooltips, table views, range filter), executed notebook, CI + Pages workflow, demo script |

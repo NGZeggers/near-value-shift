@@ -103,7 +103,20 @@ def build() -> str:
     out.append(f"- **Price has not tracked the new activity.** Within-year correlation of log price with log Intents volume in 2025 was {num(c25, 2)}; "
                f"with log active accounts it was {num(yc.loc[2025, 'active_accounts'], 2)} in 2025 and {num(yc.loc[cur_year, 'active_accounts'], 2)} in {cur_year}.")
     out.append(f"- **Peers.** NEAR ranks {near_vel_rank} of {n_vel} on 30-day DEX volume divided by TVL (velocity): "
-               f"{num(peers.loc['Near', 'dex_volume_to_tvl_30d'], 1)}x against {num(peers.loc['Solana', 'dex_volume_to_tvl_30d'], 1)}x for Solana.\n")
+               f"{num(peers.loc['Near', 'dex_volume_to_tvl_30d'], 1)}x against {num(peers.loc['Solana', 'dex_volume_to_tvl_30d'], 1)}x for Solana.")
+    qaa_bullet = ""
+    if qs.get("computed"):
+        q0 = pd.read_csv(MODELS / "qaa_monthly.csv", parse_dates=["month"]).set_index("month")
+        pk0 = q0["active_accounts_bq"].idxmax(); last0 = q0.iloc[-1]
+        raw_fall = 1 - last0["active_accounts_bq"] / q0.loc[pk0, "active_accounts_bq"]
+        qaa_fall = 1 - last0["qaa"] / q0.loc[pk0, "qaa"]
+        qaa_bullet = (f"- **Part of the headcount decline is a bot wash-out, but only part.** From the {str(pk0.date())[:7]} peak to {str(q0.index[-1].date())[:7]}, "
+                      f"raw active accounts fell {raw_fall*100:.0f}% while quality-adjusted active accounts (L1) fell {qaa_fall*100:.0f}%; the human-like share of "
+                      f"account-months rose from {q0.loc[pk0, 'qaa_share']*100:.0f}% to {last0['qaa_share']*100:.0f}%. The accounts that left were mostly mini-app farming; "
+                      f"the human-like base also shrank, so the shift is in composition more than in scale.")
+    if qaa_bullet:
+        out.append(qaa_bullet)
+    out.append("")
 
     out.append("## Evidence against\n")
     out.append(f"- **Value capture is weak.** NEAR ranks {near_fee_rank} of {n_fee} on annualized application fees divided by market cap "
@@ -127,8 +140,11 @@ def build() -> str:
     out.append(f"- **No cointegration.** Johansen trace tests find no cointegrating relation at 5% between log price and {', '.join(noj) if noj else 'any usage metric'}.")
     out.append("- **The 2024 baseline is inflated.** A large share of 2024 activity was mini-app and airdrop traffic; a fall from an inflated base is "
                "not itself evidence of a shift to higher-value use. The quality-adjusted series (below) is the honest comparison.")
-    out.append("- **The Intents volume series is third-party.** DefiLlama sources it from a Dune table maintained by the NEAR team. Our independent "
-               "on-chain recomputation is the cross-check; where it is not computed, the volume figures above rest on one source.\n")
+    rr0 = (is_.get("ratio_to_defillama") or {}) if is_.get("computed") else {}
+    out.append("- **The Intents volume series is third-party.** DefiLlama sources it from a Dune table maintained by the NEAR team. "
+               + (f"Our on-chain recomputation from sampled blocks (L2) recovers {rr0['ratio']*100:.0f}% of it (95% CI {rr0['ci_lo']*100:.0f}% to {rr0['ci_hi']*100:.0f}%) "
+                  "with a roughly stable ratio across quarters: it confirms the trend, not the level, because one-minute windows cannot see the largest trades.\n"
+                  if rr0 else "Our independent on-chain recomputation is the cross-check; where it is not computed, the volume figures above rest on one source.\n"))
 
     out.append("## Quality-adjusted active accounts (L1)\n")
     if qs.get("computed"):
@@ -154,8 +170,21 @@ def build() -> str:
                    f"(>= {is_['assumptions']['solver_min_batches_per_day']} batches and >= {is_['assumptions']['solver_min_counterparties']} counterparties in a day). "
                    f"Share of batches with a priced leg: {is_['priced_batch_share_mean']*100:.0f}%. In {str(im.index[-1].date())[:7]}: {num(lm['users_per_day'])} users per day, " +
                    (f"{num(lm['solvers_per_day'], 1)} solvers per day, solver HHI {lm['hhi_solver']:.2f}, top-1 solver share {lm['top1_solver_share']*100:.0f}%, " if pd.notna(lm['hhi_solver']) else "solver concentration not estimable (too few batches per sampled day), ") +
-                   f"median priced trade {usd(lm['median_trade_usd'])}. Independent monthly volume estimate {usd(lm['volume_est_usd'])} "
-                   f"(95% day-bootstrap interval {usd(lm['volume_ci_lo'])} to {usd(lm['volume_ci_hi'])}) against DefiLlama {usd(m['intents_volume_usd'].loc[im.index[-1]])}.\n")
+                   f"median priced trade {usd(lm['median_trade_usd'])}.\n")
+        iq = pd.read_csv(MODELS / "intents_quarterly.csv", parse_dates=["quarter"])
+        lq = iq.iloc[-1]; rr = is_.get("ratio_to_defillama") or {}; tl = is_.get("sample_tail") or {}
+        out.append(f"**Cross-check against DefiLlama.** Daily Intents volume is heavy-tailed (a single block trade can be most of a day), so "
+                   f"monthly estimates from two sampled days are only indicative; the honest comparison pools days. Over {rr.get('days', 0)} sampled days the "
+                   f"on-chain priced estimate recovers {rr.get('ratio', float('nan'))*100:.0f}% of DefiLlama's volume on the same days "
+                   f"(bootstrap 95% CI {rr.get('ci_lo', float('nan'))*100:.0f}% to {rr.get('ci_hi', float('nan'))*100:.0f}%; median daily ratio {rr.get('median_daily_ratio', float('nan'))*100:.0f}%). "
+                   f"Latest quarter ({str(lq['quarter'].date())[:7]}, {int(lq['sampled_days'])} sampled days): {usd(lq['volume_est_usd'])} "
+                   f"(95% CI {usd(lq['volume_ci_lo'])} to {usd(lq['volume_ci_hi'])}) against DefiLlama {usd(lq['defillama_usd'])}. "
+                   + (f"The gap is a tail-coverage problem, not a pricing one: the sample covers about 0.07% of each sampled day, its largest priced batch is "
+                      f"{usd(tl['max_batch_usd'])} and the top 10% of batches carry {tl['top10pct_share']*100:.0f}% of sampled volume, while Intents volume is known to be "
+                      f"driven by trades far larger than anything a one-minute window catches. " if tl.get("max_batch_usd") else "")
+                   + "The level is therefore a lower bound; the ratio is roughly stable across quarters (table in `data/derived/models/intents_quarterly.csv`), "
+                   "so the on-chain sample confirms the trend DefiLlama reports, which is what the thesis needs, and cannot confirm the level. "
+                   "`make bq` replaces the sample with full days and removes this limit.\n")
     else:
         out.append(f"Not computed: {is_.get('reason')} The event parser and the sampling design are in place (`sql/l2_intents_events.sql`, `near_thesis/intents.py`, `tests/test_intents.py`).\n")
 
