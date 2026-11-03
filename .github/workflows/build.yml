@@ -33,6 +33,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
+    continue-on-error: true  # GitHub Pages is unavailable while the repo is private; the build job is the gate
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
