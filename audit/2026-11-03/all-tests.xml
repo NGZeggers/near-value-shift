@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="12" skipped="0" tests="49" time="4.553" timestamp="2026-11-03T23:51:29.693299-06:00" hostname="ttech-main"><testcase classname="tests.test_blocks" name="test_extract_keeps_intents_logs_and_transactions" time="0.001" /><testcase classname="tests.test_bq" name="test_freshness_runs_first_and_stale_data_stops_l1" time="0.016" /><testcase classname="tests.test_econ_signal" name="test_detect_breaks_finds_level_shift" time="0.316" /><testcase classname="tests.test_econ_signal" name="test_adf_detects_random_walk_vs_noise" time="0.012" /><testcase classname="tests.test_econ_signal" name="test_block_bootstrap_ci_contains_rho_and_is_wide_for_independent_series" time="0.014" /><testcase classname="tests.test_econ_signal" name="test_var_does_not_infer_when_stationarity_is_unestablished" time="0.007" /><testcase classname="tests.test_econ_signal" name="test_johansen_full_rank_is_not_reported_as_absence" time="0.018" /><testcase classname="tests.test_econ_signal" name="test_bootstrap_is_reproducible_between_calls" time="0.005" /><testcase classname="tests.test_features" name="test_monthly_sums_and_means" time="0.016" /><testcase classname="tests.test_generated" name="test_numeric_precision_allowed_but_stale_market_cap_rejected" time="0.004" /><testcase classname="tests.test_generated" name="test_source_hashes_and_argument_require_exact_matches" time="0.000" /><testcase classname="tests.test_intents" name="test_parse_and_roles_and_metrics" time="0.052" /><testcase classname="tests.test_intents" name="test_token_diff_single_object_and_registry" time="0.002" /><testcase classname="tests.test_intents" name="test_multiple_users_in_receipt_with_only_stable_leg_priced" time="0.021" /><testcase classname="tests.test_intents" name="test_sample_run_retains_zero_days_and_loads_prices_once" time="0.180" /><testcase classname="tests.test_intents" name="test_solver_relative_threshold_is_sampled_only" time="0.020" /><testcase classname="tests.test_onchain" name="test_payload_is_deterministic_and_complete" time="0.329" /><testcase classname="tests.test_onchain" name="test_read_index_handles_missing" time="0.001" /><testcase classname="tests.test_onchain" name="test_verify_rejects_modified_numbers_even_with_matching_hash" time="0.001" /><testcase classname="tests.test_qaa" name="test_featurize_and_cluster_recovers_groups" time="0.261" /><testcase classname="tests.test_qaa" name="test_assignment_hash_preserves_magnitude_schema_and_keys" time="0.003" /><testcase classname="tests.test_qaa" name="test_frozen_qaa_cannot_use_future_months" time="0.186" /><testcase classname="tests.test_sampled_mode" name="test_load_sampled_builds_account_month_features" time="0.044" /><testcase classname="tests.test_sampled_mode" name="test_expansion_factor_uses_blocks_per_day" time="0.008" /><testcase classname="tests.test_sampled_mode" name="test_self_calls_and_window_denominator" time="0.045" /><testcase classname="audit_checks" name="test_failed_receipt_must_not_be_counted_as_settlement" time="0.001"><failure message="assert [['r', None, ...000000&quot;}}]}']] == []&#10;  &#10;  Left contains one more item: ['r', None, 'EVENT_JSON:{&quot;standard&quot;: &quot;dip4&quot;, &quot;event&quot;: &quot;token_diff&quot;, &quot;data&quot;: [{&quot;account_id&quot;: &quot;a.near&quot;, &quot;diff&quot;: {&quot;usdc&quot;: &quot;-1000000&quot;}}]}']&#10;  Use -v to get more diff">def test_failed_receipt_must_not_be_counted_as_settlement():
+        log = event([dict(account_id='a.near', diff={'usdc': '-1000000'})])
+        block = {'block': {'header': {'height': 1, 'timestamp': 1}}, 'shards': [{
+            'receipt_execution_outcomes': [{'receipt': {'receipt_id': 'r', 'receiver_id': 'intents.near'},
+            'execution_outcome': {'outcome': {'status': {'Failure': {'error': 'rollback'}}, 'logs': [log]}}}]}]}
+&gt;       assert blocks.extract(block)['events'] == []
+E       assert [['r', None, ...000000"}}]}']] == []
+E         
+E         Left contains one more item: ['r', None, 'EVENT_JSON:{"standard": "dip4", "event": "token_diff", "data": [{"account_id": "a.near", "diff": {"usdc": "-1000000"}}]}']
+E         Use -v to get more diff
+
+audit_checks.py:24: AssertionError</failure></testcase><testcase classname="audit_checks" name="test_unknown_token_name_cannot_impersonate_priced_asset[nep141:fake-usdc.attacker.near]" time="0.001"><failure message="AssertionError: assert 1e+18 is None&#10; +  where 1e+18 = &lt;function price_leg at 0x71607af7c360&gt;('nep141:fake-usdc.attacker.near', (10 ** 24), {'near': 4.0, 'bitcoin': 80000.0})&#10; +    where &lt;function price_leg at 0x71607af7c360&gt; = intents.price_leg">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7160773371a0&gt;
+name = 'nep141:fake-usdc.attacker.near'
+
+    @pytest.mark.parametrize('name', ['nep141:fake-usdc.attacker.near', 'nep141:fake-btc.attacker.near', 'nep141:fake-wrap.near.attacker'])
+    def test_unknown_token_name_cannot_impersonate_priced_asset(monkeypatch, name):
+        monkeypatch.setattr(intents, '_REGISTRY', {})
+&gt;       assert intents.price_leg(name, 10**24, {'near': 4., 'bitcoin': 80000.}) is None
+E       AssertionError: assert 1e+18 is None
+E        +  where 1e+18 = &lt;function price_leg at 0x71607af7c360&gt;('nep141:fake-usdc.attacker.near', (10 ** 24), {'near': 4.0, 'bitcoin': 80000.0})
+E        +    where &lt;function price_leg at 0x71607af7c360&gt; = intents.price_leg
+
+audit_checks.py:30: AssertionError</failure></testcase><testcase classname="audit_checks" name="test_unknown_token_name_cannot_impersonate_priced_asset[nep141:fake-btc.attacker.near]" time="0.001"><failure message="AssertionError: assert 8e+20 is None&#10; +  where 8e+20 = &lt;function price_leg at 0x71607af7c360&gt;('nep141:fake-btc.attacker.near', (10 ** 24), {'near': 4.0, 'bitcoin': 80000.0})&#10; +    where &lt;function price_leg at 0x71607af7c360&gt; = intents.price_leg">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7160773366f0&gt;
+name = 'nep141:fake-btc.attacker.near'
+
+    @pytest.mark.parametrize('name', ['nep141:fake-usdc.attacker.near', 'nep141:fake-btc.attacker.near', 'nep141:fake-wrap.near.attacker'])
+    def test_unknown_token_name_cannot_impersonate_priced_asset(monkeypatch, name):
+        monkeypatch.setattr(intents, '_REGISTRY', {})
+&gt;       assert intents.price_leg(name, 10**24, {'near': 4., 'bitcoin': 80000.}) is None
+E       AssertionError: assert 8e+20 is None
+E        +  where 8e+20 = &lt;function price_leg at 0x71607af7c360&gt;('nep141:fake-btc.attacker.near', (10 ** 24), {'near': 4.0, 'bitcoin': 80000.0})
+E        +    where &lt;function price_leg at 0x71607af7c360&gt; = intents.price_leg
+
+audit_checks.py:30: AssertionError</failure></testcase><testcase classname="audit_checks" name="test_unknown_token_name_cannot_impersonate_priced_asset[nep141:fake-wrap.near.attacker]" time="0.001"><failure message="AssertionError: assert 4.0 is None&#10; +  where 4.0 = &lt;function price_leg at 0x71607af7c360&gt;('nep141:fake-wrap.near.attacker', (10 ** 24), {'near': 4.0, 'bitcoin': 80000.0})&#10; +    where &lt;function price_leg at 0x71607af7c360&gt; = intents.price_leg">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7160772ee8a0&gt;
+name = 'nep141:fake-wrap.near.attacker'
+
+    @pytest.mark.parametrize('name', ['nep141:fake-usdc.attacker.near', 'nep141:fake-btc.attacker.near', 'nep141:fake-wrap.near.attacker'])
+    def test_unknown_token_name_cannot_impersonate_priced_asset(monkeypatch, name):
+        monkeypatch.setattr(intents, '_REGISTRY', {})
+&gt;       assert intents.price_leg(name, 10**24, {'near': 4., 'bitcoin': 80000.}) is None
+E       AssertionError: assert 4.0 is None
+E        +  where 4.0 = &lt;function price_leg at 0x71607af7c360&gt;('nep141:fake-wrap.near.attacker', (10 ** 24), {'near': 4.0, 'bitcoin': 80000.0})
+E        +    where &lt;function price_leg at 0x71607af7c360&gt; = intents.price_leg
+
+audit_checks.py:30: AssertionError</failure></testcase><testcase classname="audit_checks" name="test_malformed_diff_is_rejected_without_crashing[not-a-mapping]" time="0.002"><failure message="AttributeError: 'str' object has no attribute 'items'">diff = 'not-a-mapping'
+
+    @pytest.mark.parametrize('diff', ['not-a-mapping', ['not-a-mapping'], 1])
+    def test_malformed_diff_is_rejected_without_crashing(diff):
+        frame = pd.DataFrame([dict(block_date='2026-01-01', receipt_id='r', log=event([dict(account_id='a', diff=diff)]))])
+&gt;       assert intents.batches_from_events(frame).empty
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+audit_checks.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df =    block_date receipt_id                                                log
+0  2026-01-01          r  EVENT_JSON:{"standard": "dip4", "event": "toke...
+
+    def batches_from_events(df: pd.DataFrame) -&gt; pd.DataFrame:
+        """One row per (receipt, account, token) with the signed raw diff."""
+        rows = []
+        for r in df.itertuples(index=False):
+            ev = parse_event(r.log)
+            if not ev or ev.get("event") != "token_diff":
+                continue
+            data = ev.get("data")
+            items = data if isinstance(data, list) else ([data] if isinstance(data, dict) else [])  # 2024 events carry one object
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+&gt;               for token, amt in (item.get("diff") or {}).items():
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: 'str' object has no attribute 'items'
+
+near_thesis/intents.py:125: AttributeError</failure></testcase><testcase classname="audit_checks" name="test_malformed_diff_is_rejected_without_crashing[diff1]" time="0.002"><failure message="AttributeError: 'list' object has no attribute 'items'">diff = ['not-a-mapping']
+
+    @pytest.mark.parametrize('diff', ['not-a-mapping', ['not-a-mapping'], 1])
+    def test_malformed_diff_is_rejected_without_crashing(diff):
+        frame = pd.DataFrame([dict(block_date='2026-01-01', receipt_id='r', log=event([dict(account_id='a', diff=diff)]))])
+&gt;       assert intents.batches_from_events(frame).empty
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+audit_checks.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df =    block_date receipt_id                                                log
+0  2026-01-01          r  EVENT_JSON:{"standard": "dip4", "event": "toke...
+
+    def batches_from_events(df: pd.DataFrame) -&gt; pd.DataFrame:
+        """One row per (receipt, account, token) with the signed raw diff."""
+        rows = []
+        for r in df.itertuples(index=False):
+            ev = parse_event(r.log)
+            if not ev or ev.get("event") != "token_diff":
+                continue
+            data = ev.get("data")
+            items = data if isinstance(data, list) else ([data] if isinstance(data, dict) else [])  # 2024 events carry one object
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+&gt;               for token, amt in (item.get("diff") or {}).items():
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: 'list' object has no attribute 'items'
+
+near_thesis/intents.py:125: AttributeError</failure></testcase><testcase classname="audit_checks" name="test_malformed_diff_is_rejected_without_crashing[1]" time="0.002"><failure message="AttributeError: 'int' object has no attribute 'items'">diff = 1
+
+    @pytest.mark.parametrize('diff', ['not-a-mapping', ['not-a-mapping'], 1])
+    def test_malformed_diff_is_rejected_without_crashing(diff):
+        frame = pd.DataFrame([dict(block_date='2026-01-01', receipt_id='r', log=event([dict(account_id='a', diff=diff)]))])
+&gt;       assert intents.batches_from_events(frame).empty
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+audit_checks.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df =    block_date receipt_id                                                log
+0  2026-01-01          r  EVENT_JSON:{"standard": "dip4", "event": "toke...
+
+    def batches_from_events(df: pd.DataFrame) -&gt; pd.DataFrame:
+        """One row per (receipt, account, token) with the signed raw diff."""
+        rows = []
+        for r in df.itertuples(index=False):
+            ev = parse_event(r.log)
+            if not ev or ev.get("event") != "token_diff":
+                continue
+            data = ev.get("data")
+            items = data if isinstance(data, list) else ([data] if isinstance(data, dict) else [])  # 2024 events carry one object
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+&gt;               for token, amt in (item.get("diff") or {}).items():
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: 'int' object has no attribute 'items'
+
+near_thesis/intents.py:125: AttributeError</failure></testcase><testcase classname="audit_checks" name="test_non_events_are_ignored[None]" time="0.001" /><testcase classname="audit_checks" name="test_non_events_are_ignored[]" time="0.000" /><testcase classname="audit_checks" name="test_non_events_are_ignored[plain]" time="0.000" /><testcase classname="audit_checks" name="test_non_events_are_ignored[EVENT_JSON:{]" time="0.000" /><testcase classname="audit_checks" name="test_non_events_are_ignored[EVENT_JSON:[]]" time="0.000" /><testcase classname="audit_checks" name="test_non_events_are_ignored[EVENT_JSON:{&quot;standard&quot;:&quot;other&quot;}]" time="0.000" /><testcase classname="audit_checks" name="test_bq_run_budget_enforced_against_executed_query_ceiling" time="0.006"><failure message="assert 240000000000 &lt;= (150 * (10 ** 9))&#10; +  where 240000000000 = sum([120000000000, 120000000000])">tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-2/test_bq_run_budget_enforced_ag0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x716077185d00&gt;
+
+    def test_bq_run_budget_enforced_against_executed_query_ceiling(tmp_path, monkeypatch):
+        for name in ['q0_freshness', 'l1_accounts']:
+            (tmp_path / (name + '.sql')).write_text('SELECT 1')
+        monkeypatch.setattr(bq, 'SQL_DIR', tmp_path)
+        monkeypatch.setattr(bq, 'BQ_DIR', tmp_path)
+        monkeypatch.setattr(bq, 'BQ_MAX_GB_PER_QUERY', 120)
+        monkeypatch.setenv('BQ_MAX_GB_PER_RUN', '150')
+        ceilings = []
+        class Config:
+            def __init__(self, **kwargs): self.__dict__.update(kwargs)
+        class Job:
+            total_bytes_processed = 100 * 10**9
+            job_id = 'mock'
+            def result(self): return self
+            def to_dataframe(self):
+                return pd.DataFrame({'last_block_date': [pd.Timestamp.now(tz='UTC').date().isoformat()]})
+        class Client:
+            def query(self, sql, job_config):
+                if not getattr(job_config, 'dry_run', False):
+                    ceilings.append(job_config.maximum_bytes_billed)
+                return Job()
+        monkeypatch.setattr(bq, '_client', lambda: (SimpleNamespace(QueryJobConfig=Config), Client()))
+        monkeypatch.setattr(bq, 'dry_run', lambda _: 1.)
+        bq.run()
+        # An execution estimate changed from 1GB to 100GB. The second query's
+        # ceiling must also respect the remaining run budget, not only per-query.
+&gt;       assert sum(ceilings) &lt;= 150 * 10**9
+E       assert 240000000000 &lt;= (150 * (10 ** 9))
+E        +  where 240000000000 = sum([120000000000, 120000000000])
+
+audit_checks.py:70: AssertionError</failure></testcase><testcase classname="audit_checks" name="test_bq_accumulated_budget_cannot_be_bypassed_by_estimate_drift" time="0.007"><failure message="AssertionError: assert 4 &lt;= 1&#10; +  where 4 = len(['q0_freshness', 'l1_accounts', 'l2_events', 'q1_daily'])">tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-2/test_bq_accumulated_budget_can0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x716077187320&gt;
+
+    def test_bq_accumulated_budget_cannot_be_bypassed_by_estimate_drift(tmp_path, monkeypatch):
+        for name in ['q0_freshness', 'l1_accounts', 'l2_events', 'q1_daily']:
+            (tmp_path / (name + '.sql')).write_text('SELECT 1')
+        monkeypatch.setattr(bq, 'SQL_DIR', tmp_path)
+        monkeypatch.setenv('BQ_MAX_GB_PER_RUN', '3')
+        monkeypatch.setattr(bq, 'dry_run', lambda _: .5)
+        executed = []
+        def run(path, **kwargs):
+            executed.append(path.stem)
+            f = tmp_path / (path.stem+'.csv')
+            pd.DataFrame({'last_block_date': [pd.Timestamp.now(tz='UTC').date().isoformat()]}).to_csv(f, index=False)
+            (tmp_path / (path.stem+'.meta.json')).write_text(json.dumps({'bytes_processed': 2*10**9}))
+            return f
+        monkeypatch.setattr(bq, 'run_query', run)
+        try: bq.run()
+        except SystemExit: pass
+&gt;       assert len(executed) &lt;= 1
+E       AssertionError: assert 4 &lt;= 1
+E        +  where 4 = len(['q0_freshness', 'l1_accounts', 'l2_events', 'q1_daily'])
+
+audit_checks.py:89: AssertionError</failure></testcase><testcase classname="audit_checks" name="test_signing_not_imported_on_dry_run" time="0.003" /><testcase classname="audit_checks" name="test_missing_credentials_prevent_transaction" time="0.002" /><testcase classname="audit_checks" name="test_cli_testnet_selection_must_override_mainnet_environment" time="0.004"><failure message="AssertionError: assert ['mainnet'] == ['testnet']&#10;  &#10;  At index 0 diff: 'mainnet' != 'testnet'&#10;  Use -v to get more diff">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7160772eeea0&gt;
+
+    def test_cli_testnet_selection_must_override_mainnet_environment(monkeypatch):
+        # Stub publishing completely; this test never imports the signer or sends RPC.
+        monkeypatch.setenv('NEAR_NETWORK', 'mainnet')
+        observed = []
+        monkeypatch.setattr(onchain, 'run', lambda **kwargs: observed.append(kwargs.get('network', os.getenv('NEAR_NETWORK'))))
+        cli.main(['onchain', '--network', 'testnet'])
+&gt;       assert observed == ['testnet']
+E       AssertionError: assert ['mainnet'] == ['testnet']
+E         
+E         At index 0 diff: 'mainnet' != 'testnet'
+E         Use -v to get more diff
+
+audit_checks.py:117: AssertionError</failure></testcase><testcase classname="audit_checks" name="test_rpc_error_causes_verification_to_fail_closed" time="0.001" /><testcase classname="audit_checks" name="test_explorer_configured_must_not_report_success" time="0.001"><failure message="Failed: DID NOT RAISE any of (SystemExit, NotImplementedError)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7160773367b0&gt;
+
+    def test_explorer_configured_must_not_report_success(monkeypatch):
+        monkeypatch.setattr(fetch, 'INTENTS_EXPLORER_JWT', 'audit-placeholder-not-a-real-secret')
+&gt;       with pytest.raises((SystemExit, NotImplementedError)):
+E       Failed: DID NOT RAISE any of (SystemExit, NotImplementedError)
+
+audit_checks.py:131: Failed</failure></testcase><testcase classname="audit_checks" name="test_empty_retry_budget_has_clear_validation" time="0.000"><failure message="AssertionError">def test_empty_retry_budget_has_clear_validation():
+        with pytest.raises(ValueError):
+&gt;           http.fetch_json('https://example.invalid', retries=0)
+
+audit_checks.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+url = 'https://example.invalid', retries = 0, timeout = 60, headers = None
+method = 'GET', json_body = None
+
+    def fetch_json(url: str, *, retries: int = 3, timeout: int = 60, headers: dict | None = None,
+                   method: str = "GET", json_body: Any = None) -&gt; Any:
+        last: Exception | None = None
+        for attempt in range(1, retries + 1):
+            try:
+                r = requests.request(method, url, timeout=timeout, json=json_body,
+                                     headers={"user-agent": UA, "accept": "application/json", **(headers or {})})
+                if r.status_code == 429 or r.status_code &gt;= 500:
+                    raise requests.HTTPError(f"HTTP {r.status_code}", response=r)
+                r.raise_for_status()
+                return r.json()
+            except requests.HTTPError as e:
+                last = e
+                status = getattr(e.response, "status_code", None)
+                if status is not None and status &lt; 500 and status != 429:
+                    raise
+            except (requests.ConnectionError, requests.Timeout) as e:
+                last = e
+            time.sleep(1.5 * attempt)
+&gt;       assert last is not None
+               ^^^^^^^^^^^^^^^^
+E       AssertionError
+
+near_thesis/http.py:41: AssertionError</failure></testcase><testcase classname="audit_checks" name="test_http_non_retryable_error_is_not_retried" time="0.001" /><testcase classname="audit_checks" name="test_http_retries_429_then_succeeds" time="0.000" /><testcase classname="audit_checks" name="test_site_escapes_script_termination" time="0.001" /></testsuite></testsuites>

@@ -1,0 +1,258 @@
+[
+ {
+  "metric": "active_accounts",
+  "start": "2021-01-10",
+  "end": "2026-11-01",
+  "n_weeks": 304,
+  "stationarity": {
+   "near_price": {
+    "n": 303,
+    "adf_stat": -12.5638316809218,
+    "p_value": 2.0743592935590152e-23,
+    "lags": 0,
+    "stationary_5pct": true
+   },
+   "active_accounts": {
+    "n": 300,
+    "adf_stat": -10.764043895201812,
+    "p_value": 2.478661178056794e-19,
+    "lags": 3,
+    "stationary_5pct": true
+   }
+  },
+  "inference_valid": true,
+  "stable": true,
+  "residual_whiteness_p": 0.1938657950930702,
+  "note": "predictive association, not economic causality",
+  "lag_aic": 1,
+  "usage_granger_causes_price": {
+   "F": 2.8048684715174543,
+   "p_value": 0.09449963577598895,
+   "p_value_holm": 0.4724981788799448
+  },
+  "price_granger_causes_usage": {
+   "F": 0.003738323029044419,
+   "p_value": 0.9512666185247065,
+   "p_value_holm": 1.0
+  },
+  "cum_price_response_to_usage_shock_8w": 0.011622283344485928,
+  "contemporaneous_corr_dlog": 0.14882652660247078
+ },
+ {
+  "metric": "txns",
+  "start": "2021-01-10",
+  "end": "2026-11-01",
+  "n_weeks": 304,
+  "stationarity": {
+   "near_price": {
+    "n": 303,
+    "adf_stat": -12.5638316809218,
+    "p_value": 2.0743592935590152e-23,
+    "lags": 0,
+    "stationary_5pct": true
+   },
+   "txns": {
+    "n": 296,
+    "adf_stat": -5.383300839259759,
+    "p_value": 3.6717691195059345e-06,
+    "lags": 7,
+    "stationary_5pct": true
+   }
+  },
+  "inference_valid": true,
+  "stable": true,
+  "residual_whiteness_p": 0.12656452878779917,
+  "note": "predictive association, not economic causality",
+  "lag_aic": 8,
+  "usage_granger_causes_price": {
+   "F": 3.4947898365528607,
+   "p_value": 0.0005965760343551268,
+   "p_value_holm": 0.004772608274841015
+  },
+  "price_granger_causes_usage": {
+   "F": 2.1198322517966814,
+   "p_value": 0.03231015232563607,
+   "p_value_holm": 0.1938609139538164
+  },
+  "cum_price_response_to_usage_shock_8w": -0.03168089714626435,
+  "contemporaneous_corr_dlog": 0.09820510749127428
+ },
+ {
+  "metric": "tx_fee_usd",
+  "start": "2021-01-10",
+  "end": "2026-11-01",
+  "n_weeks": 304,
+  "stationarity": {
+   "near_price": {
+    "n": 303,
+    "adf_stat": -12.5638316809218,
+    "p_value": 2.0743592935590152e-23,
+    "lags": 0,
+    "stationary_5pct": true
+   },
+   "tx_fee_usd": {
+    "n": 297,
+    "adf_stat": -7.06786185203155,
+    "p_value": 5.025847120436841e-10,
+    "lags": 6,
+    "stationary_5pct": true
+   }
+  },
+  "inference_valid": true,
+  "stable": true,
+  "residual_whiteness_p": 0.07210606782403618,
+  "note": "predictive association, not economic causality",
+  "lag_aic": 8,
+  "usage_granger_causes_price": {
+   "F": 2.4313239957157915,
+   "p_value": 0.013718345427969503,
+   "p_value_holm": 0.09602841799578653
+  },
+  "price_granger_causes_usage": {
+   "F": 6.233252797931126,
+   "p_value": 9.806371958624018e-08,
+   "p_value_holm": 8.825734762761616e-07
+  },
+  "cum_price_response_to_usage_shock_8w": 0.02404194788523368,
+  "contemporaneous_corr_dlog": 0.3848504494718109
+ },
+ {
+  "metric": "tx_volume_usd",
+  "start": "2021-01-10",
+  "end": "2026-11-01",
+  "n_weeks": 304,
+  "stationarity": {
+   "near_price": {
+    "n": 303,
+    "adf_stat": -12.5638316809218,
+    "p_value": 2.0743592935590152e-23,
+    "lags": 0,
+    "stationary_5pct": true
+   },
+   "tx_volume_usd": {
+    "n": 302,
+    "adf_stat": -15.599877796581412,
+    "p_value": 1.8349372445932932e-28,
+    "lags": 1,
+    "stationary_5pct": true
+   }
+  },
+  "inference_valid": true,
+  "stable": true,
+  "residual_whiteness_p": 0.11760229010010677,
+  "note": "predictive association, not economic causality",
+  "lag_aic": 3,
+  "usage_granger_causes_price": {
+   "F": 1.7585386879777747,
+   "p_value": 0.1539468077521073,
+   "p_value_holm": 0.6157872310084292
+  },
+  "price_granger_causes_usage": {
+   "F": 13.540315554762715,
+   "p_value": 1.4902664761095992e-08,
+   "p_value_holm": 1.490266476109599e-07
+  },
+  "cum_price_response_to_usage_shock_8w": 0.10089149914146452,
+  "contemporaneous_corr_dlog": 0.3495591806734729
+ },
+ {
+  "metric": "intents_volume_usd",
+  "start": "2024-12-22",
+  "end": "2026-11-01",
+  "n_weeks": 98,
+  "stationarity": {
+   "near_price": {
+    "n": 97,
+    "adf_stat": -6.667399980267025,
+    "p_value": 4.6799488946839234e-09,
+    "lags": 0,
+    "stationary_5pct": true
+   },
+   "intents_volume_usd": {
+    "n": 86,
+    "adf_stat": -2.0771415385575667,
+    "p_value": 0.25380487311396327,
+    "lags": 11,
+    "stationary_5pct": false
+   }
+  },
+  "inference_valid": false,
+  "note": "inconclusive: ADF does not establish stationary log differences for both series"
+ },
+ {
+  "metric": "near_app_fees_usd",
+  "start": "2024-04-28",
+  "end": "2026-11-01",
+  "n_weeks": 128,
+  "stationarity": {
+   "near_price": {
+    "n": 127,
+    "adf_stat": -8.042783634483254,
+    "p_value": 1.82802243205886e-12,
+    "lags": 0,
+    "stationary_5pct": true
+   },
+   "near_app_fees_usd": {
+    "n": 119,
+    "adf_stat": -3.4714289670263887,
+    "p_value": 0.00875190225699675,
+    "lags": 8,
+    "stationary_5pct": true
+   }
+  },
+  "inference_valid": true,
+  "stable": true,
+  "residual_whiteness_p": 0.49299822052332853,
+  "note": "predictive association, not economic causality",
+  "lag_aic": 2,
+  "usage_granger_causes_price": {
+   "F": 1.2725701287133186,
+   "p_value": 0.2819784012960427,
+   "p_value_holm": 0.845935203888128
+  },
+  "price_granger_causes_usage": {
+   "F": 0.19168730172049417,
+   "p_value": 0.8256902076455268,
+   "p_value_holm": 1.0
+  },
+  "cum_price_response_to_usage_shock_8w": 0.04369491931869664,
+  "contemporaneous_corr_dlog": 0.10218860195786841
+ },
+ {
+  "metric": "qaa",
+  "start": "2025-06-08",
+  "end": "2026-11-01",
+  "n_weeks": 74,
+  "stationarity": {
+   "near_price": {
+    "n": 73,
+    "adf_stat": -5.614355261970107,
+    "p_value": 1.1836822033177976e-06,
+    "lags": 0,
+    "stationary_5pct": true
+   },
+   "qaa": {
+    "n": 70,
+    "adf_stat": -5.548565350978492,
+    "p_value": 1.6395078469507109e-06,
+    "lags": 3,
+    "stationary_5pct": true
+   }
+  },
+  "inference_valid": false,
+  "stable": true,
+  "residual_whiteness_p": 0.006799875122689002,
+  "note": "inconclusive: stability or residual-whiteness check failed",
+  "lag_aic": 1,
+  "usage_granger_causes_price": {
+   "F": 1.0608879434463097,
+   "p_value": 0.30478890631540434
+  },
+  "price_granger_causes_usage": {
+   "F": 0.6592864923656754,
+   "p_value": 0.4181903839090139
+  },
+  "cum_price_response_to_usage_shock_8w": -0.027554714309139704,
+  "contemporaneous_corr_dlog": -0.00048729809137517625
+ }
+]

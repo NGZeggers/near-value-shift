@@ -1,0 +1,35 @@
+{
+ "as_of": "2026-11-01",
+ "inputs": {
+  "intents_volume_12m_usd": 32761177210.0,
+  "intents_fees_12m_usd": 54155218.0,
+  "intents_net_revenue_12m_usd": 9312904.05,
+  "intents_holders_revenue_12m_usd": 7542709.05,
+  "observed_capture_share": 0.17196688322813142,
+  "observed_take_rate_bps": 16.530302819359523,
+  "gas_fees_12m_usd": 1202522.06297554,
+  "market_cap_usd": 5807002813.858446,
+  "current_price_to_gas_fees": 4829.019768244006
+ },
+ "assumptions": {
+  "volume_multiplier": "lognormal(median 1, sigma 0.6) clipped [0.25, 4]",
+  "take_rate_bps": "uniform [0.5x, 1.5x] of observed",
+  "share_to_token": "uniform [0.5x, 1.5x] observed net capture, bounded [0,1]",
+  "note": "scenarios, not forecasts: fee switch and governance-controlled buybacks are live; net capture and buyback-labelled revenue are not dividends or proof of token burning; future allocation is discretionary"
+ },
+ "token_fees_usd": {
+  "p5": 3715862.4822136895,
+  "p25": 6298266.967814224,
+  "p50": 9715196.613695258,
+  "p75": 15131071.648844318,
+  "p95": 29460406.657743733
+ },
+ "price_to_fees": {
+  "p5": 197.11210649343133,
+  "p25": 383.780009063475,
+  "p50": 597.7236553394346,
+  "p75": 922.0001207454832,
+  "p95": 1562.7604524460987
+ },
+ "n": 20000
+}

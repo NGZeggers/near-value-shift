@@ -1,0 +1,49 @@
+{
+ "computed": true,
+ "source": "neardata block sample",
+ "n": 32173,
+ "fit_sample": 32173,
+ "algorithm": "hdbscan",
+ "noise_share": 0.03335094644577752,
+ "silhouette_sample": 0.9062187060852185,
+ "months": 24,
+ "labels": {
+  "-1": "noise",
+  "0": "human_light",
+  "1": "human_light",
+  "2": "miniapp_farming",
+  "3": "human_light",
+  "4": "human_light",
+  "5": "human_light",
+  "6": "human_light",
+  "7": "miniapp_farming",
+  "8": "miniapp_farming",
+  "9": "miniapp_farming",
+  "10": "miniapp_farming",
+  "11": "miniapp_farming",
+  "12": "human_light",
+  "13": "human_light",
+  "14": "human_light",
+  "15": "human_light",
+  "16": "human_light",
+  "17": "human_light",
+  "18": "human_light",
+  "19": "human_light",
+  "20": "human_light"
+ },
+ "quality_labels": [
+  "human_light",
+  "human_multi_app",
+  "intents_participant"
+ ],
+ "method_version": "qaa-v3-self-calls-windows",
+ "causal": {
+  "computed": true,
+  "method": "frozen_calibration_gmm_diag_bic",
+  "training_end": "2025-04-30",
+  "first_available_at": "2025-06-01",
+  "months": 18,
+  "k": 6
+ },
+ "validation": "silhouette is geometric separation; anchor profiles use name proxies, not verified people; sensitivity shares reported monthly"
+}

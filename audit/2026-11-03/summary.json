@@ -1,0 +1,28 @@
+{
+  "commit": "4843bcb7b3e876bdfc330820358240b44d4f4311",
+  "at_utc": "2026-11-04T05:55:35.586170+00:00",
+  "original_pytest": {
+    "passed": 25,
+    "failed": 0
+  },
+  "combined_pytest": {
+    "passed": 37,
+    "failed": 12,
+    "total": 49
+  },
+  "browser": {
+    "passed": 27,
+    "failed": 1
+  },
+  "integrity": {
+    "passed": 91,
+    "failed": 0
+  },
+  "dependency_packages": 155,
+  "known_advisories": 0,
+  "comparison": {
+    "against_commit": [],
+    "against_first_complete_build": []
+  },
+  "python_external_network_attempt_log_exists": false
+}

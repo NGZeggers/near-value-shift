@@ -1,0 +1,457 @@
+[
+  {
+    "name": "daily_unique_dates",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "daily_sorted",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "daily_contiguous",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "no_future_analysis_days",
+    "passed": true,
+    "detail": "2026-11-01 00:00:00"
+  },
+  {
+    "name": "nonnegative_txns",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "nonnegative_active_accounts",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "nonnegative_tx_fee_usd",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "nonnegative_tx_volume_usd",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "nonnegative_intents_volume_usd",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "nonnegative_intents_fees_usd",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "nonnegative_intents_revenue_usd",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "qaa_within_accounts",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "qaa_release_after_month_close",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "qaa_no_prediction_before_calibration_end",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "qaa_finite_parameters",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "concentration_within_bounds_hhi_solver",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "concentration_within_bounds_top1_solver_share",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "concentration_within_bounds_top5_solver_share",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "no_duplicate_receipt_logs",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "onchain_index_matches_payload",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "thesis_hash_matches",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_gecko_peer_markets.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_github_commit_activity.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_intents_tokens.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_chains.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_dexs_aptos.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_dexs_arbitrum.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_dexs_avalanche.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_dexs_base.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_dexs_near.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_dexs_polygon.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_dexs_solana.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_dexs_sui.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_fees_aptos.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_fees_arbitrum.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_fees_avalanche.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_fees_base.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_fees_near.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_fees_polygon.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_fees_solana.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_fees_sui.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_intents_fees.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_intents_holders_revenue.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_intents_revenue.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_intents_volume.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_near_dexs.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_stables_aptos.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_stables_arbitrum.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_stables_avalanche.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_stables_base.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_stables_near.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_stables_polygon.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_stables_solana.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_stables_sui.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_tvl_aptos.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_tvl_arbitrum.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_tvl_avalanche.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_tvl_base.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_tvl_near.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_tvl_polygon.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_tvl_solana.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_llama_tvl_sui.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_nearblocks_charts.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_nearblocks_stats.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_aptos.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_arbitrum.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_avalanche-2.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_berachain-bera.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_binancecoin.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_bitcoin-cash.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_bitcoin.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_chainlink.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_dogecoin.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_ethereum.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_litecoin.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_near.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_polygon-ecosystem-token.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_ripple.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_solana.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_sui.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_sweatcoin.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_the-open-network.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_tron.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_price_zcash.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_rpc_status.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "documented_raw_hash_rpc_validators.json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "site_strict_json",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "every_chart_has_source_query_sentence",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "unique_chart_ids",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "all_declared_family_sizes_match",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "no_forward_target_after_cutoff",
+    "passed": true,
+    "detail": null
+  }
+]

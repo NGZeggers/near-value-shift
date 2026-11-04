@@ -1,0 +1,331 @@
+.........................FFFFFFF......FF..F.FF...                        [100%]
+=================================== FAILURES ===================================
+____________ test_failed_receipt_must_not_be_counted_as_settlement _____________
+
+    def test_failed_receipt_must_not_be_counted_as_settlement():
+        log = event([dict(account_id='a.near', diff={'usdc': '-1000000'})])
+        block = {'block': {'header': {'height': 1, 'timestamp': 1}}, 'shards': [{
+            'receipt_execution_outcomes': [{'receipt': {'receipt_id': 'r', 'receiver_id': 'intents.near'},
+            'execution_outcome': {'outcome': {'status': {'Failure': {'error': 'rollback'}}, 'logs': [log]}}}]}]}
+>       assert blocks.extract(block)['events'] == []
+E       assert [['r', None, ...000000"}}]}']] == []
+E         
+E         Left contains one more item: ['r', None, 'EVENT_JSON:{"standard": "dip4", "event": "token_diff", "data": [{"account_id": "a.near", "diff": {"usdc": "-1000000"}}]}']
+E         Use -v to get more diff
+
+audit_checks.py:24: AssertionError
+_ test_unknown_token_name_cannot_impersonate_priced_asset[nep141:fake-usdc.attacker.near] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7160773371a0>
+name = 'nep141:fake-usdc.attacker.near'
+
+    @pytest.mark.parametrize('name', ['nep141:fake-usdc.attacker.near', 'nep141:fake-btc.attacker.near', 'nep141:fake-wrap.near.attacker'])
+    def test_unknown_token_name_cannot_impersonate_priced_asset(monkeypatch, name):
+        monkeypatch.setattr(intents, '_REGISTRY', {})
+>       assert intents.price_leg(name, 10**24, {'near': 4., 'bitcoin': 80000.}) is None
+E       AssertionError: assert 1e+18 is None
+E        +  where 1e+18 = <function price_leg at 0x71607af7c360>('nep141:fake-usdc.attacker.near', (10 ** 24), {'near': 4.0, 'bitcoin': 80000.0})
+E        +    where <function price_leg at 0x71607af7c360> = intents.price_leg
+
+audit_checks.py:30: AssertionError
+_ test_unknown_token_name_cannot_impersonate_priced_asset[nep141:fake-btc.attacker.near] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7160773366f0>
+name = 'nep141:fake-btc.attacker.near'
+
+    @pytest.mark.parametrize('name', ['nep141:fake-usdc.attacker.near', 'nep141:fake-btc.attacker.near', 'nep141:fake-wrap.near.attacker'])
+    def test_unknown_token_name_cannot_impersonate_priced_asset(monkeypatch, name):
+        monkeypatch.setattr(intents, '_REGISTRY', {})
+>       assert intents.price_leg(name, 10**24, {'near': 4., 'bitcoin': 80000.}) is None
+E       AssertionError: assert 8e+20 is None
+E        +  where 8e+20 = <function price_leg at 0x71607af7c360>('nep141:fake-btc.attacker.near', (10 ** 24), {'near': 4.0, 'bitcoin': 80000.0})
+E        +    where <function price_leg at 0x71607af7c360> = intents.price_leg
+
+audit_checks.py:30: AssertionError
+_ test_unknown_token_name_cannot_impersonate_priced_asset[nep141:fake-wrap.near.attacker] _
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7160772ee8a0>
+name = 'nep141:fake-wrap.near.attacker'
+
+    @pytest.mark.parametrize('name', ['nep141:fake-usdc.attacker.near', 'nep141:fake-btc.attacker.near', 'nep141:fake-wrap.near.attacker'])
+    def test_unknown_token_name_cannot_impersonate_priced_asset(monkeypatch, name):
+        monkeypatch.setattr(intents, '_REGISTRY', {})
+>       assert intents.price_leg(name, 10**24, {'near': 4., 'bitcoin': 80000.}) is None
+E       AssertionError: assert 4.0 is None
+E        +  where 4.0 = <function price_leg at 0x71607af7c360>('nep141:fake-wrap.near.attacker', (10 ** 24), {'near': 4.0, 'bitcoin': 80000.0})
+E        +    where <function price_leg at 0x71607af7c360> = intents.price_leg
+
+audit_checks.py:30: AssertionError
+_______ test_malformed_diff_is_rejected_without_crashing[not-a-mapping] ________
+
+diff = 'not-a-mapping'
+
+    @pytest.mark.parametrize('diff', ['not-a-mapping', ['not-a-mapping'], 1])
+    def test_malformed_diff_is_rejected_without_crashing(diff):
+        frame = pd.DataFrame([dict(block_date='2026-01-01', receipt_id='r', log=event([dict(account_id='a', diff=diff)]))])
+>       assert intents.batches_from_events(frame).empty
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+audit_checks.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df =    block_date receipt_id                                                log
+0  2026-01-01          r  EVENT_JSON:{"standard": "dip4", "event": "toke...
+
+    def batches_from_events(df: pd.DataFrame) -> pd.DataFrame:
+        """One row per (receipt, account, token) with the signed raw diff."""
+        rows = []
+        for r in df.itertuples(index=False):
+            ev = parse_event(r.log)
+            if not ev or ev.get("event") != "token_diff":
+                continue
+            data = ev.get("data")
+            items = data if isinstance(data, list) else ([data] if isinstance(data, dict) else [])  # 2024 events carry one object
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+>               for token, amt in (item.get("diff") or {}).items():
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: 'str' object has no attribute 'items'
+
+near_thesis/intents.py:125: AttributeError
+___________ test_malformed_diff_is_rejected_without_crashing[diff1] ____________
+
+diff = ['not-a-mapping']
+
+    @pytest.mark.parametrize('diff', ['not-a-mapping', ['not-a-mapping'], 1])
+    def test_malformed_diff_is_rejected_without_crashing(diff):
+        frame = pd.DataFrame([dict(block_date='2026-01-01', receipt_id='r', log=event([dict(account_id='a', diff=diff)]))])
+>       assert intents.batches_from_events(frame).empty
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+audit_checks.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df =    block_date receipt_id                                                log
+0  2026-01-01          r  EVENT_JSON:{"standard": "dip4", "event": "toke...
+
+    def batches_from_events(df: pd.DataFrame) -> pd.DataFrame:
+        """One row per (receipt, account, token) with the signed raw diff."""
+        rows = []
+        for r in df.itertuples(index=False):
+            ev = parse_event(r.log)
+            if not ev or ev.get("event") != "token_diff":
+                continue
+            data = ev.get("data")
+            items = data if isinstance(data, list) else ([data] if isinstance(data, dict) else [])  # 2024 events carry one object
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+>               for token, amt in (item.get("diff") or {}).items():
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: 'list' object has no attribute 'items'
+
+near_thesis/intents.py:125: AttributeError
+_____________ test_malformed_diff_is_rejected_without_crashing[1] ______________
+
+diff = 1
+
+    @pytest.mark.parametrize('diff', ['not-a-mapping', ['not-a-mapping'], 1])
+    def test_malformed_diff_is_rejected_without_crashing(diff):
+        frame = pd.DataFrame([dict(block_date='2026-01-01', receipt_id='r', log=event([dict(account_id='a', diff=diff)]))])
+>       assert intents.batches_from_events(frame).empty
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+audit_checks.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+df =    block_date receipt_id                                                log
+0  2026-01-01          r  EVENT_JSON:{"standard": "dip4", "event": "toke...
+
+    def batches_from_events(df: pd.DataFrame) -> pd.DataFrame:
+        """One row per (receipt, account, token) with the signed raw diff."""
+        rows = []
+        for r in df.itertuples(index=False):
+            ev = parse_event(r.log)
+            if not ev or ev.get("event") != "token_diff":
+                continue
+            data = ev.get("data")
+            items = data if isinstance(data, list) else ([data] if isinstance(data, dict) else [])  # 2024 events carry one object
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+>               for token, amt in (item.get("diff") or {}).items():
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: 'int' object has no attribute 'items'
+
+near_thesis/intents.py:125: AttributeError
+__________ test_bq_run_budget_enforced_against_executed_query_ceiling __________
+
+tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-2/test_bq_run_budget_enforced_ag0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x716077185d00>
+
+    def test_bq_run_budget_enforced_against_executed_query_ceiling(tmp_path, monkeypatch):
+        for name in ['q0_freshness', 'l1_accounts']:
+            (tmp_path / (name + '.sql')).write_text('SELECT 1')
+        monkeypatch.setattr(bq, 'SQL_DIR', tmp_path)
+        monkeypatch.setattr(bq, 'BQ_DIR', tmp_path)
+        monkeypatch.setattr(bq, 'BQ_MAX_GB_PER_QUERY', 120)
+        monkeypatch.setenv('BQ_MAX_GB_PER_RUN', '150')
+        ceilings = []
+        class Config:
+            def __init__(self, **kwargs): self.__dict__.update(kwargs)
+        class Job:
+            total_bytes_processed = 100 * 10**9
+            job_id = 'mock'
+            def result(self): return self
+            def to_dataframe(self):
+                return pd.DataFrame({'last_block_date': [pd.Timestamp.now(tz='UTC').date().isoformat()]})
+        class Client:
+            def query(self, sql, job_config):
+                if not getattr(job_config, 'dry_run', False):
+                    ceilings.append(job_config.maximum_bytes_billed)
+                return Job()
+        monkeypatch.setattr(bq, '_client', lambda: (SimpleNamespace(QueryJobConfig=Config), Client()))
+        monkeypatch.setattr(bq, 'dry_run', lambda _: 1.)
+        bq.run()
+        # An execution estimate changed from 1GB to 100GB. The second query's
+        # ceiling must also respect the remaining run budget, not only per-query.
+>       assert sum(ceilings) <= 150 * 10**9
+E       assert 240000000000 <= (150 * (10 ** 9))
+E        +  where 240000000000 = sum([120000000000, 120000000000])
+
+audit_checks.py:70: AssertionError
+----------------------------- Captured stdout call -----------------------------
+q0_freshness.sql: dry run = 1.0 GB
+  saved q0_freshness.csv: 1 rows, 100.0 GB billed
+l1_accounts.sql: dry run = 1.0 GB
+  saved l1_accounts.csv: 1 rows, 100.0 GB billed
+_______ test_bq_accumulated_budget_cannot_be_bypassed_by_estimate_drift ________
+
+tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-2/test_bq_accumulated_budget_can0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x716077187320>
+
+    def test_bq_accumulated_budget_cannot_be_bypassed_by_estimate_drift(tmp_path, monkeypatch):
+        for name in ['q0_freshness', 'l1_accounts', 'l2_events', 'q1_daily']:
+            (tmp_path / (name + '.sql')).write_text('SELECT 1')
+        monkeypatch.setattr(bq, 'SQL_DIR', tmp_path)
+        monkeypatch.setenv('BQ_MAX_GB_PER_RUN', '3')
+        monkeypatch.setattr(bq, 'dry_run', lambda _: .5)
+        executed = []
+        def run(path, **kwargs):
+            executed.append(path.stem)
+            f = tmp_path / (path.stem+'.csv')
+            pd.DataFrame({'last_block_date': [pd.Timestamp.now(tz='UTC').date().isoformat()]}).to_csv(f, index=False)
+            (tmp_path / (path.stem+'.meta.json')).write_text(json.dumps({'bytes_processed': 2*10**9}))
+            return f
+        monkeypatch.setattr(bq, 'run_query', run)
+        try: bq.run()
+        except SystemExit: pass
+>       assert len(executed) <= 1
+E       AssertionError: assert 4 <= 1
+E        +  where 4 = len(['q0_freshness', 'l1_accounts', 'l2_events', 'q1_daily'])
+
+audit_checks.py:89: AssertionError
+_________ test_cli_testnet_selection_must_override_mainnet_environment _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7160772eeea0>
+
+    def test_cli_testnet_selection_must_override_mainnet_environment(monkeypatch):
+        # Stub publishing completely; this test never imports the signer or sends RPC.
+        monkeypatch.setenv('NEAR_NETWORK', 'mainnet')
+        observed = []
+        monkeypatch.setattr(onchain, 'run', lambda **kwargs: observed.append(kwargs.get('network', os.getenv('NEAR_NETWORK'))))
+        cli.main(['onchain', '--network', 'testnet'])
+>       assert observed == ['testnet']
+E       AssertionError: assert ['mainnet'] == ['testnet']
+E         
+E         At index 0 diff: 'mainnet' != 'testnet'
+E         Use -v to get more diff
+
+audit_checks.py:117: AssertionError
+_______________ test_explorer_configured_must_not_report_success _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7160773367b0>
+
+    def test_explorer_configured_must_not_report_success(monkeypatch):
+        monkeypatch.setattr(fetch, 'INTENTS_EXPLORER_JWT', 'audit-placeholder-not-a-real-secret')
+>       with pytest.raises((SystemExit, NotImplementedError)):
+E       Failed: DID NOT RAISE any of (SystemExit, NotImplementedError)
+
+audit_checks.py:131: Failed
+----------------------------- Captured stdout call -----------------------------
+Intents Explorer API: pulling 1Click transactions (this is slow: 1 request / 5 s)
+  intents: Intents Explorer pull not implemented yet
+_________________ test_empty_retry_budget_has_clear_validation _________________
+
+    def test_empty_retry_budget_has_clear_validation():
+        with pytest.raises(ValueError):
+>           http.fetch_json('https://example.invalid', retries=0)
+
+audit_checks.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+url = 'https://example.invalid', retries = 0, timeout = 60, headers = None
+method = 'GET', json_body = None
+
+    def fetch_json(url: str, *, retries: int = 3, timeout: int = 60, headers: dict | None = None,
+                   method: str = "GET", json_body: Any = None) -> Any:
+        last: Exception | None = None
+        for attempt in range(1, retries + 1):
+            try:
+                r = requests.request(method, url, timeout=timeout, json=json_body,
+                                     headers={"user-agent": UA, "accept": "application/json", **(headers or {})})
+                if r.status_code == 429 or r.status_code >= 500:
+                    raise requests.HTTPError(f"HTTP {r.status_code}", response=r)
+                r.raise_for_status()
+                return r.json()
+            except requests.HTTPError as e:
+                last = e
+                status = getattr(e.response, "status_code", None)
+                if status is not None and status < 500 and status != 429:
+                    raise
+            except (requests.ConnectionError, requests.Timeout) as e:
+                last = e
+            time.sleep(1.5 * attempt)
+>       assert last is not None
+               ^^^^^^^^^^^^^^^^
+E       AssertionError
+
+near_thesis/http.py:41: AssertionError
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.3-final-0 ________________
+
+Name                             Stmts   Miss Branch BrPart  Cover
+------------------------------------------------------------------
+near_thesis/__init__.py              1      0      0      0   100%
+near_thesis/blocks.py              206    143     74      1    29%
+near_thesis/bq.py                   62     17     18      4    71%
+near_thesis/charts.py               99     99     16      0     0%
+near_thesis/check_generated.py      66     29     36      6    56%
+near_thesis/cli.py                  55     23     24      6    51%
+near_thesis/config.py               21      0      2      0   100%
+near_thesis/econ.py                145     69     34      8    48%
+near_thesis/features.py            107     77     10      0    26%
+near_thesis/fetch.py               102     63     24      2    36%
+near_thesis/http.py                 47     14     12      0    69%
+near_thesis/intents.py             243     39     74     12    79%
+near_thesis/models.py                7      7      0      0     0%
+near_thesis/notebook.py              9      9      0      0     0%
+near_thesis/onchain.py              66     13     10      4    78%
+near_thesis/qaa.py                 226     82     60     13    60%
+near_thesis/signal.py               97     66     12      1    29%
+near_thesis/site.py                 13      0      0      0   100%
+near_thesis/thesis.py               95     95     32      0     0%
+------------------------------------------------------------------
+TOTAL                             1667    845    438     57    47%
+Coverage JSON written to file /tmp/near-audit-coverage.json
+=========================== short test summary info ============================
+FAILED audit_checks.py::test_failed_receipt_must_not_be_counted_as_settlement
+FAILED audit_checks.py::test_unknown_token_name_cannot_impersonate_priced_asset[nep141:fake-usdc.attacker.near]
+FAILED audit_checks.py::test_unknown_token_name_cannot_impersonate_priced_asset[nep141:fake-btc.attacker.near]
+FAILED audit_checks.py::test_unknown_token_name_cannot_impersonate_priced_asset[nep141:fake-wrap.near.attacker]
+FAILED audit_checks.py::test_malformed_diff_is_rejected_without_crashing[not-a-mapping]
+FAILED audit_checks.py::test_malformed_diff_is_rejected_without_crashing[diff1]
+FAILED audit_checks.py::test_malformed_diff_is_rejected_without_crashing[1]
+FAILED audit_checks.py::test_bq_run_budget_enforced_against_executed_query_ceiling
+FAILED audit_checks.py::test_bq_accumulated_budget_cannot_be_bypassed_by_estimate_drift
+FAILED audit_checks.py::test_cli_testnet_selection_must_override_mainnet_environment
+FAILED audit_checks.py::test_explorer_configured_must_not_report_success - Fa...
+FAILED audit_checks.py::test_empty_retry_budget_has_clear_validation - Assert...
+12 failed, 37 passed in 4.55s

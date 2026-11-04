@@ -1,0 +1,34 @@
+[
+  {
+    "height": 134214723,
+    "status": 200,
+    "committed_logs": 5,
+    "all_committed_logs_found": true,
+    "timestamp_matches": true,
+    "failed_intents_receipts_in_this_block": []
+  },
+  {
+    "height": 174722328,
+    "status": 200,
+    "committed_logs": 9,
+    "all_committed_logs_found": true,
+    "timestamp_matches": true,
+    "failed_intents_receipts_in_this_block": []
+  },
+  {
+    "height": 200219611,
+    "status": 200,
+    "committed_logs": 8,
+    "all_committed_logs_found": true,
+    "timestamp_matches": true,
+    "failed_intents_receipts_in_this_block": []
+  },
+  {
+    "height": 221554876,
+    "status": 200,
+    "committed_logs": 7,
+    "all_committed_logs_found": true,
+    "timestamp_matches": true,
+    "failed_intents_receipts_in_this_block": []
+  }
+]

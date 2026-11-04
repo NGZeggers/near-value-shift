@@ -1,0 +1,262 @@
+[
+  {
+    "file": "data/raw/gecko_peer_markets.json",
+    "sha256": "7cd3329d3bd0083860ffb1aa26d7be918eeaee65f1435aab6c4f1107b18cbc1a"
+  },
+  {
+    "file": "data/raw/github_commit_activity.json",
+    "sha256": "0f9538b6e3f9be102b909872b686ccb5cf4f79dd3326ac727e9980c3775e1372"
+  },
+  {
+    "file": "data/raw/intents_tokens.json",
+    "sha256": "c106887f867a105f3df1753a6bccd4e5226b45126b1508849f3352e16327ab5a"
+  },
+  {
+    "file": "data/raw/llama_chains.json",
+    "sha256": "1303054ad34ded0abd2590d439383a97008559b37d8685594cbe8c76a2bb76d1"
+  },
+  {
+    "file": "data/raw/llama_dexs_aptos.json",
+    "sha256": "23862101dc6c7a42ddbbf79795fa07ff76530d969d081ce6834e9d053e631347"
+  },
+  {
+    "file": "data/raw/llama_dexs_arbitrum.json",
+    "sha256": "599771c8f81f82959c39a5ec8a0c03d79bb68047d75e6c5ac61fde70966b0f61"
+  },
+  {
+    "file": "data/raw/llama_dexs_avalanche.json",
+    "sha256": "a8ed8fd84778105b67f3d0fbf27ec1af46720f175921f06f8494406e04e05762"
+  },
+  {
+    "file": "data/raw/llama_dexs_base.json",
+    "sha256": "3b20436cc3da2f83890f2bbd7f5d4a6c23a1e94203a6e4fb6e0a4a2b2c78d911"
+  },
+  {
+    "file": "data/raw/llama_dexs_near.json",
+    "sha256": "3188158c68454aaef70aae81d4ef987a393ff80e2abb7c01bf07fffca1606ff8"
+  },
+  {
+    "file": "data/raw/llama_dexs_polygon.json",
+    "sha256": "ecc92775d6e6368b24c9a5e312b4b56aa12d947634ddf8bb982342f19f26f8e3"
+  },
+  {
+    "file": "data/raw/llama_dexs_solana.json",
+    "sha256": "897a0517f8fa329d504cd580112588f757fe7fc670582b4f7796be67deec5e48"
+  },
+  {
+    "file": "data/raw/llama_dexs_sui.json",
+    "sha256": "56eb71f8d3b665f72639520793fb6c4d31a03cdce03f432e6412a20c7da07123"
+  },
+  {
+    "file": "data/raw/llama_fees_aptos.json",
+    "sha256": "7604b27e142f34b6ca6b3bbed2bec436f0abfa0348bd48dddf4237398fe08224"
+  },
+  {
+    "file": "data/raw/llama_fees_arbitrum.json",
+    "sha256": "2ed332e8b5dc3f2dcd2a9e92db6e7840c81b854fd9513c11ad43b88fcaa9dac8"
+  },
+  {
+    "file": "data/raw/llama_fees_avalanche.json",
+    "sha256": "78c3bb976f7ae848e0e30eee2e941cf94abe989e8a329d2c05c7daca782fd98a"
+  },
+  {
+    "file": "data/raw/llama_fees_base.json",
+    "sha256": "00959f59695eb29c06fea3dd4023a82ac9dcca59941fa61940efe9f7090a88b3"
+  },
+  {
+    "file": "data/raw/llama_fees_near.json",
+    "sha256": "98ca0dee6a9532b8ef9961654bc859f6490d5295c40ca29059ea4853754e8b6a"
+  },
+  {
+    "file": "data/raw/llama_fees_polygon.json",
+    "sha256": "0db64778b093ce4034cbf6da666415ba71aac7bdf438d62b2063140ca2449cd6"
+  },
+  {
+    "file": "data/raw/llama_fees_solana.json",
+    "sha256": "943d334fcbabd688fe20aef7a06b1fba0bf84a12a73a363af07288b91ecf90bb"
+  },
+  {
+    "file": "data/raw/llama_fees_sui.json",
+    "sha256": "7a9e2d06922bfe2e4f398ef4296eb9859b480bd3024dedeaa6d85fe03c0a7c07"
+  },
+  {
+    "file": "data/raw/llama_intents_fees.json",
+    "sha256": "12b94555ed85a241a6adeab17c65e4792e844b87fe22454eabd8617befea8598"
+  },
+  {
+    "file": "data/raw/llama_intents_holders_revenue.json",
+    "sha256": "b81907706151f15a5e5f87454897c4b22eb11377aa45d8fb9b4d737aa37a1d6b"
+  },
+  {
+    "file": "data/raw/llama_intents_revenue.json",
+    "sha256": "1b58448c56d80369e0588179abc773d8546814dff4cb659f055e956e7d580907"
+  },
+  {
+    "file": "data/raw/llama_intents_volume.json",
+    "sha256": "5a410f9ed147c75048330146ab60e1f42e5617e69d4f643782c5e28e0cdbe765"
+  },
+  {
+    "file": "data/raw/llama_near_dexs.json",
+    "sha256": "e9cd86c148ff0b0a17d61acf764a5154e4a5e2bbb0694142be9cf270bf3031ad"
+  },
+  {
+    "file": "data/raw/llama_stables_aptos.json",
+    "sha256": "950ed4015ad72b734ed95363ea0993df8e10546694a7767bbcd77ee8e44ab502"
+  },
+  {
+    "file": "data/raw/llama_stables_arbitrum.json",
+    "sha256": "c1cdfb3faa5d24b76d47f69d7254ec4ad9f5c342ed0614a183f2c0dea20332c1"
+  },
+  {
+    "file": "data/raw/llama_stables_avalanche.json",
+    "sha256": "a9524a62a10397593e0c0ba496c1d18c7882ecc0549827fb5ac9f3a93c837de2"
+  },
+  {
+    "file": "data/raw/llama_stables_base.json",
+    "sha256": "f5adc51e590ec85aa6457ee837087f69f09f3f6600e6a83673d5205888ebcfd3"
+  },
+  {
+    "file": "data/raw/llama_stables_near.json",
+    "sha256": "262fe361d73132e19ea3d26aa2a69afbeaec3639e58d6bec3f2af977646d650b"
+  },
+  {
+    "file": "data/raw/llama_stables_polygon.json",
+    "sha256": "c60bc6290e9fdeb9a4ae77a939721d02a506cae72cd1d818d57a3685ec89f4f1"
+  },
+  {
+    "file": "data/raw/llama_stables_solana.json",
+    "sha256": "ddbe426a2a7a16d4bdfb030e5763d1155ae685b314e74589c3fd581d496e6299"
+  },
+  {
+    "file": "data/raw/llama_stables_sui.json",
+    "sha256": "dffbed9d8a245195a2d7db683acdb60fe6a98e2bc20a054c1519a719f68cb0f5"
+  },
+  {
+    "file": "data/raw/llama_tvl_aptos.json",
+    "sha256": "a71e9daf838da0b2358e730c5e031c1076f998f6592d6107d624cae1348a08f1"
+  },
+  {
+    "file": "data/raw/llama_tvl_arbitrum.json",
+    "sha256": "04857add25c2d20f080e74b1d92b06d6f7d03fa8d9866cee86417d1662875233"
+  },
+  {
+    "file": "data/raw/llama_tvl_avalanche.json",
+    "sha256": "d8c6998d76b5d9b80a824324d1c9a65383e509e623052166dd776967176c9626"
+  },
+  {
+    "file": "data/raw/llama_tvl_base.json",
+    "sha256": "33c2734469a66c43bd3ec01dc1061256decedf48dbd5949597fabfdc8964121f"
+  },
+  {
+    "file": "data/raw/llama_tvl_near.json",
+    "sha256": "252359027d8513f58c06325cbf8398e300892e200dac3b36d83e285a2501923e"
+  },
+  {
+    "file": "data/raw/llama_tvl_polygon.json",
+    "sha256": "4d31675ce86c6775ac3dcf195aa074941e9618c2b3778a7c63d3fd5a63406d0b"
+  },
+  {
+    "file": "data/raw/llama_tvl_solana.json",
+    "sha256": "d656354ec7c56e4b5e71d33ad17cd4fd6ca81c4d93eb0d596ab77bd1189863f2"
+  },
+  {
+    "file": "data/raw/llama_tvl_sui.json",
+    "sha256": "402a3b5021a7ba2cf8f3a25d7181dc23770a10a23165abac3f6938d2dbb5f208"
+  },
+  {
+    "file": "data/raw/nearblocks_charts.json",
+    "sha256": "92860b12c39b4c9413f0d4984c43631fdd080006114e5bcae4c127e8051c1385"
+  },
+  {
+    "file": "data/raw/nearblocks_stats.json",
+    "sha256": "f43d11b5b6387a80cd47be63f33a3ed324272960e7c83c7c3e68b5ad640578a3"
+  },
+  {
+    "file": "data/raw/price_aptos.json",
+    "sha256": "beaa9daedada83cd74c3980cb73024df5548808d4713d76983986e01f6ef0bc8"
+  },
+  {
+    "file": "data/raw/price_arbitrum.json",
+    "sha256": "0f4d114f8a397ca8621c8661420dfcf62cd20dd211191e49e098ebd6c23c4eb9"
+  },
+  {
+    "file": "data/raw/price_avalanche-2.json",
+    "sha256": "162b59bcbc9bbeda107fc983f5e0c1261d3e7f18a1fcdb2ea4a4fa6999e2e0e7"
+  },
+  {
+    "file": "data/raw/price_berachain-bera.json",
+    "sha256": "bb1cabfb079c1c5fedbfead53198129f387894349cdc17a8531ea2e7b1933332"
+  },
+  {
+    "file": "data/raw/price_binancecoin.json",
+    "sha256": "79ceda092fc005097ba5f3962b8a3eaff69a2df9cd450f6bdef704e4b097bb7f"
+  },
+  {
+    "file": "data/raw/price_bitcoin-cash.json",
+    "sha256": "53d5832501262956613f9be612b12247eb4c5dce5b4163347dcf90e271860f75"
+  },
+  {
+    "file": "data/raw/price_bitcoin.json",
+    "sha256": "a6387cb1b1b13994c19cec6c87b88d332cb4ee7fde04a1c357155bdfdecd59a8"
+  },
+  {
+    "file": "data/raw/price_chainlink.json",
+    "sha256": "014daf5c64b46fdbccbc4894edf3ddd336afee86779786166cf5eb475a207afd"
+  },
+  {
+    "file": "data/raw/price_dogecoin.json",
+    "sha256": "0d9ad236e490f71ebdc36ed06e16a949edba060c767310dade33bf56b9d6dd84"
+  },
+  {
+    "file": "data/raw/price_ethereum.json",
+    "sha256": "0fc454fc931b1e054238c94c5a26a61fdd3dc0041a024a25fc01d46d0c994500"
+  },
+  {
+    "file": "data/raw/price_litecoin.json",
+    "sha256": "bf9b6f9ce11b9566111101c079ba555a7e79091d687b806167673c6fa7f1d1fb"
+  },
+  {
+    "file": "data/raw/price_near.json",
+    "sha256": "3313b02ad1ee19b372f4ff2bb8468ba458299b7a9c3e8762a1f5aedaaaeaaf95"
+  },
+  {
+    "file": "data/raw/price_polygon-ecosystem-token.json",
+    "sha256": "ededa69f99b7b3ef45c5c27e6a680965caf6cbf190a78fe950dc87938ce918b8"
+  },
+  {
+    "file": "data/raw/price_ripple.json",
+    "sha256": "b1be663d633c462c6f81706edfd4db4d60130f7985a6407e0f7959d39e6699fb"
+  },
+  {
+    "file": "data/raw/price_solana.json",
+    "sha256": "c940d44d665b5cb504214725353919c38b4f3132d12baed57a4b196ad4eceebd"
+  },
+  {
+    "file": "data/raw/price_sui.json",
+    "sha256": "505a4912cac3e157ab915aa20b4c590f69ba173a0374d57027fe779a75372dea"
+  },
+  {
+    "file": "data/raw/price_sweatcoin.json",
+    "sha256": "1336b45cea3320c543c3d05e3ddb98e48b3ec95920bef5bbd1c442b092205e31"
+  },
+  {
+    "file": "data/raw/price_the-open-network.json",
+    "sha256": "88b73470c66fcea93e311d6d0fdbe650d34c195a6693f91195a54d3899163ec7"
+  },
+  {
+    "file": "data/raw/price_tron.json",
+    "sha256": "5b2eb17e931e6fd63ae947b31a64a64decb46c7b2dc18d3840be73a2c8ed9595"
+  },
+  {
+    "file": "data/raw/price_zcash.json",
+    "sha256": "f5937cf6fc578947306347eac42c0b7b61673817ce22b7df83cb85d89944cc61"
+  },
+  {
+    "file": "data/raw/rpc_status.json",
+    "sha256": "d9ffbe1a9b4186051d00c58af805cbea32383471c61161f61c201feb60c01f61"
+  },
+  {
+    "file": "data/raw/rpc_validators.json",
+    "sha256": "4c0dcfb195fb5ea60dc7517935be05a437d2a8102ed7fe871f8ff2d9e7d379f9"
+  }
+]

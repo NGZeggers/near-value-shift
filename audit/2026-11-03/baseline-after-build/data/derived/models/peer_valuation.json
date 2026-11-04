@@ -1,0 +1,170 @@
+{
+ "dex_volume_to_tvl_30d": {
+  "order": [
+   "Near",
+   "Solana",
+   "Polygon",
+   "Avalanche",
+   "Base",
+   "Aptos",
+   "Arbitrum",
+   "Sui"
+  ],
+  "values": {
+   "Near": 21.40264221717312,
+   "Solana": 10.204552990912726,
+   "Polygon": 8.42270421938111,
+   "Avalanche": 5.195239366234746,
+   "Base": 4.697315473652019,
+   "Aptos": 4.171638428379689,
+   "Arbitrum": 3.323997605837055,
+   "Sui": 2.0014622451148845
+  },
+  "near_rank": 1,
+  "n": 8
+ },
+ "fees_to_mcap_annualized": {
+  "order": [
+   "Polygon",
+   "Arbitrum",
+   "Solana",
+   "Avalanche",
+   "Aptos",
+   "Near",
+   "Sui"
+  ],
+  "values": {
+   "Polygon": 0.4982191414268992,
+   "Arbitrum": 0.20586535551197227,
+   "Solana": 0.08399142917022855,
+   "Avalanche": 0.029176908656029645,
+   "Aptos": 0.02888851970381948,
+   "Near": 0.01673970594918126,
+   "Sui": 0.01072217328090579
+  },
+  "near_rank": 6,
+  "n": 7
+ },
+ "stables_to_tvl": {
+  "order": [
+   "Aptos",
+   "Polygon",
+   "Solana",
+   "Arbitrum",
+   "Avalanche",
+   "Sui",
+   "Base",
+   "Near"
+  ],
+  "values": {
+   "Aptos": 19.106768764099343,
+   "Polygon": 4.920402478905506,
+   "Solana": 2.7913565486364287,
+   "Arbitrum": 2.6135709604141644,
+   "Avalanche": 2.2938840440196113,
+   "Sui": 1.0107582786206812,
+   "Base": 0.8560346685350959,
+   "Near": 0.6574182332548792
+  },
+  "near_rank": 8,
+  "n": 8
+ },
+ "raw": [
+  {
+   "chain": "Near",
+   "tvl_usd": 196268917.93245277,
+   "dex_volume_30d_usd": 4200673428.86,
+   "app_fees_30d_usd": 7070275.350000001,
+   "stablecoins_usd": 129030765.27,
+   "market_cap_usd": 5068386772.0,
+   "has_native_token": true,
+   "dex_volume_to_tvl_30d": 21.40264221717312,
+   "fees_to_mcap_annualized": 0.01673970594918126,
+   "stables_to_tvl": 0.6574182332548792
+  },
+  {
+   "chain": "Solana",
+   "tvl_usd": 5502683489.245866,
+   "dex_volume_30d_usd": 56152425258.22997,
+   "app_fees_30d_usd": 381163645.1199987,
+   "stablecoins_usd": 15359951592.78,
+   "market_cap_usd": 54457505803.0,
+   "has_native_token": true,
+   "dex_volume_to_tvl_30d": 10.204552990912726,
+   "fees_to_mcap_annualized": 0.08399142917022855,
+   "stables_to_tvl": 2.7913565486364287
+  },
+  {
+   "chain": "Base",
+   "tvl_usd": 6004215236.510922,
+   "dex_volume_30d_usd": 28203693137.59997,
+   "app_fees_30d_usd": 51974697.87999983,
+   "stablecoins_usd": 5139816399.8,
+   "market_cap_usd": NaN,
+   "has_native_token": false,
+   "dex_volume_to_tvl_30d": 4.697315473652019,
+   "fees_to_mcap_annualized": NaN,
+   "stables_to_tvl": 0.8560346685350959
+  },
+  {
+   "chain": "Arbitrum",
+   "tvl_usd": 1452165054.431338,
+   "dex_volume_30d_usd": 4826993164.210005,
+   "app_fees_30d_usd": 18205289.440000076,
+   "stablecoins_usd": 3795336415.99,
+   "market_cap_usd": 1061195910.0,
+   "has_native_token": true,
+   "dex_volume_to_tvl_30d": 3.323997605837055,
+   "fees_to_mcap_annualized": 0.20586535551197227,
+   "stables_to_tvl": 2.6135709604141644
+  },
+  {
+   "chain": "Polygon",
+   "tvl_usd": 679396881.5196589,
+   "dex_volume_30d_usd": 5722358980.61,
+   "app_fees_30d_usd": 38874234.35000025,
+   "stablecoins_usd": 3342906099.99,
+   "market_cap_usd": 936316519.0,
+   "has_native_token": true,
+   "dex_volume_to_tvl_30d": 8.42270421938111,
+   "fees_to_mcap_annualized": 0.4982191414268992,
+   "stables_to_tvl": 4.920402478905506
+  },
+  {
+   "chain": "Avalanche",
+   "tvl_usd": 586401040.7836028,
+   "dex_volume_30d_usd": 3046493771.48,
+   "app_fees_30d_usd": 9060032.759999996,
+   "stablecoins_usd": 1345135990.85,
+   "market_cap_usd": 3726247849.0,
+   "has_native_token": true,
+   "dex_volume_to_tvl_30d": 5.195239366234746,
+   "fees_to_mcap_annualized": 0.029176908656029645,
+   "stables_to_tvl": 2.2938840440196113
+  },
+  {
+   "chain": "Sui",
+   "tvl_usd": 462940728.2308317,
+   "dex_volume_30d_usd": 926558389.28,
+   "app_fees_30d_usd": 3225748.659999998,
+   "stablecoins_usd": 467921173.57,
+   "market_cap_usd": 3610180782.0,
+   "has_native_token": true,
+   "dex_volume_to_tvl_30d": 2.0014622451148845,
+   "fees_to_mcap_annualized": 0.01072217328090579,
+   "stables_to_tvl": 1.0107582786206812
+  },
+  {
+   "chain": "Aptos",
+   "tvl_usd": 41450874.16340714,
+   "dex_volume_30d_usd": 172918059.55,
+   "app_fees_30d_usd": 1315416.32,
+   "stablecoins_usd": 791992267.71,
+   "market_cap_usd": 546410685.0,
+   "has_native_token": true,
+   "dex_volume_to_tvl_30d": 4.171638428379689,
+   "fees_to_mcap_annualized": 0.02888851970381948,
+   "stables_to_tvl": 19.106768764099343
+  }
+ ]
+}
