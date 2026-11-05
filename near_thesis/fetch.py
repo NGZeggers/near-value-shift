@@ -120,13 +120,8 @@ def fetch_github() -> None:
 
 
 def fetch_intents_explorer() -> None:
-    """Optional 1Click cross-check. Needs INTENTS_EXPLORER_JWT; rate limit 1 req / 5 s."""
-    if not INTENTS_EXPLORER_JWT:
-        print("Intents Explorer API: skipped (no INTENTS_EXPLORER_JWT in .env)")
-        return
-    print("Intents Explorer API: pulling 1Click transactions (this is slow: 1 request / 5 s)")
-    # Implemented when a token is available; the endpoint is cursor-paginated.
-    raise NotImplementedError("Intents Explorer pull not implemented yet")
+    """Reserved integration; explicit requests must fail rather than claim a pull."""
+    raise NotImplementedError("Intents Explorer is not supported; use block extraction or optional BigQuery")
 
 
 def run(only: list[str] | None = None) -> None:
@@ -136,10 +131,14 @@ def run(only: list[str] | None = None) -> None:
     for name, fn in steps.items():
         if only and name not in only:
             continue
+        if name == 'intents' and not only:
+            print('Intents Explorer: optional integration unsupported; skipped in default fetch')
+            continue
         try:
             fn()
         except NotImplementedError as e:
             print(f"  {name}: {e}")
+            failed.append(name)
         except Exception as e:  # noqa: BLE001  one failing source must not block the others
             print(f"  {name}: FAILED ({e}). Re-run with --only {name} later.")
             failed.append(name)

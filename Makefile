@@ -48,7 +48,17 @@ blocks:           ## sample full blocks from FastNear (no credentials) for L1/L2
 	$(PY) near-thesis blocks --blocks $(BLOCKS)
 
 onchain:          ## dry-run of the on-chain index publication (add SEND=1 to sign; needs keys in .env)
-	$(PY) near-thesis onchain $(if $(SEND),--send,)
+ifneq ($(strip $(SEND)),)
+ifneq ($(strip $(SEND)),0)
+ifneq ($(strip $(SEND)),1)
+	$(error SEND must be empty, 0 or 1)
+endif
+endif
+endif
+	$(PY) near-thesis onchain $(if $(filter 1,$(strip $(SEND))),--send,)
+
+verify-events:    ## verify historical event statuses from full blocks (resumable; network required)
+	$(PY) near-thesis verify-events
 
 onchain-verify:   ## read the published index back from NEAR Social and compare its THESIS.md hash with this checkout
 	$(PY) near-thesis onchain --verify

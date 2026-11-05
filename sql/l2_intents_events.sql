@@ -7,11 +7,13 @@ SELECT
   eo.executed_in_block_timestamp AS block_timestamp,
   eo.receipt_id,
   r.predecessor_account_id       AS caller,
-  log
+  log,
+  eo.status AS execution_status
 FROM `bigquery-public-data.crypto_near_mainnet_us.execution_outcomes` eo
 LEFT JOIN `bigquery-public-data.crypto_near_mainnet_us.receipt_details` r
   ON r.receipt_id = eo.receipt_id AND r.block_date = eo.block_date
 CROSS JOIN UNNEST(eo.logs) AS log
 WHERE eo.block_date IN UNNEST(DAYS)
   AND eo.executor_account_id = 'intents.near'
+  AND eo.status IN ('SUCCESS_VALUE', 'SUCCESS_RECEIPT_ID')
   AND STARTS_WITH(log, 'EVENT_JSON:');

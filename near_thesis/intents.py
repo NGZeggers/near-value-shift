@@ -1,7 +1,7 @@
 """L2: NEAR Intents microstructure from raw DIP-4 events emitted by intents.near.
 
 Input (from `make bq`, sql/l2_intents_events.sql): data/bigquery/l2_intents_events.csv with columns
-block_date, block_timestamp, receipt_id, caller, log. One row per EVENT_JSON log line.
+block_date, block_timestamp, receipt_id, caller, log, execution_status. One row per successful EVENT_JSON log line.
 
 Method
 1. Parse `EVENT_JSON:{...}`; keep standard "dip4". `token_diff` events carry data[] of {account_id, intent_hash, diff}.
@@ -10,8 +10,9 @@ Method
 3. Solver identification (documented assumption, with sensitivity): an account is a solver on a given day if it
    appears in >= SOLVER_MIN_BATCHES batches that day with >= SOLVER_MIN_COUNTERPARTIES distinct counterparties.
    Everyone else is a user.
-4. USD pricing: a swap leg denominated in a stablecoin is priced at par; NEAR, BTC, ETH legs are priced with the
-   daily price tables; other legs stay unpriced and are reported as such. Volume = sum of priced user outflows.
+4. USD pricing: exact registry identifiers establish asset identity/decimals. Registered stablecoins are priced
+   at par; registered majors use daily prices; unknown legs stay unpriced. Volume is half gross participant
+   notional, using the larger priced inflow/outflow per account-intent.
 5. Daily metrics: batches, users, solvers, HHI and top-1/top-5 share of solver volume (priced) or batch count,
    median priced trade size, withdrawal events. Sampled days are expanded to monthly estimates with a
    day-level bootstrap confidence interval.
@@ -20,7 +21,9 @@ Outputs (data/derived/models/): intents_daily.csv, intents_monthly.csv, intents_
 from __future__ import annotations
 
 import json
+import math
 import re
+import warnings
 from collections import defaultdict
 
 import numpy as np
@@ -31,26 +34,22 @@ from .config import BQ_DIR, DATA, DERIVED, MODELS
 SOLVER_MIN_BATCHES = 20          # BigQuery full days
 SOLVER_MIN_COUNTERPARTIES = 10
 SOLVER_MIN_BATCH_SHARE = 0.02    # sampled windows: an account in >= 2% of a day's sampled batches with >= 5 counterparties
-STABLE_RE = re.compile(r"(usdc|usdt|usdt0|dai|frax|usde|pyusd|usd1|fdusd|busd|tusd|lusd|usdy|usd\b)", re.I)
 STABLE_SYMBOLS = {"usdc", "usdt", "usdt0", "dai", "frax", "usde", "pyusd", "usd1", "fdusd", "busd", "tusd", "lusd", "usdy", "usds", "xusd", "usdg"}
-# fallback for tokens absent from the registry: substring of the token id -> (CoinGecko id, decimals)
-MAJORS = {"wrap.near": ("near", 24), "nbtc": ("bitcoin", 8), "btc": ("bitcoin", 8), "eth.omft": ("ethereum", 18),
-          "aurora": ("ethereum", 18), "eth.bridge": ("ethereum", 18), "weth": ("ethereum", 18), "sol.omft": ("solana", 9),
-          "xrp.omft": ("ripple", 6), "doge.omft": ("dogecoin", 8), "zec.omft": ("zcash", 8), "ltc.omft": ("litecoin", 8),
-          "bch.omft": ("bitcoin-cash", 8), "tron.omft": ("tron", 6)}
-STABLE_DECIMALS = 6
 GECKO_ALIASES = {"wrapped-near": "near", "wrapped-bitcoin": "bitcoin", "weth": "ethereum", "wrapped-solana": "solana", "wrapped-steth": "ethereum"}
 
 
 def load_token_registry() -> dict[str, tuple[str, int, str | None]]:
-    """asset id (lower) -> (symbol lower, decimals, CoinGecko id) from the 1Click snapshot (data/raw/intents_tokens.json)."""
+    """Exact asset id -> (symbol lower, decimals, CoinGecko id) from the committed 1Click snapshot."""
     f = DATA / "raw" / "intents_tokens.json"
     if not f.exists():
         return {}
     out = {}
     for t in json.loads(f.read_text()).get("data") or []:
         try:
-            out[str(t["assetId"]).lower()] = (str(t.get("symbol", "")).lower(), int(t["decimals"]), t.get("coingeckoId"))
+            dec = t['decimals']
+            if isinstance(dec, bool) or not isinstance(dec, int) or not 0 <= dec <= 38:
+                continue
+            out[str(t["assetId"])] = (str(t.get("symbol", "")).lower(), dec, t.get("coingeckoId"))
         except (KeyError, TypeError, ValueError):
             continue
     return out
@@ -77,57 +76,72 @@ def parse_event(log: str) -> dict | None:
 
 
 def token_decimals(token: str) -> int | None:
-    t = token.lower()
-    reg = registry().get(t)
-    if reg:
-        return reg[1]
-    if STABLE_RE.search(t):
-        return STABLE_DECIMALS
-    for k, (_, dec) in MAJORS.items():
-        if k in t:
-            return dec
-    return None
+    reg = registry().get(token)
+    return reg[1] if reg else None
 
 
 def price_leg(token: str, amount_raw: int, prices: dict[str, float]) -> float | None:
-    """USD value of an amount of `token` on a day, or None when unpriced. Registry first (1Click asset list), then
-    name heuristics for assets no longer listed. Stablecoins at par; majors at the day's DefiLlama price."""
-    t = token.lower()
-    reg = registry().get(t)
+    """Exact registry identifier only; unknown assets remain unpriced.
+
+    Asset identifiers can contain case-sensitive multi-token IDs. Never lowercase
+    identifiers or infer identity/decimals from an attacker-controlled name.
+    """
+    reg = registry().get(token)
     if reg:
         sym, dec, gid = reg
         if sym in STABLE_SYMBOLS:
             return abs(amount_raw) / 10 ** dec
         gid = GECKO_ALIASES.get(gid, gid)
-        if gid and prices.get(gid):
+        if gid and prices.get(gid) is not None and math.isfinite(prices[gid]) and prices[gid] > 0:
             return abs(amount_raw) / 10 ** dec * prices[gid]
         return None
-    if STABLE_RE.search(t):
-        return abs(amount_raw) / 10 ** STABLE_DECIMALS
-    for k, (col, dec) in MAJORS.items():
-        if k in t and prices.get(col):
-            return abs(amount_raw) / 10 ** dec * prices[col]
     return None
 
 
 def batches_from_events(df: pd.DataFrame) -> pd.DataFrame:
     """One row per (receipt, account, token) with the signed raw diff."""
     rows = []
+    rejected = 0
     for r in df.itertuples(index=False):
         ev = parse_event(r.log)
         if not ev or ev.get("event") != "token_diff":
             continue
         data = ev.get("data")
+        if not isinstance(data, (list, dict)):
+            rejected += 1
+            continue
         items = data if isinstance(data, list) else ([data] if isinstance(data, dict) else [])  # 2024 events carry one object
         for item in items:
             if not isinstance(item, dict):
+                rejected += 1
                 continue
-            for token, amt in (item.get("diff") or {}).items():
+            diff = item.get('diff')
+            account = item.get('account_id')
+            intent = item.get('intent_hash') or item.get('hash')
+            if not isinstance(diff, dict) or not isinstance(account, str) or not account or (intent is not None and not isinstance(intent, str)):
+                rejected += 1
+                continue
+            parsed = []
+            for token, amt in diff.items():
                 try:
-                    rows.append((r.block_date, r.receipt_id, item.get("account_id"), item.get("intent_hash") or item.get("hash"), token, int(amt)))
+                    if not isinstance(token, str) or not token or isinstance(amt, bool) or not isinstance(amt, (str, int)):
+                        raise ValueError('invalid leg')
+                    if isinstance(amt, str) and not re.fullmatch(r'-?\d{1,39}', amt):
+                        raise ValueError('invalid integer amount')
+                    value = int(amt)
+                    if abs(value) > 2**127 - 1:
+                        raise ValueError('amount outside signed 128-bit range')
+                    parsed.append((r.block_date, r.receipt_id, account, intent, token, value))
                 except (TypeError, ValueError):
-                    continue
-    return pd.DataFrame(rows, columns=["block_date", "receipt_id", "account", "intent_hash", "token", "amount"])
+                    rejected += 1
+                    break
+            else:
+                rows.extend(parsed)
+    if rejected:
+        warnings.warn(f'Rejected {rejected} malformed token_diff items', RuntimeWarning, stacklevel=2)
+    result = pd.DataFrame(rows, columns=["block_date", "receipt_id", "account", "intent_hash", "token", "amount"])
+    result.attrs['rejected_items'] = rejected
+    return result
 
 
 def identify_solvers(legs: pd.DataFrame, *, sampled: bool = False, min_share: float = SOLVER_MIN_BATCH_SHARE) -> pd.DataFrame:
@@ -267,6 +281,18 @@ def expansion_factors(raw: pd.DataFrame) -> pd.Series:
     return pd.Series({day: bpd.get(day, 150_000.0) / n for day, n in sampled.items()})
 
 
+def _unavailable(reason: str, *, source: str | None = None, **details) -> dict:
+    # Invalidate stale numerical outputs rather than leaving old metrics available
+    # to notebooks or other consumers that read files directly.
+    for name in ['intents_daily.csv', 'intents_monthly.csv', 'intents_quarterly.csv',
+                 'intents_solvers.csv', 'intents_solver_sensitivity.json']:
+        (MODELS / name).unlink(missing_ok=True)
+    status = {'computed': False, 'source': source, 'reason': reason, **details}
+    (MODELS / 'intents_status.json').write_text(json.dumps(status, indent=1) + '\n')
+    print(f'L2: not computed ({reason})')
+    return status
+
+
 def run() -> dict:
     f = BQ_DIR / "l2_intents_events.csv"
     sampled = DATA / "blocks" / "intents_events_sampled.csv"
@@ -275,11 +301,18 @@ def run() -> dict:
     elif sampled.exists() and (DATA / "blocks" / "sample_manifest.json").exists():
         f, source = sampled, "neardata block sample"
     else:
-        status = {"computed": False, "reason": "no data/bigquery/l2_intents_events.csv (make bq) and no data/blocks/intents_events_sampled.csv (make blocks)."}
-        (MODELS / "intents_status.json").write_text(json.dumps(status, indent=1))
-        print("L2: not computed (no on-chain extract)")
-        return status
+        return _unavailable('No on-chain extract; run make blocks or optional make bq')
     raw = pd.read_csv(f)
+    from .blocks import SUCCESS_STATUSES
+    if 'execution_status' not in raw:
+        return _unavailable('Legacy extract has no execution status. Run near-thesis verify-events before using L2.',
+                            source=source, unverified_events=len(raw))
+    known = raw.execution_status.isin(SUCCESS_STATUSES | {'FAILURE'})
+    if not known.all():
+        return _unavailable('Unknown receipt execution status; revalidate the entire extract.',
+                            source=source, unverified_events=int((~known).sum()))
+    failed_events = int((raw.execution_status == 'FAILURE').sum())
+    raw = raw[raw.execution_status.isin(SUCCESS_STATUSES)].copy()
     raw["block_date"] = pd.to_datetime(raw["block_date"]).dt.date
     if source != "bigquery":
         from .blocks import usable_windows
@@ -288,11 +321,11 @@ def run() -> dict:
         raw["block_date"] = pd.to_datetime(raw["window_day"]).dt.date  # attribute a window to its planned day
     events = raw.assign(event=[(parse_event(l) or {}).get("event") for l in raw["log"]])
     legs = batches_from_events(raw)
+    if legs.attrs.get('rejected_items', 0):
+        return _unavailable('Malformed token_diff items; refusing partial metrics.', source=source,
+                            rejected_items=legs.attrs['rejected_items'])
     if legs.empty:
-        status = {"computed": False, "reason": f"{source}: no token_diff events in the extract."}
-        (MODELS / "intents_status.json").write_text(json.dumps(status, indent=1))
-        print("L2: no token_diff events found")
-        return status
+        return _unavailable('No successful token_diff events in the extract.', source=source)
     roles = identify_solvers(legs, sampled=source != "bigquery")
     prices = _daily_prices()
     daily = daily_metrics(legs, roles, events, prices)
@@ -339,6 +372,8 @@ def run() -> dict:
                                 "mean_hhi": float(dm.hhi_solver.mean())})
     (MODELS / "intents_solver_sensitivity.json").write_text(json.dumps(sensitivity, indent=1) + "\n")
     status = {"computed": True, "source": source, "coverage": coverage, "ratio_to_defillama": ratio, "sample_tail": tail, "sampled_days": int(daily["date"].nunique()), "days_with_token_diff": int(legs.block_date.nunique()), "events": int(len(raw)), "token_diff_legs": int(len(legs)),
+              'execution_status_verified': True, 'failed_events_excluded': failed_events,
+              'pricing_policy': 'exact case-sensitive registry asset identifiers; unknown assets unpriced',
               "solver_accounts": int(len(solvers)), "priced_batch_share_mean": float(daily["priced_batch_share"].mean()),
               "fully_priced_batch_share_mean": float(daily["fully_priced_batch_share"].mean()),
               "priced_leg_share": float(out_["usd"].notna().mean()),

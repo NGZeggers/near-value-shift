@@ -1,0 +1,21 @@
+{
+  "tested_on": "2026-11-04T06:18:51.386562+00:00",
+  "base_commit": "99aaceb0d73792db8ae6d781164642a807173b43",
+  "scope": "uncommitted changes on NGZeggers/hackathons near_hackaton; upstream untouched",
+  "pytest": {
+    "passed": 91,
+    "failed": 0
+  },
+  "browser": {
+    "passed": 28,
+    "failed": 0
+  },
+  "complete_builds": 2,
+  "l2_status": "disabled until all legacy receipt statuses are revalidated",
+  "network_revalidation_of_1189_blocks_performed": false,
+  "checks": {
+    "comparison_against_first_corrected_build": [],
+    "original_inputs_and_audit_unchanged": true,
+    "external_python_network_attempts_recorded": false
+  }
+}

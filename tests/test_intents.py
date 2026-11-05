@@ -57,7 +57,7 @@ def test_token_diff_single_object_and_registry(monkeypatch):
 
 
 def test_multiple_users_in_receipt_with_only_stable_leg_priced(monkeypatch):
-    monkeypatch.setattr(intents, '_REGISTRY', {})
+    monkeypatch.setattr(intents, '_REGISTRY', {'usdc': ('usdc', 6, 'usd-coin')})
     legs = pd.DataFrame([
         ('2026-03-01', 'r', 'alice', 'a', 'usdc', -10_000_000),
         ('2026-03-01', 'r', 'alice', 'a', 'unknown', 10),
@@ -80,6 +80,7 @@ def test_sample_run_retains_zero_days_and_loads_prices_once(tmp_path, monkeypatc
     for p in ['blocks', 'bq', 'derived', 'models']:
         (tmp_path / p).mkdir()
     df = make_df()
+    df['execution_status'] = 'SUCCESS_VALUE'
     df['window_day'] = df.block_date
     df['window_hour'] = 3
     df.to_csv(tmp_path / 'blocks/intents_events_sampled.csv', index=False)

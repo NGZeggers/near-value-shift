@@ -1,51 +1,6 @@
 {
- "computed": true,
+ "computed": false,
  "source": "neardata block sample",
- "coverage": {
-  "blocks_fetched": 4892,
-  "blocks_requested": 4900,
-  "sample_complete": true,
-  "days_with_blocks": 49
- },
- "ratio_to_defillama": {
-  "days": 46,
-  "ratio": 0.25253575034639153,
-  "ci_lo": 0.17779112325476906,
-  "ci_hi": 0.32746183577166066,
-  "median_daily_ratio": 0.1461059525981197
- },
- "sample_tail": {
-  "priced_batches": 578,
-  "max_batch_usd": 32209.065295275712,
-  "top1pct_share": 0.34707460219695285,
-  "top10pct_share": 0.937488666172925
- },
- "sampled_days": 49,
- "days_with_token_diff": 39,
- "events": 7280,
- "token_diff_legs": 3844,
- "solver_accounts": 9,
- "priced_batch_share_mean": 0.9983974358974359,
- "fully_priced_batch_share_mean": 0.7451792192384413,
- "priced_leg_share": 0.9422476586888657,
- "volume_method": "half gross participant notional: sum max(priced inflow, priced outflow) per account-intent / 2; fixed-window expansion; not a validated total or guaranteed lower bound",
- "cross_check_passed": false,
- "event_counts": {
-  "token_diff": 1952,
-  "intents_executed": 1503,
-  "transfer": 1053,
-  "ft_withdraw": 389,
-  "mt_withdraw": 90,
-  "nft_withdraw": 43,
-  "native_withdraw": 33,
-  "public_key_added": 28,
-  "storage_deposit": 23
- },
- "assumptions": {
-  "solver_min_batches_per_day": 20,
-  "solver_min_counterparties": 10,
-  "mode": "absolute or (batch share >= 2%, batches >= 5, counterparties >= 5)",
-  "users": "observed unique accounts in windows; never expanded to daily unique users",
-  "intervals": "conditional day bootstrap; excludes intraday, routing and price uncertainty; not a population confidence guarantee"
- }
+ "reason": "Legacy extract has no execution status. Run near-thesis verify-events before using L2.",
+ "unverified_events": 7280
 }

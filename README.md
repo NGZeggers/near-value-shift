@@ -2,9 +2,11 @@
 
 Built for NEAR Hackathon 2026, track **Investment Thesis** (`thesis`).
 
+**Working branch:** [NGZeggers/hackathons · near_hackaton](https://github.com/NGZeggers/hackathons/tree/near_hackaton). The original [near-value-shift demo](https://ngzeggers.github.io/near-value-shift/) remains an upstream reference and does not include these branch fixes.
+
 **Question:** do falling account counts obscure a shift toward cross-chain settlement, and does the evidence support a token investment case? The project compares activity, behavioral proxies, Intents flows, net captured fees and forward associations. It reports failed cross-checks and inconclusive statistical tests. Settlement growth alone does not establish undervaluation.
 
-[Dashboard](https://ngzeggers.github.io/near-value-shift/) · [Generated argument](THESIS.md) · [Sampling and limits](docs/SAMPLING.md) · [Audit and corrections](docs/VALIDACION_HACKATHON.md)
+[Local dashboard](#reproduce-do-x-see-y) · [Generated argument](THESIS.md) · [Sampling and limits](docs/SAMPLING.md) · [Audit and corrections](docs/VALIDACION_HACKATHON.md)
 
 ## What is implemented
 
@@ -12,18 +14,18 @@ Built for NEAR Hackathon 2026, track **Investment Thesis** (`thesis`).
 |---|---|---|
 | L0 | Hashed public snapshots, including gross Intents fees, net captured receipts and buyback-labelled revenue | `near_thesis/fetch.py`, `data/raw/` |
 | L1 | Retrospective HDBSCAN; separate frozen past-only GMM for predictive QAA, with next-month availability | `near_thesis/qaa.py` |
-| L2 | Multi-participant token-diff flow estimate, zero-event days, observed user counts, heuristic solver sensitivity | `near_thesis/intents.py`, `data/blocks/` |
+| L2 | Successful-receipt token-diff parser, exact asset identifiers, zero-event days and heuristic roles; legacy L2 extract disabled pending status revalidation | `near_thesis/intents.py`, `data/blocks/` |
 | L3 | Breaks, correlations, stationarity-gated VAR, stability/residual checks, explicit Johansen ranks | `near_thesis/econ.py` |
 | L4 | Forward associations with block-bootstrap and familywise intervals; descriptive peer panel; capture-based scenarios | `near_thesis/signal.py` |
 | Output | Generated thesis, static dashboard, executed notebook, complete input hashes, regression tests | `THESIS.md`, `site/`, `tests/` |
 
-QAA labels are behavioral assumptions, not verified human identities. The Intents sample is not a validated total or guaranteed lower bound. Buyback-labelled receipts are not proof of burning or holder dividends. The generated argument names the current consistency-test result and remaining limitations.
+QAA labels are behavioral assumptions, not verified human identities. The Intents sample is not a validated total or guaranteed lower bound. Buyback-labelled receipts are not proof of burning or holder dividends. The generated argument names the current consistency-test result or why it is unavailable, plus remaining limitations. The committed legacy L2 extract does not contain receipt execution statuses and is excluded until revalidated; old estimates remain only in the immutable audit evidence.
 
 ## Reproduce: do X, see Y
 
 Requirements: [uv](https://docs.astral.sh/uv/); Python 3.12 is configured by CI. No Google account or wallet keys are needed.
 
-1. `uv sync --all-extras` → installs the locked dependencies.
+1. `uv sync --locked --all-extras` → installs the locked dependencies.
 2. `make build` → rebuilds tables, models, chart data, `THESIS.md`, `site/index.html`, `site/walkthrough.html` and the local index from committed inputs. It uses no external HTTP requests. Jupyter opens localhost ports for its kernel, so environments must permit that. The build reuses matching fitted descriptive assignments and the serialized past-only model. `QAA_REFIT=1 make models` explicitly retrains them.
 3. `make test` → runs metric, causal-availability, pricing, solver-mode, freshness, index-verification and regression tests.
 4. `make check-generated` → exits successfully with no analytical changes against the committed artifacts. Run this after a build; a changed raw snapshot requires regenerating and committing its outputs.
@@ -38,9 +40,13 @@ Build time varies by machine; price tables are loaded once and bootstrap correla
 
 `make fetch` refreshes public APIs. `make blocks BLOCKS=100` tops up the cached FastNear block plan; acquiring thousands of public blocks can take hours under rate limits. Rebuild afterward. Snapshot acquisition timestamps and complete SHA-256 hashes are generated into `docs/REPRODUCIBILITY.md`.
 
+`make verify-events` revalidates all event-bearing blocks against FastNear, resumes from status-aware block caches and replaces the extract only after full verification. The current historical extract spans 1,189 event-bearing blocks; respect the public rate limit and allow substantial time. `uv run near-thesis verify-events --offline` only uses already verified caches. Rebuild after verification. New samples preserve explicit successful receipt status.
+
+An explicit `near-thesis fetch --only intents` fails clearly because the Explorer integration is unsupported; the default public-source fetch skips it.
+
 `make bq` is optional. It checks dataset freshness **before** L1/L2, estimates query size, sets a server-side byte ceiling and limits each run. See `docs/SETUP_BIGQUERY.md`; actual Google query/schema execution is not claimed for the block-sample build. Q0–Q3 auxiliary extracts are available for manual cross-checks; QAA and Intents consume L1/L2 extracts when present.
 
-`make onchain` prints a dry-run NEAR Social payload. `make onchain SEND=1` signs only with an explicitly configured account/key. `make onchain-verify` compares all local index fields against the published record, including hashes. The index is **not claimed published** without a transaction reference. Keys belong only in `.env`, which is ignored.
+`make onchain` prints a dry-run NEAR Social payload. `make onchain SEND=1` signs only with an explicitly configured account/key. Empty `SEND` and `SEND=0` are dry runs; other values are rejected. `uv run near-thesis onchain --account team.testnet --network testnet` explicitly overrides the environment for a dry run; add `--send` only when you intend to sign on that selected network. `make onchain-verify` compares all local index fields against the published record, including hashes. The index is **not claimed published** without a transaction reference. Keys belong only in `.env`, which is ignored.
 
 ## NEAR's concrete role
 
@@ -52,4 +58,10 @@ Official rules: [HACKATHON.md](https://nearhackathon.com/HACKATHON.md). Deadline
 
 ## Disclosure and license
 
-Libraries and locked versions: `pyproject.toml` and `uv.lock`. Parts of the original implementation used Claude Code; the correction pass and regression checks used Codex. No pre-existing product is declared reused. This is research software; its statistical and sampling limits are part of the deliverable. MIT; see `LICENSE`.
+Libraries and locked versions: `pyproject.toml` and `uv.lock`. Parts of the original implementation used Claude Code; the correction pass and regression checks used Codex. This branch continues the same thesis project from the [audited baseline](https://github.com/NGZeggers/hackathons/commit/4843bcb7b3e876bdfc330820358240b44d4f4311), also published upstream as `near-value-shift`; it is not presented as an independent second project. This is research software; its statistical and sampling limits are part of the deliverable. MIT; see `LICENSE`.
+
+## Security fixes and validation
+
+The [original audit](docs/AUDITORIA_FUNCIONAL_SEGURIDAD_2026-11-03.md) and its evidence remain unchanged. [Fix verification](docs/SECURITY_FIXES_2026-11-04.md) records the corrected behavior and remaining data/operational limits. The current regression suite includes the promoted audit cases and tests for signing controls, receipt-status verification, cache migration and BigQuery budget drift.
+
+CI validates pushes to `near_hackaton` and pull requests with read-only repository permissions. Pages deployment requires an explicit manual workflow run with `deploy_pages=true` on this branch of `NGZeggers/hackathons`; normal pushes do not publish a site.

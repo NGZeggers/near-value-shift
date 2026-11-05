@@ -5,7 +5,7 @@
 1. Problem: "NEAR's account counts and cross-chain settlement tell different stories. Which claims survive a reproducible test?"
 2. Run `uv sync --all-extras`, `make build`, `make test`; show the generated files and passing test count.
 3. Open the dashboard; compare account activity, Intents volume and the separate gross-fee/net-revenue/buyback-labelled series. Open Source and query.
-4. Show the on-chain/reference reconciliation and the explicit failed or passing consistency check. Explain that fixed windows cannot validate full-market totals by themselves.
+4. Show the on-chain/reference reconciliation when verified data exists, or the explicit unavailable status until receipt revalidation completes. Explain that fixed windows cannot validate full-market totals by themselves.
 5. Show retrospective QAA next to the past-only model's training end and release dates. Labels describe behavior, not verified humans.
 6. Show statistical diagnostics, exploratory IC and the generated current verdict. Emphasize the evidence against the claim as well as the descriptive shift.
 7. Close with NEAR's concrete role: its blocks, receipt logs and Intents events are the evidence. BigQuery and the on-chain index are optional paths, not claimed deployed results.
@@ -18,8 +18,8 @@ Built at NEAR HACKATHON: From clicks to settlement.
 
 Do falling account counts tell the whole story of @NEARProtocol? We built a reproducible thesis comparing raw activity, behavioral proxies, Intents settlement and net fee capture—with past-only features, statistical diagnostics and the evidence against our own hypothesis.
 
-Repo: https://github.com/NGZeggers/near-value-shift
-Dashboard: https://ngzeggers.github.io/near-value-shift/
+Repo: https://github.com/NGZeggers/hackathons/tree/near_hackaton
+Dashboard: record the current local build; the upstream hosted demo predates these security fixes.
 
 Every chart has its source. One command rebuilds the results. Demo attached. #NEARHackathon
 

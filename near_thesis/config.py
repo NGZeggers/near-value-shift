@@ -27,3 +27,6 @@ INTENTS_EXPLORER_JWT = os.getenv("INTENTS_EXPLORER_JWT") or None
 # Analysis window shared by every layer. Changing it here changes every table and chart.
 START_DATE = "2021-01-01"
 INTENTS_START = "2024-11-04"   # intents.near deployed 2024-11-01; first DefiLlama volume 2024-12
+
+# This review branch belongs to hackathons; the upstream demo is a separate deployment.
+REPO_URL = "https://github.com/NGZeggers/hackathons/tree/near_hackaton"

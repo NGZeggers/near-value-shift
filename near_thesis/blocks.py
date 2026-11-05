@@ -32,6 +32,8 @@ CACHE = BLOCKS / "cache"
 UA = {"user-agent": "near-thesis/0.1 (NEAR Hackathon 2026; sampled block reader)"}
 RATE_PER_S = 0.35  # measured 2026-11-02: the public block API sustains ~0.3-0.4 requests/s per IP before answering 429
 RATE_MIN, RATE_MAX = 0.12, 0.6
+SUCCESS_STATUSES = frozenset({'SUCCESS_VALUE', 'SUCCESS_RECEIPT_ID'})
+CACHE_SCHEMA = 2
 _lock = threading.Lock()
 _next_slot = [0.0]
 _rate = [RATE_PER_S]
@@ -137,10 +139,14 @@ def plan(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_wind
     return out
 
 
-def fetch_block(height: int, retries: int = 6, rate_limit_retries: int = 40) -> dict | None:
+def fetch_block(height: int, retries: int = 6, rate_limit_retries: int = 40, *, offline: bool = False) -> dict | None:
     cached = CACHE / f"{height}.json"
     if cached.exists():
-        return json.loads(cached.read_text())
+        saved = json.loads(cached.read_text())
+        if saved is None or (saved.get('schema_version') == CACHE_SCHEMA and saved.get('height') == height):
+            return saved
+    if offline:
+        raise ValueError(f'No status-aware cached block {height}; rerun verification online')
     attempt = limited = 0
     while attempt < retries and limited < rate_limit_retries:
         try:
@@ -160,6 +166,8 @@ def fetch_block(height: int, retries: int = 6, rate_limit_retries: int = 40) -> 
             if not full:  # skipped height: the API answers 200 with a null body
                 CACHE.mkdir(parents=True, exist_ok=True); cached.write_text("null"); return None
             slim = extract(full)
+            if slim['height'] != height:
+                raise ValueError('Returned block height does not match request')
             CACHE.mkdir(parents=True, exist_ok=True)
             cached.write_text(json.dumps(slim, separators=(",", ":")))
             return slim
@@ -169,11 +177,23 @@ def fetch_block(height: int, retries: int = 6, rate_limit_retries: int = 40) -> 
     return None
 
 
+def outcome_status(status: object) -> str:
+    """Only explicit successful protocol outcome variants establish execution."""
+    if isinstance(status, dict) and len(status) == 1:
+        if 'SuccessValue' in status and isinstance(status['SuccessValue'], str):
+            return 'SUCCESS_VALUE'
+        if 'SuccessReceiptId' in status and isinstance(status['SuccessReceiptId'], str):
+            return 'SUCCESS_RECEIPT_ID'
+        if 'Failure' in status:
+            return 'FAILURE'
+    return 'UNKNOWN'
+
+
 def extract(block: dict) -> dict:
     """Keep only what the pipeline needs; a full block is ~200 KB, this is a few KB."""
     hdr = block["block"]["header"]
     ts = int(hdr["timestamp"]); height = int(hdr["height"])
-    txs, events, n_outcomes = [], [], 0
+    txs, events, n_outcomes, receipts = [], [], 0, {}
     for sh in block.get("shards", []):
         chunk = sh.get("chunk") or {}
         for t in chunk.get("transactions", []) or []:
@@ -191,11 +211,74 @@ def extract(block: dict) -> dict:
             rc = o.get("receipt") or {}
             if rc.get("receiver_id") != "intents.near":
                 continue
-            logs = ((o.get("execution_outcome") or {}).get("outcome") or {}).get("logs") or []
+            outcome = ((o.get("execution_outcome") or {}).get("outcome") or {})
+            logs = outcome.get('logs') or []
+            status = outcome_status(outcome.get('status'))
+            rid = rc.get('receipt_id')
+            receipts[rid] = {'status': status, 'logs': logs, 'caller': rc.get('predecessor_id')}
+            if status not in SUCCESS_STATUSES:
+                continue
             for log in logs:
                 if isinstance(log, str) and log.startswith("EVENT_JSON:"):
-                    events.append([rc.get("receipt_id"), rc.get("predecessor_id"), log])
-    return {"height": height, "ts": ts, "n_outcomes": n_outcomes, "txs": txs, "events": events}
+                    events.append([rid, rc.get("predecessor_id"), log, status])
+    return {"schema_version": CACHE_SCHEMA, "height": height, "ts": ts, "n_outcomes": n_outcomes,
+            "txs": txs, "events": events, 'receipts': receipts}
+
+
+def verify_events(*, offline: bool = False) -> dict:
+    """Revalidate every saved event, replacing the extract only after complete verification.
+
+    New-schema block caches make interrupted runs resumable. Legacy slim caches
+    have lost the execution status and must be fetched again, never upgraded by assumption.
+    """
+    import hashlib
+    import io
+
+    path = BLOCKS / 'intents_events_sampled.csv'
+    original = path.read_bytes()
+    reader = csv.DictReader(io.StringIO(original.decode()))
+    fields = list(reader.fieldnames or [])
+    rows = list(reader)
+    heights = sorted({int(row['block_height']) for row in rows})
+    checked = {}
+    for i, height in enumerate(heights):
+        checked[height] = fetch_block(height, offline=offline)
+        if checked[height] is None:
+            raise ValueError(f'Block {height} unavailable; original extract preserved')
+        if checked[height]['height'] != height:
+            raise ValueError('Block height mismatch; original extract preserved')
+        if (i + 1) % 25 == 0:
+            print(f'Verified {i+1}/{len(heights)} blocks; original extract unchanged until complete', flush=True)
+    kept, failed = [], 0
+    for row in rows:
+        block = checked[int(row['block_height'])]
+        rc = block['receipts'].get(row['receipt_id'])
+        if not rc or row['log'] not in rc['logs'] or row['caller'] != rc['caller'] or int(row['block_timestamp']) != block['ts']:
+            raise ValueError('Event provenance mismatch; original extract preserved')
+        if rc['status'] not in SUCCESS_STATUSES | {'FAILURE'}:
+            raise ValueError('Unknown execution status; original extract preserved')
+        if rc['status'] == 'FAILURE':
+            failed += 1
+            continue
+        kept.append(dict(row, execution_status=rc['status']))
+    if 'execution_status' not in fields:
+        fields.append('execution_status')
+    buffer = io.StringIO(newline='')
+    writer = csv.DictWriter(buffer, fieldnames=fields)
+    writer.writeheader()
+    writer.writerows(kept)
+    verified = buffer.getvalue().encode()
+    report = {'source': NEARDATA, 'blocks_checked': len(heights), 'input_events': len(rows),
+              'accepted_events': len(kept), 'failed_events_removed': failed,
+              'input_sha256': hashlib.sha256(original).hexdigest(), 'output_sha256': hashlib.sha256(verified).hexdigest()}
+    # Refuse concurrent changes; replace atomically after all checks pass.
+    if path.read_bytes() != original:
+        raise ValueError('Extract changed during verification; refusing replacement')
+    temporary = path.with_suffix('.csv.tmp')
+    temporary.write_bytes(verified)
+    temporary.replace(path)
+    (BLOCKS / 'event_verification.json').write_text(json.dumps(report, indent=1) + '\n')
+    return report
 
 
 def min_usable(n: int) -> int:
@@ -230,22 +313,28 @@ def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_windo
     if plan_file.exists():
         P = json.loads(plan_file.read_text())
     else:
+        if offline:
+            raise ValueError('Offline sampling requires an existing sample_plan.json')
         print("planning windows (secant search on block timestamps)...")
         P = plan(day_step, windows, blocks_per_window)
         plan_file.write_text(json.dumps(P, indent=1))
     heights = [(i, w["start_height"] + j) for i, w in enumerate(P) for j in range(blocks_per_window)]
     if offline:
         heights = [(i, h) for i, h in heights if (CACHE / f"{h}.json").exists()]
+        # Validate old caches before opening/truncating any extract. Offline means
+        # no cache upgrade via HTTP, even after the schema migration.
+        for _, height in heights:
+            fetch_block(height, offline=True)
     requested = len(P) * blocks_per_window
     print(f"{len(P)} windows over {len({w['day'] for w in P})} days, {len(heights)} blocks to read" + (" (offline, from cache)" if offline else ""))
     t0 = time.time(); done = 0; missing = 0; fetched: dict[int, int] = {}
     ev_path, tx_path = BLOCKS / "intents_events_sampled.csv", BLOCKS / "tx_sampled.csv"
     with ev_path.open("w", newline="") as fe, tx_path.open("w", newline="") as ft:
         we, wt = csv.writer(fe), csv.writer(ft)
-        we.writerow(["block_date", "block_timestamp", "receipt_id", "caller", "log", "window_day", "window_hour", "block_height"])
+        we.writerow(["block_date", "block_timestamp", "receipt_id", "caller", "log", "window_day", "window_hour", "block_height", 'execution_status'])
         wt.writerow(["block_date", "window_day", "window_hour", "block_height", "block_timestamp", "signer", "receiver", "action_kind", "method", "deposit"])
         with ThreadPoolExecutor(max_workers=workers) as ex:
-            futs = {ex.submit(fetch_block, h): (i, h) for i, h in heights}
+            futs = {ex.submit(fetch_block, h, offline=offline): (i, h) for i, h in heights}
             for f in as_completed(futs):
                 i, h = futs[f]; w = P[i]
                 b = f.result()
@@ -255,8 +344,8 @@ def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_windo
                 else:
                     fetched[i] = fetched.get(i, 0) + 1
                     day = datetime.fromtimestamp(b["ts"] / 1e9, tz=timezone.utc).strftime("%Y-%m-%d")
-                    for rid, pred, log in b["events"]:
-                        we.writerow([day, b["ts"], rid, pred, log, w["day"], w["hour"], b["height"]])
+                    for rid, pred, log, status in b["events"]:
+                        we.writerow([day, b["ts"], rid, pred, log, w["day"], w["hour"], b["height"], status])
                     for s_, r, kind, m, dep in b["txs"]:
                         wt.writerow([day, w["day"], w["hour"], b["height"], b["ts"], s_, r, kind, m, dep])
                 if done % 100 == 0:

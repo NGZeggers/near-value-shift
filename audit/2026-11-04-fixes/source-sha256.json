@@ -1,0 +1,134 @@
+[
+  {
+    "file": ".github/workflows/build.yml",
+    "sha256": "c0c1ca6ff1cb56bb8bb965ec9d076c61727a2853f5d3b659ad4990439e4807ce"
+  },
+  {
+    "file": "Makefile",
+    "sha256": "a265e16e2eb0c7a61bc372fc960b10f00708c3d555b86c433c2247afa17352a0"
+  },
+  {
+    "file": "README.md",
+    "sha256": "2232b55cef69a9b05780e426f230b4a3a541fb95a9a28d5be168ae9485bf5fcd"
+  },
+  {
+    "file": "THESIS.md",
+    "sha256": "a83fc407048f0660f22371f2a9a99ff918d2898c9dc41147a2ac537e84878071"
+  },
+  {
+    "file": "data/derived/models/intents_status.json",
+    "sha256": "845e4b904298ade758bc4e690aceb9e5a4036adf277a64e0c60d74d95ddd40c4"
+  },
+  {
+    "file": "data/derived/onchain_index.json",
+    "sha256": "7908ce1fe15d36e8c00936dd50c9b4c33e10fafc9655b06d971151dae1750ab8"
+  },
+  {
+    "file": "docs/DEMO.md",
+    "sha256": "7b70ec53b16cfeccccf3553293dbaafe07d7ecced1d7451d21a6921c0a7eea12"
+  },
+  {
+    "file": "docs/REPRODUCIBILITY.md",
+    "sha256": "a83217462b31fff9797f6f82c7572959369266b98ea4c5485b7a69f012b1a092"
+  },
+  {
+    "file": "docs/SAMPLING.md",
+    "sha256": "773a2ffaf3d16f242cebe61634867c949d9d5fb1f0a759b6a58f04c58deaf8dd"
+  },
+  {
+    "file": "docs/SECURITY_FIXES_2026-11-04.md",
+    "sha256": "569d58cdd6af75cec7281fc6177ac552c7dbebf7e27765e165c5e685989888ae"
+  },
+  {
+    "file": "docs/SETUP_BIGQUERY.md",
+    "sha256": "7a7d0df07de1fd6e30370c0560f5e6ddd09762ae965c1799f9ec9ad38818aa2b"
+  },
+  {
+    "file": "near_thesis/blocks.py",
+    "sha256": "1f14a6ea8ea8b884410618bd17dfc51136d649b6d07c9a8d5775aa957670e808"
+  },
+  {
+    "file": "near_thesis/bq.py",
+    "sha256": "0af458b34823a2ccdc8c4377ef01568be14adc733c4c0b2e8adf96f5ac6cdf8f"
+  },
+  {
+    "file": "near_thesis/cli.py",
+    "sha256": "4660bebb5c3c6050297398e8f0ce03604eccb459040b6fe476a7203011adbfea"
+  },
+  {
+    "file": "near_thesis/config.py",
+    "sha256": "9232cb3db50a700d2912e9e9ebf9c638431f63de5308329ff53a4fcae45a2238"
+  },
+  {
+    "file": "near_thesis/fetch.py",
+    "sha256": "a61a66a125e7a1fa6efa2425572ca0ffc659a10daad01f9892fbca6aa0f833f4"
+  },
+  {
+    "file": "near_thesis/http.py",
+    "sha256": "4540dea77236c0c60a2bb3135f4a17a2c8fa46d965765c29bed09ae9ee95f89a"
+  },
+  {
+    "file": "near_thesis/intents.py",
+    "sha256": "205f95c893e392ea92994c1e35b02a1b6372a942b9721b1b96411fdd547eac9e"
+  },
+  {
+    "file": "near_thesis/notebook.py",
+    "sha256": "ba8f4411c758b08dab7ea3392b96f7a4497160e2516ed9f6bbd9a68232695886"
+  },
+  {
+    "file": "near_thesis/onchain.py",
+    "sha256": "f53969170435a43b3869366d3c00daeb6604d09f18e76028a628ba99a49b3e60"
+  },
+  {
+    "file": "near_thesis/thesis.py",
+    "sha256": "0938c6b90143c7219e047bb04d4957bd47ca30b2f24cdfb21babca66d2852a52"
+  },
+  {
+    "file": "near_thesis/web/app.js",
+    "sha256": "8b0181b01a8d99dec22b73873bca769552114c5edc7ebdb6957cd56844ce0195"
+  },
+  {
+    "file": "near_thesis/web/index.html",
+    "sha256": "7e6c58fdac83affef335bf862a89ace7875a18d879071687c5b54e55f497c051"
+  },
+  {
+    "file": "notebooks/walkthrough.ipynb",
+    "sha256": "688364fe9cfbae9e48e58c2d2a37b4c7523261b1c4dadc09e660729c59b6eaa3"
+  },
+  {
+    "file": "site/data.json",
+    "sha256": "f37be581d268a70402bd9f161acf0310f240f50ee350a3291b0606c24b39af4f"
+  },
+  {
+    "file": "sql/l2_intents_events.sql",
+    "sha256": "1544a88a7d4dd2743ae0b9551f49ed815d867102025a4170ccb25ca7e3dd16e4"
+  },
+  {
+    "file": "tests/browser_dashboard.py",
+    "sha256": "d145d033762ece603e0ce5868f15f6b248c93828ac8e7bd6f0d21bf5ce51d0e3"
+  },
+  {
+    "file": "tests/test_blocks.py",
+    "sha256": "4a2d0fb33d962e5c00b8759e3bb7065a91705bbd197b61f338d2a879ec3e5973"
+  },
+  {
+    "file": "tests/test_bq.py",
+    "sha256": "95d19b363427a44af4a09bdb7b9fa80333a8c144f1ec5e294d4dab56d5ee0154"
+  },
+  {
+    "file": "tests/test_execution_security.py",
+    "sha256": "1eeb9e6334dac588ae9bca9bc4240847fe902ef2e81bc185f0374355fe896ad7"
+  },
+  {
+    "file": "tests/test_intents.py",
+    "sha256": "87106840c214d9536cc93881e0a5a1a622b057b7e3dd5873c3095b57a1b13670"
+  },
+  {
+    "file": "tests/test_onchain.py",
+    "sha256": "ec60e16f44125bdc3f690fc5efa061a244df446b999c919829a90c52eead6613"
+  },
+  {
+    "file": "tests/test_security_regressions.py",
+    "sha256": "b1024379acef888bec673eb1e765936a17613b1a475e88db18ba38c95f4dc2e6"
+  }
+]

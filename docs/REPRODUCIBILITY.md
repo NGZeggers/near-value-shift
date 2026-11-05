@@ -82,7 +82,7 @@ The build reads committed snapshots. Full SHA-256 hashes cover raw files, block 
 | data/derived/models/qaa_causal_model.json | 4958 | `fbd00b69c5e52df45935e2d44122bb14087648de50b879cb012af0d715e205ed` |
 | sql/l1_account_month_actions.sql | 929 | `2d6af7cffda32de111da4ac9ffe7affc2587263503e03d070d54473a8ada37ef` |
 | sql/l1_account_month_features.sql | 2011 | `a237053b0e3d20adb1046bee96053111983c113995cb37fb00053fedc04de18f` |
-| sql/l2_intents_events.sql | 891 | `a2ddd2f45b62a719f2db7f18cbeaf07e7cd1635cd15279c444d99f7a784753f1` |
+| sql/l2_intents_events.sql | 983 | `1544a88a7d4dd2743ae0b9551f49ed815d867102025a4170ccb25ca7e3dd16e4` |
 | sql/q0_freshness.sql | 281 | `383379c31f2e103ad5c0c8cc1fc35f030a03d96b55bea2d5e969ba4da3419f07` |
 | sql/q1_daily_txns_signers.sql | 372 | `1a2e57e1d1acce072b849310140cb2ebca76ec6022c32f05496155eb9b18a749` |
 | sql/q2_top_contracts_daily.sql | 685 | `4a3fef7d7484974d7c70bb08da70dcc56f301563a6072a552bedb7c98066e9ff` |

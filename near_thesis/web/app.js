@@ -39,9 +39,14 @@
     if (spec.type === 'stacked') { const tot = {}; series.forEach(s => s.points.forEach(p => tot[p[0]] = (tot[p[0]] || 0) + p[1])); vals = Object.values(tot).concat([0]); }
     else vals = series.flatMap(s => s.points.map(p => p[1]));
     if (spec.y_log) vals = vals.filter(v => v > 0);
+    vals = vals.filter(Number.isFinite);
+    if (!vals.length) { svg.remove(); h('div', 'empty', host, 'No finite values available for this scale.'); return; }
     let lo = spec.y_domain ? spec.y_domain[0] : Math.min(...vals), hi = spec.y_domain ? spec.y_domain[1] : Math.max(...vals);
     if (!spec.y_log && !spec.y_domain) { lo = Math.min(0, lo); hi = hi + (hi - lo) * 0.08; }
     if (spec.y_log) { lo = Math.pow(10, Math.floor(Math.log10(lo))); hi = Math.pow(10, Math.ceil(Math.log10(hi))); if (lo === hi) hi *= 10; }
+    if (!Number.isFinite(lo) || !Number.isFinite(hi) || (spec.y_log && lo <= 0)) { svg.remove(); h('div', 'empty', host, 'No finite values available for this scale.'); return; }
+    if (hi < lo) { svg.remove(); h('div', 'empty', host, 'Invalid scale domain.'); return; }
+    if (hi === lo) { const pad = Math.abs(lo) * 0.05 || 1; hi = lo + pad; lo -= pad; }
     const ys = (v) => spec.y_log ? M.t + ph - (Math.log10(Math.max(v, lo)) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo)) * ph : M.t + ph - (v - lo) / (hi - lo) * ph;
     const g = el('g', { class: 'grid' }, svg), ax = el('g', { class: 'axis' }, svg);
     const ticks = spec.y_log ? logTicks(lo, hi) : niceTicks(lo, hi, 5);

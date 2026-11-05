@@ -50,7 +50,7 @@ def build() -> str:
            "NEAR's reported activity is shifting from high transaction/account counts toward cross-chain settlement. That is a claim about composition, not proof of token undervaluation or future returns. QAA is a behavioral proxy, not a count of verified humans.\n",
            "**Current verdict: the descriptive shift is supported by the third-party series, but the independent on-chain validation is "
            + ("consistent within the conditional interval" if cross_ok else "unresolved")
-           + ". The investment case remains conditional on net capture, governance allocation, dilution and robust forward evidence. A failed cross-check counts against the claim; it is not explained away as missing large trades.\n",
+           + ". The investment case remains conditional on net capture, governance allocation, dilution and robust forward evidence. A failed cross-check counts against the claim; it is not explained away as missing large trades.**\n",
            "## Observed activity\n",
            "| Metric (daily mean) | " + " | ".join(str(i) for i in y.index) + " |",
            "|---|" + "---|" * len(y.index)]
@@ -78,6 +78,8 @@ def build() -> str:
     if ratio:
         out.append(f"- The independent sample-to-DefiLlama ratio is {ratio['ratio']:.3f}, conditional day-bootstrap interval [{ratio['ci_lo']:.3f}, {ratio['ci_hi']:.3f}], over {ratio['days']} matched days. "
                    + ("The interval contains parity." if cross_ok else "The interval excludes parity: our consistency criterion fails, so independent confirmation of the total and trend is not established."))
+    elif not ins.get('computed'):
+        out.append('- Independent L2 validation is unavailable: ' + ins.get('reason', 'no verified extract'))
     int_ic = next((r for r in ic if r['metric'] == 'intents_volume_usd' and r.get('horizon_weeks') == 12 and r.get('benchmark') == 'btc' and 'spearman_ic' in r), None)
     if int_ic:
         lo, hi = int_ic['ci95_block_bootstrap']
@@ -115,6 +117,8 @@ def build() -> str:
         out.append("\nIntervals condition on the observed sampled days; they omit intraday, routing and pricing uncertainty. One-day strata have no estimable interval. "
                    "The estimator now retains multiple account-intents in a receipt; it still does not identify every economic swap. The gap is unresolved, not a proven tail effect or a guaranteed lower bound. "
                    "Full-day extracts would improve coverage but would not automatically validate this estimator. Role sensitivity is in `intents_solver_sensitivity.json`.\n")
+    else:
+        out.append('Not computed: ' + ins.get('reason', 'no verified extract') + '\n')
     out += ["## Econometrics (L3)\n", "| Metric | Weeks | VAR status | Johansen rank | Johansen status |\n|---|---|---|---|---|"]
     jmap = {r['metric']: r for r in jo}
     for r in vg:
@@ -139,7 +143,7 @@ def build() -> str:
             f"Median market-cap/illustrative retained-fees multiple {num(sc['price_to_fees']['p50'])}x, range p5–p95 {num(sc['price_to_fees']['p5'])}x–{num(sc['price_to_fees']['p95'])}x. "
             "The gas-fee term is a paid-fee proxy, not audited net burn; no net-deflation, fair-price or price-forecast claim is made.\n",
             "## What changes the verdict\n",
-            "- Independent full-day/routed-batch reconciliation consistent with the reference series would strengthen the descriptive evidence. The current cross-check is explicitly " + ('consistent' if cross_ok else 'failing') + ".",
+            "- Independent full-day/routed-batch reconciliation consistent with the reference series would strengthen the descriptive evidence. The current cross-check is " + ('unavailable' if not ins.get('computed') else 'consistent' if cross_ok else 'failing') + ".",
             "- Audited net receipts, executed purchases and supply effects may strengthen or weaken the value-capture case; gross volume alone does not decide it.",
             "- Stable out-of-sample associations with past-only features, dependence-aware uncertainty and multiplicity control are needed before describing usage as a return signal.",
             "- Strong sensitivity to clustering, sampling hours or role thresholds weakens the behavioral interpretation. Verified anchors remain an external data need.\n",

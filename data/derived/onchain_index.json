@@ -6,7 +6,7 @@
  "intents_volume_usd": 3985641601,
  "usd_per_txn": 345.98,
  "ic_intents_12w_vs_btc": -0.576,
- "thesis_sha256": "d754676ce76bc2e06729e9f7980005b881030661d3ca5862b602179a2e422282",
+ "thesis_sha256": "a83fc407048f0660f22371f2a9a99ff918d2898c9dc41147a2ac537e84878071",
  "raw_manifest_sha256": "173442f81549c05fe49938f6e9e4f5fc940492349859bdcd88a7b91e7b55f4f3",
- "repo": "https://github.com/NGZeggers/near-value-shift"
+ "repo": "https://github.com/NGZeggers/hackathons/tree/near_hackaton"
 }

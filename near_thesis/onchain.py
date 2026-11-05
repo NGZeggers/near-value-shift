@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 
 import pandas as pd
 
-from .config import DERIVED, MODELS, ROOT
+from .config import DERIVED, MODELS, ROOT, REPO_URL
 from .http import raw_manifest
 
 SOCIAL = {"testnet": ("v1.social08.testnet", "https://rpc.testnet.near.org"), "mainnet": ("social.near", "https://rpc.mainnet.near.org")}
@@ -39,14 +39,19 @@ def payload() -> dict:
         "ic_intents_12w_vs_btc": round(ic.get("intents_volume_usd", float("nan")), 3) if "intents_volume_usd" in ic else None,
         "thesis_sha256": hashlib.sha256((ROOT / "THESIS.md").read_bytes()).hexdigest(),
         "raw_manifest_sha256": hashlib.sha256(json.dumps([r["sha256"] for r in raw_manifest()]).encode()).hexdigest(),
-        "repo": "https://github.com/NGZeggers/near-value-shift",
+        "repo": REPO_URL,
     }
 
 
-async def publish(dry_run: bool = True) -> dict:
-    network = os.getenv("NEAR_NETWORK", "testnet")
+async def publish(dry_run: bool = True, *, account_id: str | None = None, network: str | None = None) -> dict:
+    network = network if network is not None else os.getenv("NEAR_NETWORK", "testnet")
+    if network not in SOCIAL:
+        raise SystemExit("NEAR_NETWORK must be testnet or mainnet")
     contract, rpc = SOCIAL[network]
-    account_id, key = os.getenv("NEAR_ACCOUNT_ID"), os.getenv("NEAR_PRIVATE_KEY")
+    account_id = account_id if account_id is not None else os.getenv("NEAR_ACCOUNT_ID")
+    key = os.getenv("NEAR_PRIVATE_KEY")
+    if not dry_run and not (account_id and key):
+        raise SystemExit("An account and NEAR_PRIVATE_KEY are required")
     index = payload()
     (DERIVED / "onchain_index.json").write_text(json.dumps(index, indent=1))  # what the chain would hold; diffable in git
     data = {account_id or "<account>": {"near_thesis": {"index": json.dumps(dict(index, published_at=datetime.now(timezone.utc).isoformat(timespec="seconds")))}}}
@@ -54,8 +59,7 @@ async def publish(dry_run: bool = True) -> dict:
     if dry_run:
         print(f"dry run: would call {contract}.set on {network} from {account_id} (saved data/derived/onchain_index.json)")
         return data
-    if not (account_id and key):
-        raise SystemExit("NEAR_ACCOUNT_ID and NEAR_PRIVATE_KEY are required in .env")
+    print(f"Sending: network={network}, account={account_id}, contract={contract}, method=set, storage deposit=0.05 NEAR")
     from py_near.account import Account  # type: ignore
 
     acc = Account(account_id, key, rpc_addr=rpc)
@@ -102,5 +106,5 @@ def verify(account_id: str | None = None, network: str | None = None) -> bool:
     return same
 
 
-def run(dry_run: bool = True) -> None:
-    asyncio.run(publish(dry_run))
+def run(dry_run: bool = True, *, account_id: str | None = None, network: str | None = None) -> None:
+    asyncio.run(publish(dry_run, account_id=account_id, network=network))

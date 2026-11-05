@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import time
 from datetime import datetime, timezone
 from typing import Any
@@ -21,6 +22,10 @@ UA = "near-thesis/0.1 (NEAR Hackathon 2026; research pipeline)"
 
 def fetch_json(url: str, *, retries: int = 3, timeout: int = 60, headers: dict | None = None,
                method: str = "GET", json_body: Any = None) -> Any:
+    if isinstance(retries, bool) or not isinstance(retries, int) or retries < 1:
+        raise ValueError("retries must be a positive integer")
+    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout <= 0:
+        raise ValueError("timeout must be positive and finite")
     last: Exception | None = None
     for attempt in range(1, retries + 1):
         try:
@@ -38,7 +43,8 @@ def fetch_json(url: str, *, retries: int = 3, timeout: int = 60, headers: dict |
         except (requests.ConnectionError, requests.Timeout) as e:
             last = e
         time.sleep(1.5 * attempt)
-    assert last is not None
+    if last is None:
+        raise RuntimeError("HTTP retry loop ended without a result")
     raise last
 
 

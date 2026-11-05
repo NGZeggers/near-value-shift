@@ -31,3 +31,11 @@ Only additive batch/flow/withdrawal counts are expanded by blocks-in-day divided
 Monthly/quarterly flow estimates use the mean of expanded sampled days times calendar days (or the reference series' available days for partial quarters). Day-bootstrap intervals condition on those observed days and do not account for intraday selection, missing large trades, pricing or route reconstruction. One observed day cannot identify an interval; its endpoints are missing.
 
 The pooled sample/reference ratio uses sums on matched reference days, including observed zeros. Quarterly ratios are displayed rather than assumed constant. Parity must fall inside the conditional interval to pass the project's consistency check. If it does not, THESIS.md calls the cross-check unresolved and treats it as evidence against independent confirmation. Missing large trades are a possible explanation, not an established cause. Full-day BigQuery extracts improve coverage but do not automatically fix pricing, role or reconstruction errors.
+
+## Receipt status and input validation
+
+New extracts admit only explicit `SUCCESS_VALUE` or `SUCCESS_RECEIPT_ID` outcomes. Failure and unknown protocol variants do not produce settlement logs. Slim block caches from before schema version 2 lost status information and are re-fetched rather than upgraded by assumption.
+
+The committed legacy event CSV has no `execution_status` column. L2 therefore returns `computed=false` and removes stale numerical outputs; the notebook, thesis and dashboard display why no estimate is available. Run `make verify-events` to re-fetch event-bearing blocks, match receipt ID/caller/log/timestamp and exclude failures. Verification is resumable through versioned caches and replaces the CSV only after every event is checked. `--offline` never fetches a missing or legacy cache. This is public-source reconciliation, not a cryptographic proof of execution.
+
+Pricing uses exact, case-sensitive asset IDs from the committed token registry. Unknown or differently cased identifiers stay unpriced; name substrings no longer establish asset identity. Malformed account-intent items are rejected as a whole and counted; any rejection disables production L2 metrics instead of publishing a partial estimate.

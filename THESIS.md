@@ -6,7 +6,7 @@ Generated from committed snapshots; analysis through 2026-11-01. `make build` re
 
 NEAR's reported activity is shifting from high transaction/account counts toward cross-chain settlement. That is a claim about composition, not proof of token undervaluation or future returns. QAA is a behavioral proxy, not a count of verified humans.
 
-**Current verdict: the descriptive shift is supported by the third-party series, but the independent on-chain validation is unresolved. The investment case remains conditional on net capture, governance allocation, dilution and robust forward evidence. A failed cross-check counts against the claim; it is not explained away as missing large trades.
+**Current verdict: the descriptive shift is supported by the third-party series, but the independent on-chain validation is unresolved. The investment case remains conditional on net capture, governance allocation, dilution and robust forward evidence. A failed cross-check counts against the claim; it is not explained away as missing large trades.**
 
 ## Observed activity
 
@@ -36,7 +36,7 @@ On the analysis cutoff's trailing year: gross Intents fees $54.2M; net captured 
 ## Evidence against and unresolved tests
 
 - Greater settlement volume does not mechanically imply greater token returns. Gross fees are not token-holder yield; net capture, future allocation and issuance still matter.
-- The independent sample-to-DefiLlama ratio is 0.253, conditional day-bootstrap interval [0.178, 0.327], over 46 matched days. The interval excludes parity: our consistency criterion fails, so independent confirmation of the total and trend is not established.
+- Independent L2 validation is unavailable: Legacy extract has no execution status. Run near-thesis verify-events before using L2.
 - Intents growth versus twelve-week forward NEAR excess returns over BTC: IC -0.58, exploratory 95% block interval [-0.73, -0.13], n=80. First/second chronological halves: +0.05/-0.52. These are descriptive association checks, not a validated trading signal.
 - Fixed intraday windows, sparse sampling, role assumptions, unpriced assets and routed batches can all affect the on-chain comparison. Their separate contributions are not identified.
 
@@ -50,23 +50,7 @@ Latest sensitivity: strict multi-app share 0.0%; default share 62.0%; including 
 
 ## Intents microstructure (L2)
 
-Source: neardata block sample. 4892 blocks, 49 sampled days including observed zero-event days; 39 days contain token_diff. Parsed 7,280 events. 9 accounts satisfy the role heuristic (absolute or (batch share >= 2%, batches >= 5, counterparties >= 5)).
-
-Valuation: half gross participant notional: sum max(priced inflow, priced outflow) per account-intent / 2; fixed-window expansion; not a validated total or guaranteed lower bound. Batch coverage with any priced leg 99.8%; fully priced batches 74.5%; priced token-diff legs 94.2%. Leg coverage is a count share, not a known USD share. Observed users are never multiplied into daily unique users. Solvers and HHI are within-window estimates, not full-market concentration.
-
-| Quarter | Sampled days | Flow estimate / DefiLlama |
-|---|---|---|
-| 2024-10 | 4 | 0.040 |
-| 2025-01 | 6 | 0.043 |
-| 2025-04 | 6 | 0.271 |
-| 2025-07 | 7 | 0.065 |
-| 2025-10 | 6 | 0.269 |
-| 2026-01 | 6 | 0.175 |
-| 2026-04 | 6 | 0.330 |
-| 2026-07 | 6 | 0.184 |
-| 2026-10 | 2 | 0.402 |
-
-Intervals condition on the observed sampled days; they omit intraday, routing and pricing uncertainty. One-day strata have no estimable interval. The estimator now retains multiple account-intents in a receipt; it still does not identify every economic swap. The gap is unresolved, not a proven tail effect or a guaranteed lower bound. Full-day extracts would improve coverage but would not automatically validate this estimator. Role sensitivity is in `intents_solver_sensitivity.json`.
+Not computed: Legacy extract has no execution status. Run near-thesis verify-events before using L2.
 
 ## Econometrics (L3)
 
@@ -103,7 +87,7 @@ The scenario model draws 20,000 assumptions around observed gross take rate and 
 
 ## What changes the verdict
 
-- Independent full-day/routed-batch reconciliation consistent with the reference series would strengthen the descriptive evidence. The current cross-check is explicitly failing.
+- Independent full-day/routed-batch reconciliation consistent with the reference series would strengthen the descriptive evidence. The current cross-check is unavailable.
 - Audited net receipts, executed purchases and supply effects may strengthen or weaken the value-capture case; gross volume alone does not decide it.
 - Stable out-of-sample associations with past-only features, dependence-aware uncertainty and multiplicity control are needed before describing usage as a return signal.
 - Strong sensitivity to clustering, sampling hours or role thresholds weakens the behavioral interpretation. Verified anchors remain an external data need.
