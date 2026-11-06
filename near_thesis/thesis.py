@@ -7,6 +7,7 @@ import json
 import pandas as pd
 
 from .config import DATA, DERIVED, DOCS, MODELS, ROOT
+from . import narrative
 from .http import raw_manifest
 
 
@@ -48,9 +49,7 @@ def build() -> str:
            f"Generated from committed snapshots; analysis through {d.index.max().date()}. `make build` rebuilds this argument, tables, dashboard and executed notebook. Numbers are computed; interpretation and source context are explicit.\n",
            "## Claim and current verdict\n",
            "NEAR's reported activity is shifting from high transaction/account counts toward cross-chain settlement. That is a claim about composition, not proof of token undervaluation or future returns. QAA is a behavioral proxy, not a count of verified humans.\n",
-           "**Current verdict: the descriptive shift is supported by the third-party series, but the independent on-chain validation is "
-           + ("consistent within the conditional interval" if cross_ok else "unresolved")
-           + ". The investment case remains conditional on net capture, governance allocation, dilution and robust forward evidence. A failed cross-check counts against the claim; it is not explained away as missing large trades.**\n",
+           "**" + narrative.verdict_statement(bool(ins.get("computed")), cross_ok) + "**\n",
            "## Observed activity\n",
            "| Metric (daily mean) | " + " | ".join(str(i) for i in y.index) + " |",
            "|---|" + "---|" * len(y.index)]

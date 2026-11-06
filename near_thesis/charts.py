@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 from .config import DERIVED, INTENTS_START, MODELS, SITE
+from . import narrative
 from .http import raw_manifest
 
 SQL_NOTE = "SQL in sql/; run with `make bq`"
@@ -192,10 +193,11 @@ def build() -> dict:
                 ("buyback-labelled revenue", "intents_holders_revenue_usd")]],
             unit="USD", source="DefiLlama summary/fees/near-intents: dailyFees, dailyRevenue, dailyHoldersRevenue (Dune/wallet receipts)",
             query="monthly sums of matched-cutoff raw snapshots; methodology included in each response"))
-    kpis = _kpis(d, m)
+    kpis = narrative.story_kpis(d, m, intents_status)
+    story = narrative.build(d, m, qaa_status, intents_status, ic, vg)
     manifest = raw_manifest()
     return {"built_at": max(r["fetched_at"] for r in manifest), "data_through": str(d.index.max().date()),
-            "kpis": kpis, "charts": specs, "raw_manifest": manifest}
+            "kpis": kpis, "charts": specs, "raw_manifest": manifest, **story}
 
 
 def _indexed(m: pd.DataFrame) -> list[tuple[str, list]]:
@@ -207,20 +209,6 @@ def _indexed(m: pd.DataFrame) -> list[tuple[str, list]]:
         if base in s.index and s[base] > 0:
             out.append((name, [[str(i.date()), round(float(v / s[base] * 100), 1)] for i, v in s.dropna().items()]))
     return out
-
-
-def _kpis(d: pd.DataFrame, m: pd.DataFrame) -> list[dict]:
-    full = m[m.index < m.index.max()]
-    last, prev = full.iloc[-1], full.iloc[-13] if len(full) > 13 else full.iloc[0]
-    def kpi(label, value, prior, unit, up_is_good=True):
-        delta = (value - prior) / prior * 100 if prior else None
-        return {"label": label, "value": value, "unit": unit, "delta_pct_yoy": delta, "up_is_good": up_is_good, "month": str(full.index[-1].date())[:7]}
-    return [kpi("Intents volume, last full month", float(last["intents_volume_usd"]), float(prev["intents_volume_usd"]), "USD"),
-            kpi("Daily active accounts, monthly mean", float(last["active_accounts"]), float(prev["active_accounts"]), "accounts"),
-            kpi("USD moved per transaction", float(last["usd_per_txn"]), float(prev["usd_per_txn"]), "USD"),
-            kpi("Application fees, last full month", float(last["near_app_fees_usd"]), float(prev["near_app_fees_usd"]), "USD"),
-            kpi("Gas fees paid, last full month", float(last["tx_fee_usd"]), float(prev["tx_fee_usd"]), "USD"),
-            kpi("NEAR price, monthly mean", float(last["near_price"]), float(prev["near_price"]), "USD", up_is_good=True)]
 
 
 def run() -> None:

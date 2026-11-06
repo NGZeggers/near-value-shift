@@ -11,8 +11,11 @@
 <div class="wrap">
 <header>
   <h1>From clicks to settlement</h1>
-  <p class="lede">A reproducible investment thesis on NEAR: is activity shifting from many low-value transactions to fewer, high-value cross-chain settlements through NEAR Intents, and does that show up in anything but the price? Every chart lists its source and query. Read the argument in <a href="https://github.com/NGZeggers/near-value-shift/blob/main/THESIS.md">THESIS.md</a>; the executed notebook is <a href="walkthrough.html">walkthrough.html</a>.</p>
+  <p class="lede">A reproducible investment thesis on NEAR: is activity shifting from many low-value transactions to fewer, high-value cross-chain settlements through NEAR Intents, and does that show up in anything but the price? Every chart lists its source and query. The full generated argument is <a href="https://github.com/NGZeggers/near-value-shift/blob/main/THESIS.md">THESIS.md</a>; the executed notebook is <a href="walkthrough.html">walkthrough.html</a>. Every number on this page is computed by <code>make build</code> from committed snapshots.</p>
 </header>
+<section class="verdict" id="verdict" aria-labelledby="verdict-h"></section>
+<section class="argument" id="argument" aria-labelledby="argument-h"></section>
+<nav class="jump" id="jump" aria-label="Sections"></nav>
 <div class="toolbar">
   <div class="group"><label>Range</label><span id="range"></span></div>
   <div class="group"><label>Theme</label><span id="theme"></span></div>
@@ -20,6 +23,7 @@
 <div class="hero" id="hero"></div>
 <div class="kpis" id="kpis"></div>
 <div id="charts"></div>
+<section class="against" id="against" aria-labelledby="against-h"></section>
 <footer><div id="built"></div><div>Built for the NEAR Hackathon 2026, track Investment Thesis. MIT licensed. Sources: NearBlocks, DefiLlama, FastNear block extracts, NEAR RPC, CoinGecko and GitHub. BigQuery is an optional extraction path.</div></footer>
 </div>
 <script id="spec" type="application/json">/*DATA*/</script>

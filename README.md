@@ -15,7 +15,7 @@ Built for NEAR Hackathon 2026, track **Investment Thesis** (`thesis`).
 | L2 | Successful-receipt token-diff parser, exact asset identifiers, zero-event days and heuristic roles; historical events revalidated against 1,189 FastNear blocks; failed receipts excluded | `near_thesis/intents.py`, `data/blocks/` |
 | L3 | Breaks, correlations, stationarity-gated VAR, stability/residual checks, explicit Johansen ranks | `near_thesis/econ.py` |
 | L4 | Forward associations with block-bootstrap and familywise intervals; descriptive peer panel; capture-based scenarios | `near_thesis/signal.py` |
-| Output | Generated thesis, static dashboard, executed notebook, complete input hashes, regression tests | `THESIS.md`, `site/`, `tests/` |
+| Output | Generated thesis, static dashboard with a computed verdict, five-step argument, per-section conclusions and an explicit evidence-against block, executed notebook, complete input hashes, regression tests | `THESIS.md`, `near_thesis/narrative.py`, `site/`, `tests/` |
 
 QAA labels are behavioral assumptions, not verified human identities. The Intents sample is not a validated total or guaranteed lower bound. Buyback-labelled receipts are not proof of burning or holder dividends. The generated argument names the current consistency-test result or why it is unavailable, plus remaining limitations. The historical L2 extract was revalidated against FastNear on 2026-11-05: 53 failed-receipt logs were removed and 7,227 events retain explicit successful statuses. See [receipt revalidation](docs/REVALIDACION_L2_2026-11-05.md) for scope and evidence. Legacy extracts without execution status remain disabled by the pipeline.
 

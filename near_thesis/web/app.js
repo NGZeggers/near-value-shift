@@ -123,14 +123,36 @@
   function render() {
     const root = document.getElementById('charts'); root.textContent = '';
     const sections = [...new Set(DATA.charts.map(s => s.section))];
-    sections.forEach(sec => { h('h2', null, root, sec); DATA.charts.filter(s => s.section === sec).forEach(s => card(s, root)); });
+    sections.forEach(sec => { const meta = (DATA.sections || {})[sec]; const head = h('div', 'sec-head', root); head.id = meta ? 'sec-' + meta.id : 'sec-' + sec.replace(/\W+/g, '-').toLowerCase(); h('h2', null, head, sec); if (meta) { h('p', 'sec-q', head, meta.question); h('p', 'sec-intro', head, meta.intro); h('p', 'sec-limit', head, meta.limit); } DATA.charts.filter(s => s.section === sec).forEach(s => card(s, root)); });
   }
   function kpis() {
     const hero = DATA.kpis[0]; const hv = document.getElementById('hero');
     h('div', 'label', hv, `${hero.label} (${hero.month})`); h('div', 'value', hv, fmt(hero.value, hero.unit));
     const d = h('div', 'delta', hv, hero.delta_pct_yoy == null ? '' : `${hero.delta_pct_yoy >= 0 ? '+' : ''}${hero.delta_pct_yoy.toFixed(0)}% vs the same month a year earlier`);
     const row = document.getElementById('kpis');
-    DATA.kpis.slice(1).forEach(k => { const c = h('div', 'kpi', row); h('div', 'label', c, k.label); h('div', 'value', c, fmt(k.value, k.unit)); const up = k.delta_pct_yoy >= 0; const good = k.up_is_good ? up : !up; h('div', 'delta ' + (k.delta_pct_yoy == null ? '' : good ? 'up' : 'down'), c, k.delta_pct_yoy == null ? '' : `${up ? '▲' : '▼'} ${Math.abs(k.delta_pct_yoy).toFixed(0)}% YoY`); });
+    DATA.kpis.slice(1).forEach(k => { const c = h('div', 'kpi' + (k.state ? ' state-' + k.state : ''), row); h('div', 'label', c, k.label); h('div', 'value', c, k.unit === 'ratio' ? (k.value == null ? 'n/a' : k.value.toFixed(2)) : fmt(k.value, k.unit)); if (k.delta_pct_yoy == null) { h('div', 'delta note', c, k.note || ''); return; } const up = k.delta_pct_yoy >= 0; const good = k.up_is_good ? up : !up; h('div', 'delta ' + (good ? 'up' : 'down'), c, `${up ? '▲' : '▼'} ${Math.abs(k.delta_pct_yoy).toFixed(0)}% YoY`); });
+  }
+  const STATE_WORD = { pass: 'supported', fail: 'failing', open: 'open' };
+  function story() {
+    const v = DATA.verdict; const vh = document.getElementById('verdict');
+    if (v) {
+      const top = h('div', 'v-top', vh); h('h2', null, top, 'Claim and current verdict').id = 'verdict-h'; const pill = h('span', 'pill ' + (v.status === 'supported' ? 'pass' : 'open'), top, v.status === 'supported' ? 'Supported' : 'Unresolved');
+      h('p', 'v-claim', vh, v.claim);
+      const list = h('div', 'checks', vh);
+      (v.checks || []).forEach(c => { const row = h('div', 'check', list); const head = h('div', 'c-head', row); h('span', 'pill ' + c.state, head, STATE_WORD[c.state] || c.state); h('span', 'c-label', head, c.label); h('p', null, row, c.text); });
+      h('p', 'v-statement', vh, v.statement);
+      const det = h('details', null, vh); h('summary', null, det, 'What would change the verdict'); const ul = h('ul', null, det); (v.changes || []).forEach(t => h('li', null, ul, t));
+    } else vh.remove();
+    const a = DATA.argument; const ah = document.getElementById('argument');
+    if (a && a.length) {
+      h('h2', null, ah, 'The argument in ' + a.length + ' steps').id = 'argument-h';
+      const ol = h('ol', 'steps', ah);
+      a.forEach(s => { const li = h('li', null, ol); const link = h('a', 's-title', li, s.title); link.href = s.href; h('p', null, li, s.text); });
+    } else ah.remove();
+    const jump = document.getElementById('jump'); const secs = [...new Set(DATA.charts.map(s => s.section))];
+    if (secs.length > 1) { h('span', 'j-label', jump, 'Jump to'); secs.forEach(sec => { const meta = (DATA.sections || {})[sec]; const link = h('a', null, jump, sec.replace(/^\d+\.\s*/, '')); link.href = '#sec-' + (meta ? meta.id : sec.replace(/\W+/g, '-').toLowerCase()); }); if (DATA.against && DATA.against.length) { const link = h('a', null, jump, 'Evidence against'); link.href = '#against'; } } else jump.remove();
+    const g = DATA.against; const gh = document.getElementById('against');
+    if (g && g.length) { h('h2', null, gh, 'Evidence against and unresolved tests').id = 'against-h'; h('p', 'sec-q', gh, 'What counts against the claim, in the open rather than in a footnote.'); const ul = h('ul', null, gh); g.forEach(x => { const li = h('li', null, ul); li.appendChild(document.createTextNode(x.text + ' ')); const link = h('a', 'see', li, 'See chart'); link.href = x.href; }); } else gh.remove();
   }
   function toolbar() {
     const presets = [['All', null], ['Since 2023', '2023-01-01'], ['Since 2024', '2024-01-01'], ['Since Intents', '2024-12-01'], ['Last 12 months', new Date(Date.now() - 365 * 864e5).toISOString().slice(0, 10)]];
@@ -141,5 +163,5 @@
     try { const qp = new URLSearchParams(location.search).get('theme'); if (qp) localStorage.setItem('theme', qp); const saved = localStorage.getItem('theme'); if (saved) { document.documentElement.setAttribute('data-theme', saved); th.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x.textContent.toLowerCase() === saved ? 'true' : 'false')); } } catch (e) {}
   }
   document.getElementById('built').textContent = `Data through ${DATA.data_through}. Latest snapshot ${DATA.built_at}. ${DATA.raw_manifest.length} raw snapshots, hashes in docs/REPRODUCIBILITY.md.`;
-  toolbar(); kpis(); render();
+  toolbar(); story(); kpis(); render();
 })();
