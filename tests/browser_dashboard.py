@@ -35,9 +35,18 @@ with sync_playwright() as p:
     for mode, url in [('http', base), ('file', (ROOT/'site/index.html').as_uri())]:
         page.goto(url)
         record(mode+'_chart_count', page.locator('section.card').count() == len(spec['charts']))
-        record(mode+'_6_kpis', page.locator('#kpis .kpi').count() == 5 and page.locator('#hero .value').count() == 1)
+        record(mode+'_6_kpis', len(spec['kpis']) == 6
+               and page.locator('#kpis .kpi').count() == len(spec['kpis']) - 1
+               and page.locator('#hero .value').count() == 1)
         record(mode+'_valid_svg_geometry', geometry() == 0, geometry())
         record(mode+'_no_javascript_errors', not errors, errors.copy())
+        record(mode+'_page_timestamp', page.locator('#page-built time').get_attribute('datetime')
+               == page.locator('#page-built time').inner_text()
+               and '/*BUILD_TIME*/' not in page.locator('#page-built').inner_text())
+        verdict = page.locator('#verdict')
+        verdict.locator('summary').click()
+        record(mode+'_verdict_conditions', 'ci_lo <= 1.0 <= ci_hi' in verdict.inner_text()
+               and all(change in verdict.inner_text() for change in spec['verdict']['changes']))
     page.goto(base)
     for label in ['Since 2023', 'Since 2024', 'Since Intents', 'Last 12 months', 'All']:
         button = page.get_by_role('button', name=label, exact=True)

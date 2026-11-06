@@ -25,6 +25,55 @@ def _names(metrics: list[str]) -> str:
     return ", ".join(METRIC_NAMES.get(x, x) for x in metrics)
 
 
+def granger_summary(vg: list[dict]) -> str:
+    """Report directional results only for models eligible for inference."""
+    valid = [r for r in vg if r.get("inference_valid")]
+    invalid = [r["metric"] for r in vg if not r.get("inference_valid")]
+
+    def significant(direction: str) -> str:
+        results = []
+        for r in valid:
+            p = r[direction]["p_value_holm"]
+            if p < 0.05:
+                value = f"{p:.3f}" if p >= 0.001 else f"{p:.3g}"
+                results.append(f"{METRIC_NAMES.get(r['metric'], r['metric'])} (Holm p = {value})")
+        return ", ".join(results) or "no metric"
+
+    text = (f"In the {len(valid)} VAR models that pass the stationarity, stability and whiteness gates, "
+            f"usage leads price for {significant('usage_granger_causes_price')}; "
+            f"price leads usage for {significant('price_granger_causes_usage')}. "
+            if valid else "No VAR model passes all stationarity, stability and whiteness gates. ")
+    if invalid:
+        text += f"{_cap(_names(invalid))} fail the prerequisites and are inconclusive. "
+    return text.rstrip()
+
+
+def verdict_changes(ins: dict) -> list[str]:
+    """Shared, measurable conditions for changing the thesis and dashboard verdict."""
+    computed, cross_ok = bool(ins.get("computed")), bool(ins.get("cross_check_passed"))
+    ratio, coverage = ins.get("ratio_to_defillama") or {}, ins.get("coverage") or {}
+    reconciliation = ("Independent full-day or routed-batch reconciliation would strengthen the descriptive evidence. "
+                      "The numerical consistency criterion is ci_lo <= 1.0 <= ci_hi: the conditional 95% interval "
+                      "of the on-chain estimate / DefiLlama ratio must include 1.0 on matched days. ")
+    if computed and ratio:
+        reconciliation += (f"Current ratio {ratio['ratio']:.3f}, interval [{ratio['ci_lo']:.3f}, {ratio['ci_hi']:.3f}], "
+                           f"over {ratio['days']} matched days: {'consistent' if cross_ok else 'failing'}. ")
+    else:
+        reconciliation += "The current cross-check is unavailable. "
+    if ins.get("source") == "neardata block sample":
+        reconciliation += (f"Coverage is {ins['sampled_days']} sampled days and {coverage.get('blocks_fetched', 'unknown')} blocks "
+                           "in fixed intraday windows, not complete-day extracts. Full-day coverage of those days and "
+                           "independent routed-batch/pricing reconciliation are still missing. ")
+    reconciliation += ("A passing conditional interval alone would not validate population coverage or economic swap reconstruction; "
+                       "the sample does not identify how many additional complete days would suffice.")
+    return [
+        reconciliation,
+        "Audited net receipts, executed purchases and supply effects may strengthen or weaken the value-capture case; gross volume alone does not decide it.",
+        "Stable out-of-sample associations with past-only features, dependence-aware uncertainty and multiplicity control are needed before usage can be called a return signal.",
+        "Strong sensitivity to clustering, sampling hours or role thresholds weakens the behavioral interpretation. Verified anchors remain an external data need.",
+    ]
+
+
 SECTION_IDS = {
     "1. Raw activity": "raw",
     "2. Value-weighted activity": "value",
@@ -88,12 +137,8 @@ def build(d: pd.DataFrame, m: pd.DataFrame, qs: dict, ins: dict, ic: list, vg: l
     int_ic = next((r for r in ic if r["metric"] == "intents_volume_usd" and r.get("horizon_weeks") == 12
                    and r.get("benchmark") == "btc" and "spearman_ic" in r), None)
     valid_granger = [r for r in vg if r.get("inference_valid")]
-    granger_sig = [r["metric"] for r in valid_granger if r["usage_granger_causes_price"]["p_value_holm"] < 0.05]
     granger_rev = [r["metric"] for r in valid_granger if r["price_granger_causes_usage"]["p_value_holm"] < 0.05]
-    granger_invalid = [r["metric"] for r in vg if not r.get("inference_valid")]
-    granger_text = (f"In the {len(valid_granger)} VAR models that pass the stationarity, stability and whiteness gates, usage leads price only for {_names(granger_sig) if granger_sig else 'no metric'}"
-                    + (f"; price leads usage for {_names(granger_rev)}" if granger_rev else "")
-                    + (f". {_cap(_names(granger_invalid))} fail the prerequisites and are inconclusive. " if granger_invalid else ". "))
+    granger_text = granger_summary(vg) + " "
     ic_text = ""
     if int_ic:
         lo, hi = int_ic["ci95_block_bootstrap"]
@@ -120,13 +165,7 @@ def build(d: pd.DataFrame, m: pd.DataFrame, qs: dict, ins: dict, ic: list, vg: l
         {"label": "Investment case", "state": "open",
          "text": "Conditional. Net capture exists but its allocation is discretionary; no stable forward association between usage and returns is established."},
     ]
-    changes = [
-        "An independent full-day or routed-batch reconciliation consistent with the reference series would strengthen the descriptive evidence. The current cross-check is "
-        + ("unavailable" if not computed else "consistent" if cross_ok else "failing") + ".",
-        "Audited net receipts, executed purchases and supply effects may strengthen or weaken the value-capture case; gross volume alone does not decide it.",
-        "Stable out-of-sample associations with past-only features, dependence-aware uncertainty and multiplicity control are needed before usage can be called a return signal.",
-        "Strong sensitivity to clustering, sampling hours or role thresholds weakens the behavioral interpretation. Verified anchors remain an external data need.",
-    ]
+    changes = verdict_changes(ins)
     verdict = {
         "claim": "NEAR's activity is shifting from many low-value transactions toward fewer, high-value cross-chain settlements through NEAR Intents. "
                  "That is a claim about composition, not proof of token undervaluation or future returns.",

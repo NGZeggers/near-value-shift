@@ -1,5 +1,9 @@
 # Correcciones de seguridad y calidad — 2026-11-04
 
+## Summary (English)
+
+This report records corrections to audit findings A1–A10: explicit network/account signing controls, successful-receipt-only logs, exact asset identities, enforced BigQuery budgets, strict send modes, whole-item parser rejection, clear failure for the unsupported Explorer pull, robust chart domains, validated retries and restricted CI permissions. Tests and evidence are described below. The work was originally performed on a temporary review branch and has since been integrated into `NGZeggers/near-value-shift`; the branch and deployment statements below describe the historical review, not today's canonical repository. [Receipt revalidation](REVALIDACION_L2_2026-11-05.md) subsequently restored L2 analytics. Volume reconciliation remains unresolved; no transaction, demo post or hackathon application was sent by this review.
+
 Aplicadas únicamente a la copia de trabajo de `NGZeggers/hackathons`, rama `near_hackaton`, sobre `99aaceb`. No se modificó ni desplegó `NGZeggers/near-value-shift`. La auditoría y sus evidencias del 3 de noviembre se conservan sin cambios.
 
 ## Comportamiento corregido

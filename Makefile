@@ -11,7 +11,7 @@ all: fetch build
 build: features models charts thesis site notebook index   ## offline rebuild from committed inputs
 
 setup:
-	uv sync --all-extras
+	uv sync --locked --all-extras
 
 fetch:            ## L0: pull public, key-less sources into data/raw/*.json
 	$(PY) near-thesis fetch

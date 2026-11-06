@@ -118,7 +118,8 @@ def build() -> str:
                    "Full-day extracts would improve coverage but would not automatically validate this estimator. Role sensitivity is in `intents_solver_sensitivity.json`.\n")
     else:
         out.append('Not computed: ' + ins.get('reason', 'no verified extract') + '\n')
-    out += ["## Econometrics (L3)\n", "| Metric | Weeks | VAR status | Johansen rank | Johansen status |\n|---|---|---|---|---|"]
+    out += ["## Econometrics (L3)\n", narrative.granger_summary(vg) + "\n",
+            "| Metric | Weeks | VAR status | Johansen rank | Johansen status |\n|---|---|---|---|---|"]
     jmap = {r['metric']: r for r in jo}
     for r in vg:
         j = jmap.get(r['metric'], {})
@@ -142,15 +143,15 @@ def build() -> str:
             f"Median market-cap/illustrative retained-fees multiple {num(sc['price_to_fees']['p50'])}x, range p5–p95 {num(sc['price_to_fees']['p5'])}x–{num(sc['price_to_fees']['p95'])}x. "
             "The gas-fee term is a paid-fee proxy, not audited net burn; no net-deflation, fair-price or price-forecast claim is made.\n",
             "## What changes the verdict\n",
-            "- Independent full-day/routed-batch reconciliation consistent with the reference series would strengthen the descriptive evidence. The current cross-check is " + ('unavailable' if not ins.get('computed') else 'consistent' if cross_ok else 'failing') + ".",
-            "- Audited net receipts, executed purchases and supply effects may strengthen or weaken the value-capture case; gross volume alone does not decide it.",
-            "- Stable out-of-sample associations with past-only features, dependence-aware uncertainty and multiplicity control are needed before describing usage as a return signal.",
-            "- Strong sensitivity to clustering, sampling hours or role thresholds weakens the behavioral interpretation. Verified anchors remain an external data need.\n",
+            *["- " + change for change in narrative.verdict_changes(ins)], "",
             "## Gaps, provenance and reproduction\n",
             "Raw and extracted inputs and frozen model artifacts are hashed in `docs/REPRODUCIBILITY.md`. Revenue definitions are stored in the raw responses. "
             "BigQuery is optional: its runner checks freshness before L1/L2; actual queries and credentials were not needed for this block-sample build. "
-            "Explorer JWT is not used. On-chain publication is an optional dry-run-capable feature, not a claimed deployed result.\n",
-            "`uv sync --all-extras && make build && make test`; open `site/index.html` and `site/walkthrough.html`. Sampling limits: `docs/SAMPLING.md`.\n"]
+            "The suggested track deliverable, a swap-volume pull from the Intents Explorer API, is not implemented: "
+            "the team has no partner JWT for Explorer. Setting INTENTS_EXPLORER_JWT alone does not enable a pull; "
+            "an explicit request fails clearly. DefiLlama/Dune is the substitute reference for the FastNear on-chain sample cross-check, "
+            "not an Explorer API result or a completed Explorer deliverable. On-chain publication is an optional dry-run-capable feature, not a claimed deployed result.\n",
+            "`uv sync --locked --all-extras && make build && make test && make check-generated`; open `site/index.html` and `site/walkthrough.html`. Sampling limits: `docs/SAMPLING.md`.\n"]
     return '\n'.join(out)
 
 

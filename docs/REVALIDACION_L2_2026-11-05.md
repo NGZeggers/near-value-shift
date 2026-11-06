@@ -1,5 +1,9 @@
 # Revalidación de receipts y recuperación de L2 — 2026-11-05
 
+## Summary (English)
+
+All 1,189 event-bearing blocks in the original extract were checked against FastNear by height, timestamp, receipt ID, caller and log contents. The verified extract retains 7,227 successful logs and removes 53 failed-receipt logs; missing statuses were never assumed successful. This restored L2 analytics, backed by the verification report, hashes and regression tests. It does not verify blocks absent from that extract or validate full-market volume: the conditional sample/DefiLlama cross-check still fails. The dated tests and build checks below refer to the review branch; these changes are now integrated into the canonical `NGZeggers/near-value-shift` repository.
+
 Rama: `near_hackaton`, `NGZeggers/hackathons`. Base: `e8d69e1ca617e677872a1a391afde7f549dce042`.
 
 ## Resultado

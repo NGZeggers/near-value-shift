@@ -1,6 +1,6 @@
 # From clicks to settlement: a reproducible investment thesis on NEAR
 
-Built for NEAR Hackathon 2026, track **Investment Thesis** (`thesis`).
+This is a reproducible investment thesis on NEAR, built for NEAR Hackathon 2026, track **Investment Thesis** (`thesis`). It tests whether falling account counts hide a shift toward cross-chain settlement. Run `make build` to rebuild the evidence and explore the dashboard: [Try it in two minutes](#reproduce-do-x-see-y).
 
 **Question:** do falling account counts obscure a shift toward cross-chain settlement, and does the evidence support a token investment case? The project compares activity, behavioral proxies, Intents flows, net captured fees and forward associations. It reports failed cross-checks and inconclusive statistical tests. Settlement growth alone does not establish undervaluation.
 
@@ -32,6 +32,8 @@ Requirements: [uv](https://docs.astral.sh/uv/); Python 3.12 is configured by CI.
 
 Generated text and source hashes are compared exactly. Numerical arrays allow only `rtol=1e-9`, `atol=1e-11` for machine precision; stale market caps and changed methods still fail the check.
 
+Optional browser checks: `uv run --with playwright python -m playwright install chromium`, then `uv run --with playwright python tests/browser_dashboard.py`. These exercise HTTP and local-file rendering, all six KPIs, verdict conditions, filters, themes, sources, tables, mobile layout and hostile/degenerate inputs. The script prints the temporary directory containing screenshots and JSON results.
+
 Build time varies by machine; price tables are loaded once and bootstrap correlations are batched. Retraining clustering costs more than a normal cached build. Snapshot acquisition is separate from build time.
 
 ## Refreshing data and optional integrations
@@ -40,7 +42,7 @@ Build time varies by machine; price tables are loaded once and bootstrap correla
 
 `make verify-events` revalidates all event-bearing blocks against FastNear, resumes from status-aware block caches and replaces the extract only after full verification. The historical revalidation checked all 1,189 blocks from the original event extract; respect the public rate limit and allow substantial time. `uv run near-thesis verify-events --offline` only uses already verified caches. Rebuild after verification. New samples preserve explicit successful receipt status.
 
-An explicit `near-thesis fetch --only intents` fails clearly because the Explorer integration is unsupported; the default public-source fetch skips it.
+The suggested track deliverable, a swap-volume pull from the **Intents Explorer API, is not implemented**: the team has no partner JWT for Explorer. DefiLlama/Dune serves as the substitute reference for the FastNear on-chain sample cross-check; it is not an Explorer API result. Setting `INTENTS_EXPLORER_JWT` alone does not enable this integration. An explicit `uv run near-thesis fetch --only intents` fails clearly; the default public-source fetch skips it. This gap is also recorded in [THESIS.md](THESIS.md#gaps-provenance-and-reproduction).
 
 `make bq` is optional. It checks dataset freshness **before** L1/L2, estimates query size, sets a server-side byte ceiling and limits each run. See `docs/SETUP_BIGQUERY.md`; actual Google query/schema execution is not claimed for the block-sample build. Q0–Q3 auxiliary extracts are available for manual cross-checks; QAA and Intents consume L1/L2 extracts when present.
 
@@ -58,8 +60,10 @@ Official rules: [HACKATHON.md](https://nearhackathon.com/HACKATHON.md). Deadline
 
 Libraries and locked versions: `pyproject.toml` and `uv.lock`. Parts of the original implementation used Claude Code; the correction pass and regression checks used Codex. The independent audit, its fixes and the receipt revalidation were developed on a temporary review branch and merged into this repository, which is the canonical one. No pre-existing product is declared reused. This is research software; its statistical and sampling limits are part of the deliverable. MIT; see `LICENSE`.
 
+All commits date from 2026-11-02 onward; there is no pre-hackathon baseline. The first commit is [117c268](https://github.com/NGZeggers/near-value-shift/commit/117c268), dated 2026-11-02 10:10 in Guadalajara; all project commits fall within the permitted work window.
+
 ## Security fixes and validation
 
-The [original audit](docs/AUDITORIA_FUNCIONAL_SEGURIDAD_2026-11-03.md) and its evidence remain unchanged. [Fix verification](docs/SECURITY_FIXES_2026-11-04.md) records the corrected behavior and remaining data/operational limits. The current regression suite includes the promoted audit cases and tests for signing controls, receipt-status verification, cache migration and BigQuery budget drift.
+The [original audit](docs/AUDITORIA_FUNCIONAL_SEGURIDAD_2026-11-03.md) preserves its historical findings and now starts with an English summary; its [evidence](audit/README.md) remains unchanged. [Fix verification](docs/SECURITY_FIXES_2026-11-04.md) records the corrected behavior and remaining data/operational limits. The current regression suite includes the promoted audit cases and tests for signing controls, receipt-status verification, cache migration and BigQuery budget drift.
 
 CI validates pushes to `main` and pull requests with read-only repository permissions. The Pages deployment job runs only after a successful build of `main` and holds the only write-scoped permissions.

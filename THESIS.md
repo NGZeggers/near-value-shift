@@ -70,6 +70,8 @@ Intervals condition on the observed sampled days; they omit intraday, routing an
 
 ## Econometrics (L3)
 
+In the 5 VAR models that pass the stationarity, stability and whiteness gates, usage leads price for transaction counts (Holm p = 0.005); price leads usage for gas fees (Holm p = 8.83e-07), transfer volume (Holm p = 1.49e-07). Intents volume, QAA fail the prerequisites and are inconclusive.
+
 | Metric | Weeks | VAR status | Johansen rank | Johansen status |
 |---|---|---|---|---|
 | active_accounts | 304 | diagnostics passed | 0 | rank 0: no rejection |
@@ -103,13 +105,13 @@ The scenario model draws 20,000 assumptions around observed gross take rate and 
 
 ## What changes the verdict
 
-- Independent full-day/routed-batch reconciliation consistent with the reference series would strengthen the descriptive evidence. The current cross-check is failing.
+- Independent full-day or routed-batch reconciliation would strengthen the descriptive evidence. The numerical consistency criterion is ci_lo <= 1.0 <= ci_hi: the conditional 95% interval of the on-chain estimate / DefiLlama ratio must include 1.0 on matched days. Current ratio 0.253, interval [0.178, 0.327], over 46 matched days: failing. Coverage is 49 sampled days and 4892 blocks in fixed intraday windows, not complete-day extracts. Full-day coverage of those days and independent routed-batch/pricing reconciliation are still missing. A passing conditional interval alone would not validate population coverage or economic swap reconstruction; the sample does not identify how many additional complete days would suffice.
 - Audited net receipts, executed purchases and supply effects may strengthen or weaken the value-capture case; gross volume alone does not decide it.
-- Stable out-of-sample associations with past-only features, dependence-aware uncertainty and multiplicity control are needed before describing usage as a return signal.
+- Stable out-of-sample associations with past-only features, dependence-aware uncertainty and multiplicity control are needed before usage can be called a return signal.
 - Strong sensitivity to clustering, sampling hours or role thresholds weakens the behavioral interpretation. Verified anchors remain an external data need.
 
 ## Gaps, provenance and reproduction
 
-Raw and extracted inputs and frozen model artifacts are hashed in `docs/REPRODUCIBILITY.md`. Revenue definitions are stored in the raw responses. BigQuery is optional: its runner checks freshness before L1/L2; actual queries and credentials were not needed for this block-sample build. Explorer JWT is not used. On-chain publication is an optional dry-run-capable feature, not a claimed deployed result.
+Raw and extracted inputs and frozen model artifacts are hashed in `docs/REPRODUCIBILITY.md`. Revenue definitions are stored in the raw responses. BigQuery is optional: its runner checks freshness before L1/L2; actual queries and credentials were not needed for this block-sample build. The suggested track deliverable, a swap-volume pull from the Intents Explorer API, is not implemented: the team has no partner JWT for Explorer. Setting INTENTS_EXPLORER_JWT alone does not enable a pull; an explicit request fails clearly. DefiLlama/Dune is the substitute reference for the FastNear on-chain sample cross-check, not an Explorer API result or a completed Explorer deliverable. On-chain publication is an optional dry-run-capable feature, not a claimed deployed result.
 
-`uv sync --all-extras && make build && make test`; open `site/index.html` and `site/walkthrough.html`. Sampling limits: `docs/SAMPLING.md`.
+`uv sync --locked --all-extras && make build && make test && make check-generated`; open `site/index.html` and `site/walkthrough.html`. Sampling limits: `docs/SAMPLING.md`.

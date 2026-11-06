@@ -1,5 +1,9 @@
 # Validación del proyecto para NEAR Hackathon 2026
 
+## Summary (English)
+
+This dated review documents the initial thesis audit and subsequent corrections: observed net revenue, repaired QAA features/cache identity, a separate past-only predictive model, explicit statistical prerequisites and multiplicity control, corrected Intents aggregation and broader generated-artifact checks. The sample/reference cross-check still fails and is evidence against independent confirmation; QAA remains a behavioral proxy and no robust return signal is claimed. Historical test counts and deployment observations below apply to their named commits. Later [security fixes](SECURITY_FIXES_2026-11-04.md) and [receipt revalidation](REVALIDACION_L2_2026-11-05.md) are integrated into the canonical repository. A public X demo post and the team's reviewed final application remain outstanding.
+
 Revisión: 2026-11-02, zona America/Mexico_City. Commit revisado: `e361fee1537bb13a7c611c3f20aef32754219300`.
 
 ## Estado después de las correcciones autorizadas

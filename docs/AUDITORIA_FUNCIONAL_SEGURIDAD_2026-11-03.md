@@ -1,5 +1,9 @@
 # Auditoría de cumplimiento, funcionamiento y seguridad — NEAR Hackathon 2026
 
+## Summary (English)
+
+This is the historical audit of commit `4843bcb`, not the current project's security verdict. The pipeline and hosted dashboard were reproducible, but the audit found high-priority signing-network and failed-receipt issues, plus pricing, parser, budget and robustness defects. Those findings were subsequently addressed in [fix verification](SECURITY_FIXES_2026-11-04.md), and the historical receipt extract was [revalidated](REVALIDACION_L2_2026-11-05.md); both changes are now integrated into the canonical `NGZeggers/near-value-shift` repository. The failed volume cross-check and exploratory behavioral/statistical limits remain. A real X demo post, team details and official submission still require the team. The original dated findings below are preserved for traceability.
+
 Fecha: 2026-11-03. Rama: `near_hackaton`. Commit: `4843bcb7b3e876bdfc330820358240b44d4f4311`.
 
 ## Dictamen
