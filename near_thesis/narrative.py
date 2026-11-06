@@ -140,23 +140,23 @@ def build(d: pd.DataFrame, m: pd.DataFrame, qs: dict, ins: dict, ic: list, vg: l
     steps = [
         {"title": "Counts collapsed",
          "text": f"Daily active accounts are {_fmt_pct(acc_vs_peak)} from the {str(peak_m.date())[:7]} peak and transactions {_fmt_pct(txn_vs_peak)} from theirs. This is the decline everyone sees.",
-         "href": "#chart-active_accounts"},
+         "href": "#chart-active_accounts", "chart": "active_accounts"},
         {"title": "Value per transaction rose",
          "text": f"The average transaction in {lm} moved {_usd(last['usd_per_txn'])}, about {usd_mult:.0f}x the 2024 mean. Count fell much faster than volume.",
-         "href": "#chart-usd_per_txn"},
+         "href": "#chart-usd_per_txn", "chart": "usd_per_txn"},
         {"title": "Settlement moved to Intents",
          "text": f"Reported cross-chain settlement reached {_usd(last['intents_volume_usd'])} in {lm}; application fees are {fee_mult:.0f}x the gas paid to the protocol. "
                  "Value that settles through NEAR does not stay on NEAR: TVL and stablecoins are flat.",
-         "href": "#sec-value"},
+         "href": "#sec-value", "chart": "indexed"},
         {"title": "Part of the decline is a bot wash-out, and our own on-chain check "
                   + ("holds" if cross_ok else "fails"),
          "text": ((f"The quality-adjusted share of accounts rose from {qaa_first['qaa_share']:.0%} to {qaa_last['qaa_share']:.0%}. " if qaa_last is not None else "")
                   + (f"But our block sample recovers only {ratio['ratio']:.0%} of the DefiLlama level: the trend is confirmed, the level is not." if (computed and not cross_ok)
                      else "Our block sample is consistent with the DefiLlama level." if computed else "Independent validation is unavailable.")),
-         "href": "#chart-intents_xcheck"},
+         "href": "#chart-intents_xcheck", "chart": "intents_xcheck"},
         {"title": "Price reflects none of it",
          "text": "The price-usage correlation is unstable and often negative. " + granger_text + ic_text + "Decoupling is observed; a return signal is not.",
-         "href": "#sec-price"},
+         "href": "#sec-price", "chart": "rolling_corr"},
     ]
     for i, s in enumerate(steps, 1):
         s["step"] = i

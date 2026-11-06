@@ -37,6 +37,11 @@ def _spec(id, section, title, sentence, type, series, *, unit="", y_log=False, a
             "series": series, "annotations": annotations or [], "source": source, "query": query, "note": note, "y_domain": y_domain}
 
 
+def _label(column: str) -> str:
+    """Human label for a metric column (shared with the narrative layer)."""
+    return narrative.METRIC_NAMES.get(column, column)
+
+
 def _breaks(name: str) -> list[dict]:
     b = json.loads((MODELS / "breaks.json").read_text()).get(name, {})
     return [{"date": d, "label": "break"} for d in b.get("breaks", [])]
@@ -147,23 +152,23 @@ def build() -> dict:
     # ---- Section 4: price decoupling and econometrics
     specs.append(_spec("yearly_corr", "4. Price and usage", "Correlation of log price with log usage, by calendar year",
         "Within-year correlation of price with active accounts flipped sign in 2026; correlation with Intents volume was negative in 2025.",
-        "diverging", [{"name": c, "points": [[str(int(y)), round(float(v), 2)] for y, v in zip(yc["year"], yc[c]) if pd.notna(v)]}
+        "diverging", [{"name": _label(c), "points": [[str(int(y)), round(float(v), 2)] for y, v in zip(yc["year"], yc[c]) if pd.notna(v)]}
                       for c in ["active_accounts", "txns", "tx_volume_usd", "intents_volume_usd"] if c in yc.columns],
         unit="Pearson r", y_domain=[-1, 1], source="data/derived/daily.csv", query="Pearson(log price, log metric) per year (near_thesis/econ.py yearly_corr)"))
     specs.append(_spec("rolling_corr", "4. Price and usage", "Rolling 90-day correlation of log price with log usage",
         "The price-usage link is unstable; long stretches are near zero or negative, which is what decoupling looks like.",
-        "line", [{"name": c, "points": _pts(rc[c], round_to=2)} for c in ["active_accounts", "tx_volume_usd", "intents_volume_usd"] if c in rc.columns],
+        "line", [{"name": _label(c), "points": _pts(rc[c], round_to=2)} for c in ["active_accounts", "tx_volume_usd", "intents_volume_usd"] if c in rc.columns],
         unit="Pearson r", y_domain=[-1, 1], source="data/derived/daily.csv", query="rolling(90).corr on log levels (near_thesis/econ.py)"))
     specs.append(_spec("granger", "4. Price and usage", "Granger causality p-values (weekly, lag by AIC)",
         "Only models passing stationarity, stability and residual-whiteness checks are shown. Holm-adjusted p-values; omitted tests are inconclusive, not evidence of no relation.",
-        "ranked", [{"name": "usage -> price", "points": [[r["metric"], round(r["usage_granger_causes_price"]["p_value_holm"], 3)] for r in vg if r.get("inference_valid")]},
-                   {"name": "price -> usage", "points": [[r["metric"], round(r["price_granger_causes_usage"]["p_value_holm"], 3)] for r in vg if r.get("inference_valid")]}],
+        "ranked", [{"name": "usage -> price", "points": [[_label(r["metric"]), round(r["usage_granger_causes_price"]["p_value_holm"], 3)] for r in vg if r.get("inference_valid")]},
+                   {"name": "price -> usage", "points": [[_label(r["metric"]), round(r["price_granger_causes_usage"]["p_value_holm"], 3)] for r in vg if r.get("inference_valid")]}],
         unit="p-value", y_domain=[0, 1], source="data/derived/daily.csv", query="VAR on weekly d-log series, statsmodels test_causality (near_thesis/econ.py)"))
     specs.append(_spec("ic", "4. Price and usage", "Does a 4-week change in usage predict 12-week excess returns vs BTC?",
         "Exploratory Spearman association; overlapping returns and multiple tests limit inference. QAA is trained only on past calibration months and released after month-end. This is not a trading backtest.",
-        "ranked", [{"name": "IC (12w, vs BTC)", "points": [[r["metric"], round(r["spearman_ic"], 2)] for r in ic if r.get("horizon_weeks") == 12 and r.get("benchmark") == "btc" and "spearman_ic" in r]}],
+        "ranked", [{"name": "IC (12w, vs BTC)", "points": [[_label(r["metric"]), round(r["spearman_ic"], 2)] for r in ic if r.get("horizon_weeks") == 12 and r.get("benchmark") == "btc" and "spearman_ic" in r]}],
         unit="Spearman IC", y_domain=[-1, 1], source="data/derived/daily.csv", query="near_thesis/signal.py ic_table",
-        note=json.dumps({r["metric"]: r["ci95_block_bootstrap"] for r in ic if r.get("horizon_weeks") == 12 and r.get("benchmark") == "btc" and "spearman_ic" in r})))
+        note="95% block-bootstrap intervals: " + json.dumps({_label(r["metric"]): r["ci95_block_bootstrap"] for r in ic if r.get("horizon_weeks") == 12 and r.get("benchmark") == "btc" and "spearman_ic" in r})))
 
     # ---- Section 5: peers
     p = peers.set_index("chain")
