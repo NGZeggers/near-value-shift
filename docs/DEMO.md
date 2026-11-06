@@ -18,8 +18,8 @@ Built at NEAR HACKATHON: From clicks to settlement.
 
 Do falling account counts tell the whole story of @NEARProtocol? We built a reproducible thesis comparing raw activity, behavioral proxies, Intents settlement and net fee capture—with past-only features, statistical diagnostics and the evidence against our own hypothesis.
 
-Repo: https://github.com/NGZeggers/hackathons/tree/near_hackaton
-Dashboard: record the current local build; the upstream hosted demo predates these security fixes.
+Repo: https://github.com/NGZeggers/near-value-shift
+Dashboard: https://ngzeggers.github.io/near-value-shift/
 
 Every chart has its source. One command rebuilds the results. Demo attached. #NEARHackathon
 

@@ -1,14 +1,9 @@
 name: build
 on:
   push:
-    branches: [near_hackaton]
+    branches: [main]
   pull_request:
   workflow_dispatch:
-    inputs:
-      deploy_pages:
-        description: Publish this branch on hackathons Pages
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -33,7 +28,7 @@ jobs:
         with:
           path: site
   deploy:
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy_pages && github.repository == 'NGZeggers/hackathons' && github.ref == 'refs/heads/near_hackaton'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build
     permissions:
       pages: write

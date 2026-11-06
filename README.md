@@ -2,11 +2,9 @@
 
 Built for NEAR Hackathon 2026, track **Investment Thesis** (`thesis`).
 
-**Working branch:** [NGZeggers/hackathons · near_hackaton](https://github.com/NGZeggers/hackathons/tree/near_hackaton). The original [near-value-shift demo](https://ngzeggers.github.io/near-value-shift/) remains an upstream reference and does not include these branch fixes.
-
 **Question:** do falling account counts obscure a shift toward cross-chain settlement, and does the evidence support a token investment case? The project compares activity, behavioral proxies, Intents flows, net captured fees and forward associations. It reports failed cross-checks and inconclusive statistical tests. Settlement growth alone does not establish undervaluation.
 
-[Local dashboard](#reproduce-do-x-see-y) · [Generated argument](THESIS.md) · [Sampling and limits](docs/SAMPLING.md) · [Audit and corrections](docs/VALIDACION_HACKATHON.md)
+[Dashboard](https://ngzeggers.github.io/near-value-shift/) · [Generated argument](THESIS.md) · [Sampling and limits](docs/SAMPLING.md) · [Audit and corrections](docs/VALIDACION_HACKATHON.md)
 
 ## What is implemented
 
@@ -58,10 +56,10 @@ Official rules: [HACKATHON.md](https://nearhackathon.com/HACKATHON.md). Deadline
 
 ## Disclosure and license
 
-Libraries and locked versions: `pyproject.toml` and `uv.lock`. Parts of the original implementation used Claude Code; the correction pass and regression checks used Codex. This branch continues the same thesis project from the [audited baseline](https://github.com/NGZeggers/hackathons/commit/4843bcb7b3e876bdfc330820358240b44d4f4311), also published upstream as `near-value-shift`; it is not presented as an independent second project. This is research software; its statistical and sampling limits are part of the deliverable. MIT; see `LICENSE`.
+Libraries and locked versions: `pyproject.toml` and `uv.lock`. Parts of the original implementation used Claude Code; the correction pass and regression checks used Codex. The independent audit, its fixes and the receipt revalidation were developed on a temporary review branch and merged into this repository, which is the canonical one. No pre-existing product is declared reused. This is research software; its statistical and sampling limits are part of the deliverable. MIT; see `LICENSE`.
 
 ## Security fixes and validation
 
 The [original audit](docs/AUDITORIA_FUNCIONAL_SEGURIDAD_2026-11-03.md) and its evidence remain unchanged. [Fix verification](docs/SECURITY_FIXES_2026-11-04.md) records the corrected behavior and remaining data/operational limits. The current regression suite includes the promoted audit cases and tests for signing controls, receipt-status verification, cache migration and BigQuery budget drift.
 
-CI validates pushes to `near_hackaton` and pull requests with read-only repository permissions. Pages deployment requires an explicit manual workflow run with `deploy_pages=true` on this branch of `NGZeggers/hackathons`; normal pushes do not publish a site.
+CI validates pushes to `main` and pull requests with read-only repository permissions. The Pages deployment job runs only after a successful build of `main` and holds the only write-scoped permissions.
