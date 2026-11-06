@@ -1,0 +1,17 @@
+{
+  "intents_daily.csv": {
+    "matches_audited_numerical_artifact": true
+  },
+  "intents_monthly.csv": {
+    "matches_audited_numerical_artifact": true
+  },
+  "intents_quarterly.csv": {
+    "matches_audited_numerical_artifact": true
+  },
+  "intents_solvers.csv": {
+    "matches_audited_numerical_artifact": true
+  },
+  "intents_solver_sensitivity.json": {
+    "matches_audited_numerical_artifact": true
+  }
+}

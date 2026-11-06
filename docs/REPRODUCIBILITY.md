@@ -74,7 +74,8 @@ The build reads committed snapshots. Full SHA-256 hashes cover raw files, block 
 
 | File | Bytes | SHA-256 |
 |---|---|---|
-| data/blocks/intents_events_sampled.csv | 4306892 | `e0224a184993806b25c8574ef05f0f3a44e34d7b6e7406497637341f0c858af7` |
+| data/blocks/event_verification.json | 334 | `22a626709daebc13b1ec3eb2664eb91c4932d276b299bbebb599df83f13c1ece` |
+| data/blocks/intents_events_sampled.csv | 4383281 | `c9aeb3830f15e2e597b431d67a7314c82be01dd0a4e89f851b06baa7614bb111` |
 | data/blocks/sample_manifest.json | 12580 | `444e3843e6290d33e115270aab918b23a5896fe6a419afa281c1e832a1716642` |
 | data/blocks/sample_plan.json | 8185 | `d46b1ffc11cc483d0a2838e50b1256584c59a5f4b8ee9b6c975d9372dfb63d78` |
 | data/blocks/tx_sampled.csv | 22653523 | `3a7de3ac562a89bb6e83d030262f67bbc30d8d44073e18e03eb6beca181f38e2` |

@@ -6,7 +6,7 @@
  "intents_volume_usd": 3985641601,
  "usd_per_txn": 345.98,
  "ic_intents_12w_vs_btc": -0.576,
- "thesis_sha256": "a83fc407048f0660f22371f2a9a99ff918d2898c9dc41147a2ac537e84878071",
+ "thesis_sha256": "7f5aeee89154ea7cfe3c2ee94fb0cd3a227373d24f9fac5a614117e9521fa202",
  "raw_manifest_sha256": "173442f81549c05fe49938f6e9e4f5fc940492349859bdcd88a7b91e7b55f4f3",
  "repo": "https://github.com/NGZeggers/hackathons/tree/near_hackaton"
 }

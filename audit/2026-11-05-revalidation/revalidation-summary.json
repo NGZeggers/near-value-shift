@@ -1,0 +1,22 @@
+{
+  "verified_at_utc": "2026-11-05T07:39:04.188782+00:00",
+  "blocks": 1189,
+  "input_events": 7280,
+  "accepted_events": 7227,
+  "removed_failed_events": 53,
+  "event_statuses": {
+    "SUCCESS_VALUE": 7211,
+    "SUCCESS_RECEIPT_ID": 16,
+    "FAILURE": 53
+  },
+  "unique_receipts": 2170,
+  "receipt_statuses": {
+    "SUCCESS_VALUE": 2101,
+    "SUCCESS_RECEIPT_ID": 16,
+    "FAILURE": 53
+  },
+  "checks_passed": 15758,
+  "input_sha256": "e0224a184993806b25c8574ef05f0f3a44e34d7b6e7406497637341f0c858af7",
+  "output_sha256": "c9aeb3830f15e2e597b431d67a7314c82be01dd0a4e89f851b06baa7614bb111",
+  "verification_scope": "Public-source reconciliation; no cryptographic execution proof claimed."
+}

@@ -1,0 +1,97 @@
+Prefetch 1189 blocks, 2 workers sharing blocks._throttle and AIMD rate limits
+Cached 25/1189 blocks; elapsed 0s; global rate 0.30/s; extract unchanged
+Cached 50/1189 blocks; elapsed 0s; global rate 0.30/s; extract unchanged
+Cached 75/1189 blocks; elapsed 0s; global rate 0.30/s; extract unchanged
+Cached 100/1189 blocks; elapsed 0s; global rate 0.30/s; extract unchanged
+Cached 125/1189 blocks; elapsed 0s; global rate 0.30/s; extract unchanged
+Cached 150/1189 blocks; elapsed 21s; global rate 0.30/s; extract unchanged
+Cached 175/1189 blocks; elapsed 104s; global rate 0.30/s; extract unchanged
+Cached 200/1189 blocks; elapsed 187s; global rate 0.30/s; extract unchanged
+Cached 225/1189 blocks; elapsed 270s; global rate 0.30/s; extract unchanged
+Cached 250/1189 blocks; elapsed 382s; global rate 0.25/s; extract unchanged
+Cached 275/1189 blocks; elapsed 472s; global rate 0.30/s; extract unchanged
+Cached 300/1189 blocks; elapsed 556s; global rate 0.30/s; extract unchanged
+Cached 325/1189 blocks; elapsed 660s; global rate 0.14/s; extract unchanged
+Cached 350/1189 blocks; elapsed 819s; global rate 0.18/s; extract unchanged
+Cached 375/1189 blocks; elapsed 943s; global rate 0.24/s; extract unchanged
+Cached 400/1189 blocks; elapsed 1050s; global rate 0.20/s; extract unchanged
+Cached 425/1189 blocks; elapsed 1162s; global rate 0.26/s; extract unchanged
+Cached 450/1189 blocks; elapsed 1325s; global rate 0.15/s; extract unchanged
+Cached 475/1189 blocks; elapsed 1477s; global rate 0.19/s; extract unchanged
+Cached 500/1189 blocks; elapsed 1596s; global rate 0.25/s; extract unchanged
+Cached 525/1189 blocks; elapsed 1718s; global rate 0.21/s; extract unchanged
+Cached 550/1189 blocks; elapsed 1826s; global rate 0.27/s; extract unchanged
+Cached 575/1189 blocks; elapsed 1948s; global rate 0.23/s; extract unchanged
+Cached 600/1189 blocks; elapsed 2073s; global rate 0.13/s; extract unchanged
+Cached 625/1189 blocks; elapsed 2244s; global rate 0.17/s; extract unchanged
+Cached 650/1189 blocks; elapsed 2375s; global rate 0.22/s; extract unchanged
+Cached 675/1189 blocks; elapsed 2484s; global rate 0.19/s; extract unchanged
+Cached 700/1189 blocks; elapsed 2604s; global rate 0.24/s; extract unchanged
+Cached 725/1189 blocks; elapsed 2722s; global rate 0.21/s; extract unchanged
+Cached 750/1189 blocks; elapsed 2831s; global rate 0.27/s; extract unchanged
+Cached 775/1189 blocks; elapsed 2990s; global rate 0.15/s; extract unchanged
+Cached 800/1189 blocks; elapsed 3138s; global rate 0.20/s; extract unchanged
+Cached 825/1189 blocks; elapsed 3253s; global rate 0.25/s; extract unchanged
+Cached 850/1189 blocks; elapsed 3417s; global rate 0.15/s; extract unchanged
+Cached 875/1189 blocks; elapsed 3573s; global rate 0.19/s; extract unchanged
+Cached 900/1189 blocks; elapsed 3694s; global rate 0.24/s; extract unchanged
+Cached 925/1189 blocks; elapsed 3804s; global rate 0.21/s; extract unchanged
+Cached 950/1189 blocks; elapsed 3915s; global rate 0.26/s; extract unchanged
+Cached 975/1189 blocks; elapsed 4032s; global rate 0.23/s; extract unchanged
+Cached 1000/1189 blocks; elapsed 4139s; global rate 0.19/s; extract unchanged
+Cached 1025/1189 blocks; elapsed 4256s; global rate 0.25/s; extract unchanged
+Cached 1050/1189 blocks; elapsed 4368s; global rate 0.21/s; extract unchanged
+Cached 1075/1189 blocks; elapsed 4474s; global rate 0.28/s; extract unchanged
+Cached 1100/1189 blocks; elapsed 4595s; global rate 0.24/s; extract unchanged
+Cached 1125/1189 blocks; elapsed 4711s; global rate 0.20/s; extract unchanged
+Cached 1150/1189 blocks; elapsed 4823s; global rate 0.26/s; extract unchanged
+Cached 1175/1189 blocks; elapsed 4986s; global rate 0.15/s; extract unchanged
+Cached 1189/1189 blocks; elapsed 5075s; global rate 0.17/s; extract unchanged
+Verified 25/1189 blocks; original extract unchanged until complete
+Verified 50/1189 blocks; original extract unchanged until complete
+Verified 75/1189 blocks; original extract unchanged until complete
+Verified 100/1189 blocks; original extract unchanged until complete
+Verified 125/1189 blocks; original extract unchanged until complete
+Verified 150/1189 blocks; original extract unchanged until complete
+Verified 175/1189 blocks; original extract unchanged until complete
+Verified 200/1189 blocks; original extract unchanged until complete
+Verified 225/1189 blocks; original extract unchanged until complete
+Verified 250/1189 blocks; original extract unchanged until complete
+Verified 275/1189 blocks; original extract unchanged until complete
+Verified 300/1189 blocks; original extract unchanged until complete
+Verified 325/1189 blocks; original extract unchanged until complete
+Verified 350/1189 blocks; original extract unchanged until complete
+Verified 375/1189 blocks; original extract unchanged until complete
+Verified 400/1189 blocks; original extract unchanged until complete
+Verified 425/1189 blocks; original extract unchanged until complete
+Verified 450/1189 blocks; original extract unchanged until complete
+Verified 475/1189 blocks; original extract unchanged until complete
+Verified 500/1189 blocks; original extract unchanged until complete
+Verified 525/1189 blocks; original extract unchanged until complete
+Verified 550/1189 blocks; original extract unchanged until complete
+Verified 575/1189 blocks; original extract unchanged until complete
+Verified 600/1189 blocks; original extract unchanged until complete
+Verified 625/1189 blocks; original extract unchanged until complete
+Verified 650/1189 blocks; original extract unchanged until complete
+Verified 675/1189 blocks; original extract unchanged until complete
+Verified 700/1189 blocks; original extract unchanged until complete
+Verified 725/1189 blocks; original extract unchanged until complete
+Verified 750/1189 blocks; original extract unchanged until complete
+Verified 775/1189 blocks; original extract unchanged until complete
+Verified 800/1189 blocks; original extract unchanged until complete
+Verified 825/1189 blocks; original extract unchanged until complete
+Verified 850/1189 blocks; original extract unchanged until complete
+Verified 875/1189 blocks; original extract unchanged until complete
+Verified 900/1189 blocks; original extract unchanged until complete
+Verified 925/1189 blocks; original extract unchanged until complete
+Verified 950/1189 blocks; original extract unchanged until complete
+Verified 975/1189 blocks; original extract unchanged until complete
+Verified 1000/1189 blocks; original extract unchanged until complete
+Verified 1025/1189 blocks; original extract unchanged until complete
+Verified 1050/1189 blocks; original extract unchanged until complete
+Verified 1075/1189 blocks; original extract unchanged until complete
+Verified 1100/1189 blocks; original extract unchanged until complete
+Verified 1125/1189 blocks; original extract unchanged until complete
+Verified 1150/1189 blocks; original extract unchanged until complete
+Verified 1175/1189 blocks; original extract unchanged until complete
+VERIFICATION_COMPLETE {"source": "https://mainnet.neardata.xyz/v0/block/{h}", "blocks_checked": 1189, "input_events": 7280, "accepted_events": 7227, "failed_events_removed": 53, "input_sha256": "e0224a184993806b25c8574ef05f0f3a44e34d7b6e7406497637341f0c858af7", "output_sha256": "c9aeb3830f15e2e597b431d67a7314c82be01dd0a4e89f851b06baa7614bb111"}

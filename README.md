@@ -14,12 +14,12 @@ Built for NEAR Hackathon 2026, track **Investment Thesis** (`thesis`).
 |---|---|---|
 | L0 | Hashed public snapshots, including gross Intents fees, net captured receipts and buyback-labelled revenue | `near_thesis/fetch.py`, `data/raw/` |
 | L1 | Retrospective HDBSCAN; separate frozen past-only GMM for predictive QAA, with next-month availability | `near_thesis/qaa.py` |
-| L2 | Successful-receipt token-diff parser, exact asset identifiers, zero-event days and heuristic roles; legacy L2 extract disabled pending status revalidation | `near_thesis/intents.py`, `data/blocks/` |
+| L2 | Successful-receipt token-diff parser, exact asset identifiers, zero-event days and heuristic roles; historical events revalidated against 1,189 FastNear blocks; failed receipts excluded | `near_thesis/intents.py`, `data/blocks/` |
 | L3 | Breaks, correlations, stationarity-gated VAR, stability/residual checks, explicit Johansen ranks | `near_thesis/econ.py` |
 | L4 | Forward associations with block-bootstrap and familywise intervals; descriptive peer panel; capture-based scenarios | `near_thesis/signal.py` |
 | Output | Generated thesis, static dashboard, executed notebook, complete input hashes, regression tests | `THESIS.md`, `site/`, `tests/` |
 
-QAA labels are behavioral assumptions, not verified human identities. The Intents sample is not a validated total or guaranteed lower bound. Buyback-labelled receipts are not proof of burning or holder dividends. The generated argument names the current consistency-test result or why it is unavailable, plus remaining limitations. The committed legacy L2 extract does not contain receipt execution statuses and is excluded until revalidated; old estimates remain only in the immutable audit evidence.
+QAA labels are behavioral assumptions, not verified human identities. The Intents sample is not a validated total or guaranteed lower bound. Buyback-labelled receipts are not proof of burning or holder dividends. The generated argument names the current consistency-test result or why it is unavailable, plus remaining limitations. The historical L2 extract was revalidated against FastNear on 2026-11-05: 53 failed-receipt logs were removed and 7,227 events retain explicit successful statuses. See [receipt revalidation](docs/REVALIDACION_L2_2026-11-05.md) for scope and evidence. Legacy extracts without execution status remain disabled by the pipeline.
 
 ## Reproduce: do X, see Y
 
@@ -40,7 +40,7 @@ Build time varies by machine; price tables are loaded once and bootstrap correla
 
 `make fetch` refreshes public APIs. `make blocks BLOCKS=100` tops up the cached FastNear block plan; acquiring thousands of public blocks can take hours under rate limits. Rebuild afterward. Snapshot acquisition timestamps and complete SHA-256 hashes are generated into `docs/REPRODUCIBILITY.md`.
 
-`make verify-events` revalidates all event-bearing blocks against FastNear, resumes from status-aware block caches and replaces the extract only after full verification. The current historical extract spans 1,189 event-bearing blocks; respect the public rate limit and allow substantial time. `uv run near-thesis verify-events --offline` only uses already verified caches. Rebuild after verification. New samples preserve explicit successful receipt status.
+`make verify-events` revalidates all event-bearing blocks against FastNear, resumes from status-aware block caches and replaces the extract only after full verification. The historical revalidation checked all 1,189 blocks from the original event extract; respect the public rate limit and allow substantial time. `uv run near-thesis verify-events --offline` only uses already verified caches. Rebuild after verification. New samples preserve explicit successful receipt status.
 
 An explicit `near-thesis fetch --only intents` fails clearly because the Explorer integration is unsupported; the default public-source fetch skips it.
 

@@ -1,0 +1,43 @@
+import csv
+import json
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+
+ROOT = Path('/home/ttech-main/hackathons-review/repo')
+sys.path.insert(0, str(ROOT))
+from near_thesis import blocks
+
+# Conservative cap below the observed public limit; shared across both workers.
+blocks.RATE_MAX = 0.30
+blocks._rate[0] = 0.30
+
+rows = list(csv.DictReader((ROOT/'data/blocks/intents_events_sampled.csv').open()))
+heights = sorted({int(row['block_height']) for row in rows})
+# Preserve any incomplete cache left by an interrupted write, then refetch it.
+for h in heights:
+    p = blocks.CACHE/f'{h}.json'
+    if p.exists():
+        try:
+            json.loads(p.read_text())
+        except ValueError:
+            p.rename(Path('/tmp')/f'near-incomplete-cache-{h}-{time.time_ns()}.json')
+print(f'Prefetch {len(heights)} blocks, 2 workers sharing blocks._throttle and AIMD rate limits', flush=True)
+start = time.monotonic()
+executor = ThreadPoolExecutor(max_workers=2)
+futures = {executor.submit(blocks.fetch_block, h): h for h in heights}
+completed = 0
+try:
+    for future in as_completed(futures):
+        height = futures[future]
+        block = future.result()
+        if block is None or block['height'] != height:
+            raise ValueError(f'Block {height} unavailable or mismatched; extract untouched')
+        completed += 1
+        if completed % 25 == 0 or completed == len(heights):
+            print(f'Cached {completed}/{len(heights)} blocks; elapsed {time.monotonic()-start:.0f}s; global rate {blocks._rate[0]:.2f}/s; extract unchanged', flush=True)
+finally:
+    executor.shutdown(wait=True, cancel_futures=True)
+report = blocks.verify_events(offline=True)
+print('VERIFICATION_COMPLETE '+json.dumps(report), flush=True)

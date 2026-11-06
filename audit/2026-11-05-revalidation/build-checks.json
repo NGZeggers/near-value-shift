@@ -1,0 +1,15 @@
+{
+  "repeated_build_differences": [],
+  "external_network_attempt_log_exists": false,
+  "unchanged_raw_prices_l1_and_historical_audits": true,
+  "normalized_numerical_only_artifacts": [
+    "data/derived/models/breaks.json",
+    "data/derived/models/johansen.json",
+    "data/derived/models/rolling_corr.csv",
+    "data/derived/models/scenarios.json",
+    "data/derived/models/signal_ic.json",
+    "data/derived/models/stationarity.json",
+    "data/derived/models/var_granger.json",
+    "data/derived/models/yearly_corr.csv"
+  ]
+}

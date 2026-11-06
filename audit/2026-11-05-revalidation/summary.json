@@ -1,0 +1,45 @@
+{
+  "base_commit": "e8d69e1ca617e677872a1a391afde7f549dce042",
+  "receipt_revalidation": {
+    "verified_at_utc": "2026-11-05T07:39:04.188782+00:00",
+    "blocks": 1189,
+    "input_events": 7280,
+    "accepted_events": 7227,
+    "removed_failed_events": 53,
+    "event_statuses": {
+      "SUCCESS_VALUE": 7211,
+      "SUCCESS_RECEIPT_ID": 16,
+      "FAILURE": 53
+    },
+    "unique_receipts": 2170,
+    "receipt_statuses": {
+      "SUCCESS_VALUE": 2101,
+      "SUCCESS_RECEIPT_ID": 16,
+      "FAILURE": 53
+    },
+    "checks_passed": 15758,
+    "input_sha256": "e0224a184993806b25c8574ef05f0f3a44e34d7b6e7406497637341f0c858af7",
+    "output_sha256": "c9aeb3830f15e2e597b431d67a7314c82be01dd0a4e89f851b06baa7614bb111",
+    "verification_scope": "Public-source reconciliation; no cryptographic execution proof claimed."
+  },
+  "pytest": {
+    "passed": 92,
+    "failed": 0
+  },
+  "browser": {
+    "passed": 28,
+    "failed": 0
+  },
+  "complete_builds": 2,
+  "l2_computed": true,
+  "sampled_days": 49,
+  "cross_check_passed": false,
+  "ratio_to_defillama": {
+    "days": 46,
+    "ratio": 0.25253575034639153,
+    "ci_lo": 0.17779112325476906,
+    "ci_hi": 0.32746183577166066,
+    "median_daily_ratio": 0.1461059525981197
+  },
+  "publication": "local changes; no commit, push, deployment or transaction sent"
+}
