@@ -89,4 +89,10 @@ Resultado: ninguna métrica de uso supera el criterio declarado; el veredicto lo
 
 ## Verificación de esta pasada
 
-Los resultados de `make build`, `make test`, `make check-generated`, las comprobaciones de navegador y la reconstrucción desde copia limpia se registran aquí al cerrar la pasada.
+- `make build` completo (features, modelos, gráficos, tesis, sitio, notebook ejecutado, índice): correcto.
+- `make test`: 111 pruebas aprobadas (98 previas más las nuevas de reconciliación, puente de valor, fuera de muestra, ponderación QAA, migración de etiquetas y tipos de evidencia).
+- `make check-generated`: los artefactos reconstruidos coinciden con los confirmados (texto y hashes exactos, numéricos dentro de la tolerancia de máquina).
+- `uv run --with playwright python tests/browser_dashboard.py`: 47 controles aprobados en Chromium (los 32 anteriores más etiquetas de evidencia, enlaces de método, bloque de sensibilidad, chip de fechas, enlaces internos resolubles, skip link, tabulación, activación por teclado y `details` por teclado).
+- Reconstrucción desde copia limpia: `git clone` local → `uv sync --locked --all-extras` → `make build` → `check_generated --baseline-dir` contra el árbol de trabajo: artefactos coincidentes; 111 pruebas aprobadas en el clon. Se reutilizaron la asignación HDBSCAN y el modelo congelado confirmados; el reajuste (`QAA_REFIT=1`) no se evaluó.
+- `git diff --check` y `node --check near_thesis/web/app.js`: correctos.
+- Extracto intradía: adquisición en curso al cerrar esta pasada (ritmo ~0.2 bloques/s); al terminar, `make build` recalcula el factor de sesgo y las secciones correspondientes se rellenan solas. Si se interrumpe, `uv run near-thesis blocks-intraday --offline` escribe la parte ya cacheada.
