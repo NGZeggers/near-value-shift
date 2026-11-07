@@ -180,7 +180,8 @@ def qaa_scope_section(qs: dict) -> list[str]:
             f"Criteria: strict {crit['strict']:.1%} ({sens['criteria']['groups_counted']['strict'][0]} only), default {crit['default']:.1%}, including ambiguous groups {crit['including_ambiguous']:.1%}. {crit['why_strict_is_low']}.",
             f"A name-only split (accounts without a `.tg`/`.sweat` name) gives {sens['name_only_baseline']['latest_month']:.1%}; its mean absolute difference from the default share over all months is {sens['name_only_baseline']['mean_abs_difference_vs_default']:.1%} "
             f"(correlation {sens['name_only_baseline']['correlation_with_default']:.2f}), so in these sparse windows the clustering adds little beyond the name class. "
-            f"Inclusion-probability weighting (accounts active in fewer windows are under-observed) moves the latest share from {sens['inclusion_probability_weighting']['latest_month_unweighted']:.1%} to {sens['inclusion_probability_weighting']['latest_month_weighted']:.1%}; "
+            f"Inclusion-probability weighting (accounts active in fewer windows are under-observed) moves the latest share from {sens['inclusion_probability_weighting']['latest_month_unweighted']:.1%} to {sens['inclusion_probability_weighting']['latest_month_weighted']:.1%}. "
+            "This is a sensitivity under stated assumptions (" + "; ".join(sens['inclusion_probability_weighting'].get('assumptions', [])) + "), not a demonstrated correction of the observation bias; "
             "never-observed accounts stay outside the index, so the QAA count is an illustrative rescaling and the share is the measured quantity."]
     if sens.get('by_window_hour'):
         bh = sens['by_window_hour']
@@ -225,6 +226,12 @@ def reconciliation_section() -> list[str]:
                    f"Estimates from all 24 hours reach {num(intra.get('ratio_all_hours_to_reference_median'), 2)}x the reference (median over the three days). {intra['reading']}.\n")
     else:
         out.append("**Intraday expansion error.** Not measured yet: `make blocks-intraday` fetches 24 hourly windows for three pre-declared days (highest reference volume, 2026 median day, 2025 median day).\n")
+    iv = rec.get('intraday_validation') or {}
+    if iv:
+        rule = iv['rule']
+        out.append(f"**Validation of the intraday factor (declared {rule['declared']}).** Selection: {rule['selection']}. Aggregation: {rule['aggregation']}. Acceptance: {rule['acceptance']}. {rule['not_a_correction_of_the_estimator'][0].upper() + rule['not_a_correction_of_the_estimator'][1:]}. "
+                   + (f"Result: validation days {', '.join(d['day'] for d in iv.get('days', []))}, median factor {num(iv.get('validation_median_factor'), 2)} versus {num(iv.get('motivating_median_factor'), 2)} on the motivating days (ratio {num(iv.get('ratio_validation_over_motivating'), 2)}); {iv.get('verdict', '')}.\n"
+                      if iv.get('validation_median_factor') else f"Status: {iv['status']}.\n"))
     chk = val['two_sided_pricing_check']
     out.append(f"**Valuation.** {val['legs_unpriced']} of {val['legs_total']} legs ({val['legs_unpriced_share']:.1%}) are unpriced, but an account-intent is valued by whichever side is priced: only {val['account_intents_without_any_priced_side']} of {val['account_intents']} account-intents in {val['batches_with_unvalued_account_intent']} batches lose value entirely. "
                f"For the {chk['account_intents_two_sided']} account-intents with both sides priced, inflow/outflow has median {chk['in_over_out']['p50']:.3f} and 5th-95th percentiles {chk['in_over_out']['p5']:.3f}-{chk['in_over_out']['p95']:.3f}: daily prices and decimals are consistent across legs. "
@@ -237,7 +244,7 @@ def reconciliation_section() -> list[str]:
         out.append(f"**Residual.** After the measured intraday bias (median factor {res['intraday_bias_factor_used']:.2f}) the ratio would be {res['after_intraday_bias_correction']:.2f} "
                    f"({res['after_intraday_bias_correction_mean_factor']:.2f} with the mean factor); a factor of {res['unexplained_factor_to_parity']:.1f}x to parity remains unexplained and is reported as such, not attributed to missing large trades. "
                    f"If the reference additionally counted both sides the corrected ratio would be {res['after_both']:.2f}"
-                   + ("; that exceeds parity, so the two-sided reading and the full intraday correction cannot both hold.\n" if res.get('two_sided_and_intraday_overshoot') else ".\n"))
+                   + ("; that exceeds parity, which shows the two readings cannot both be taken at face value together but does not identify which one overstates: estimation error and unidentified components remain.\n" if res.get('two_sided_and_intraday_overshoot') else ".\n"))
     else:
         out.append(f"**Residual.** A factor of {res['unexplained_factor_to_parity']:.1f}x to parity remains unexplained and is reported as such, not attributed to missing large trades.\n")
     cal, valid = hold['calibration'], hold['validation']
@@ -254,18 +261,21 @@ def oos_section() -> list[str]:
     if not o.get('tests'):
         return []
     p, sm = o['protocol'], o['summary']
-    out = ["## Out-of-sample evaluation (pre-registered)\n",
-           f"Protocol declared before scoring: {p['hypothesis']}. Signal: {p['signal_transform']}. Target: {p['target']}. Calibration ends {p['calibration_end']}; {p['purge']}. Rule: {p['fixed_rule']}. Walk-forward: {p['walk_forward']}. Family: {p['family']}. "
-           f"Benchmark predictors: {p['benchmark_predictors']['near_momentum']}; {p['benchmark_predictors']['btc_trend']}.\n",
-           f"**Result: {sm['conclusion']}** ({sm['passing']} of {sm['evaluable']} evaluable usage tests; not evaluable: {', '.join(sm['not_evaluable']) or 'none'}). Best naive-benchmark evaluation IC {num(sm.get('best_naive_benchmark_ic'), 2)}.\n",
-           "| Predictor | h | vs | Calibration IC (n) | Evaluation IC, signed (n) | 95% block interval | Walk-forward hit rate | Status |\n|---|---|---|---|---|---|---|---|"]
+    out = ["## Out-of-sample evaluation (retrospective, temporally separated)\n",
+           f"Scope: {p['declaration']}. Prospective use: {p['prospective']['rule']}; {p['prospective']['intents_and_qaa']}.\n",
+           f"Protocol: {p['hypothesis']}. Signal: {p['signal_transform']}. Target: {p['target']}. Calibration ends {p['calibration_end']}; {p['purge']}. Rule: {p['fixed_rule']}. Benchmark predictors: {p['benchmark_predictor_treatment']}. Walk-forward: {p['walk_forward']}. Family: {p['family']}.\n",
+           f"**Result: {sm['conclusion']}** ({sm['passing']} of {sm['evaluable']} evaluable usage tests pass the familywise criterion; {sm.get('passing_nominal_only', 0)} pass the unadjusted interval only; not evaluable: {', '.join(sm['not_evaluable']) or 'none'}). Best naive-benchmark evaluation IC {num(sm.get('best_naive_benchmark_ic'), 2)}.\n",
+           "| Predictor | h | vs | Calibration IC (n) | Evaluation IC, signed (n) | 95% block interval (exploratory) | Familywise interval (criterion) | Walk-forward hit rate | Status |\n|---|---|---|---|---|---|---|---|---|"]
     for r in o['tests']:
         if 'ic_evaluation_signed' in r:
-            lo, hi = r['ci95_block_bootstrap']
-            out.append(f"| {r['predictor']} | {r['horizon_weeks']} | {r['benchmark']} | {r['ic_calibration']:+.2f} ({r['n_calibration']}) | {r['ic_evaluation_signed']:+.2f} ({r['n_evaluation']}) | {lo:+.2f} to {hi:+.2f} | "
+            lo, hi = r['ci95_block_bootstrap']; flo, fhi = r['ci95_familywise_bonferroni']
+            out.append(f"| {r['predictor']} | {r['horizon_weeks']} | {r['benchmark']} | {r['ic_calibration']:+.2f} ({r['n_calibration']}) | {r['ic_evaluation_signed']:+.2f} ({r['n_evaluation']}) | {lo:+.2f} to {hi:+.2f} | {flo:+.2f} to {fhi:+.2f} | "
                        f"{num(100 * r['walk_forward_hit_rate'], 0) if r.get('walk_forward_hit_rate') is not None else 'n/a'}% ({r['walk_forward_n']}) | {r['status']} |")
         else:
-            out.append(f"| {r['predictor']} | {r['horizon_weeks']} | {r['benchmark']} | n={r['n_calibration']} | n={r['n_evaluation']} | | | {r['status']} |")
+            plan = r.get('prospective_plan') or {}
+            out.append(f"| {r['predictor']} | {r['horizon_weeks']} | {r['benchmark']} | n={r['n_calibration']} | n={r['n_evaluation']} | | | | {r['status']}" + (f"; evaluable from {plan['evaluable_from']} under the fixed plan" if plan else "") + " |")
+    if sm.get('prospective_evaluable_from'):
+        out.append("\nProspective plan for the tests that are not evaluable (fixed now, not to be re-tuned): calibration on every signal week with a realized target at the data cutoff, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the cutoff, under the same familywise criterion. Earliest scoring dates: " + "; ".join(f"{k} from {v}" for k, v in sm['prospective_evaluable_from'].items()) + ".")
     out.append("\nLimitations: " + "; ".join(p['limitations']) + ". A negative or inconclusive result is a valid outcome and is carried into the verdict; no trading strategy is proposed.\n")
     return out
 
@@ -284,9 +294,19 @@ def bridge_section() -> list[str]:
     out.append("")
     out += [f"- Step {st['step']}: {st['note'].rstrip('.')}." for st in b['steps'] if st.get('note')]
     out.append("")
+    tr, led = b.get('trace') or {}, (b.get('receipts') or {}).get('ledger') or {}
+    if tr.get('sampled'):
+        out.append(f"**What the receipts establish.** A pre-declared sample of {tr['sampled']} of {tr['receipts_in_snapshot_from_intents_near']} inbound receipts ({tr['rule']['sample']}) was traced to the Intents events between the originating transaction and the receipt: "
+                   f"{tr['matched_native_withdraw']} match a `native_withdraw` of wrapped NEAR from {tr.get('distinct_intents_accounts', 0)} distinct Intents-side accounts, and {tr['with_token_diff_in_same_block']} show the funding `token_diff` of the same account in the same blocks "
+                   f"({tr.get('with_wrap_near_bought_in_same_block', 0)} buying wrap.near). For the remaining {tr['sampled'] - tr['with_token_diff_in_same_block']} the swap is outside the blocks read and is not observed. "
+                   f"{tr['rule']['what_it_establishes'][0].upper() + tr['rule']['what_it_establishes'][1:]}. At the trace time {sum(1 for v in (tr.get('intents_side_balances_at_fetch') or {}).values() if isinstance(v, dict) and v.get('token_ids_held'))} of those accounts still held tokens inside Intents.\n")
+    if led:
+        out.append(f"**Ledger reconciliation.** {led['method'][0].upper() + led['method'][1:]}. Reconstructed to the snapshot date: {led['reconstructed_balance_at_fetch_near']:,.0f} NEAR against a snapshot balance of {led['snapshot_balance_at_fetch_near']:,.0f} NEAR "
+                   f"(residual {led['unexplained_residual_near']:,.1f} NEAR, {led['unexplained_residual_share_of_inflows']:.4%} of inflows). Reconstructed to the analysis cutoff {led['cutoff']}: {led['reconstructed_balance_at_cutoff_near']:,.0f} NEAR; "
+                   f"{led['inflows_after_cutoff_near']:,.0f} NEAR arrived after the cutoff and are excluded from the bridge.\n")
     dl = b['dilution']
     out.append(f"**Issuance and dilution ({dl['status']}).** {dl['measure'][0].upper() + dl['measure'][1:]}. Total supply {dl['total_supply_start_near']:,.0f} to {dl['total_supply_end_near']:,.0f} NEAR: {dl['net_new_total_near']:,.0f} new NEAR ({dl['annual_total_supply_growth']:.2%}), "
-               f"{usd(dl['net_new_usd_at_average_price'])} at the average price. " + (f"Executed buybacks received {dl['buyback_near_received_12m']:,.0f} NEAR, {dl['buyback_to_issuance_ratio']:.1%} of issuance. " if dl.get('buyback_to_issuance_ratio') else "")
+               f"{usd(dl['net_new_usd_at_average_price'])} at the average price. " + (f"The buyback wallet received {dl['buyback_near_received_12m']:,.0f} NEAR from Intents, {dl['buyback_to_issuance_ratio']:.1%} of issuance (purchase attribution inferred). " if dl.get('buyback_to_issuance_ratio') else "")
                + f"The NearBlocks circulating-supply field is constant since {dl['circulating_supply_field']['last_change']} and is not used. {dl['note'][0].upper() + dl['note'][1:]}.\n")
     out.append("| Scenario | Volume | Take rate | Capture | Allocation to buybacks | New supply | Buyback accrual | Issuance | Net yield on market cap |\n|---|---|---|---|---|---|---|---|---|")
     for name, sc in b['scenarios'].items():
@@ -300,8 +320,8 @@ def bridge_section() -> list[str]:
 def evidence_rows(ins: dict) -> list[str]:
     rec, b, o, qsens = _opt('intents_reconciliation.json'), _opt('value_bridge.json'), _opt('signal_oos.json'), _opt('qaa_sensitivity.json')
     rows = [("Activity counts fell while value per transaction and reported settlement rose", "observed (third-party series)", "Observed activity table; `docs/METRICS.md`"),
-            ("Intents captures net revenue and buys NEAR", "observed (adapter receipts; wallet receipts)" if b.get('receipts', {}).get('purchase_transfers') else "observed (adapter) / purchases unavailable", "Value bridge; `value_bridge.json`"),
-            ("Purchased NEAR is held, not burned", "observed balance" if b.get('receipts', {}).get('balance_near_at_fetch') else "unavailable", "Value bridge step 6"),
+            ("Intents captures net revenue and NEAR reaches the buyback wallet", "observed (adapter receipts; wallet receipts as Intents withdrawals); purchase attribution inferred" if b.get('receipts', {}).get('purchase_transfers') else "observed (adapter) / wallet receipts unavailable", "Value bridge; `value_bridge.json`"),
+            ("Received NEAR is held, not burned", "inferred (ledger reconstructed at the cutoff; snapshot balance observed at fetch)" if b.get('receipts', {}).get('balance_near_at_fetch') else "unavailable", "Value bridge step 6"),
             ("Issuance exceeds buyback accrual", "observed issuance vs scenario accrual", "Value bridge scenarios"),
             ("The on-chain sample reproduces the reference level", "estimate: failing (outside declared tolerance)" if rec.get('holdout', {}).get('validation', {}).get('within_tolerance') is False else "estimate", "Reconciliation; `docs/RECONCILIATION.md`"),
             ("Departing accounts were bots", "not established: behavioral groups only; name-only split tracks the share" if qsens else "not established", "Quality-adjusted accounts (L1)"),
@@ -321,7 +341,7 @@ def reconciliation_doc() -> str:
     if rec.get('computed'):
         out += [line for line in reconciliation_section()[2:]]
         out += ['## How to extend the evidence\n',
-                '1. `make blocks-intraday` fetches 24 hourly windows for the three pre-declared days (several hours under the public rate limit) and `make build` recomputes the intraday bias factor.',
+                '1. `make blocks-intraday` fetches 24 hourly windows for the three motivating days and `make blocks-intraday-validation` the three validation days chosen by position (several hours each under the public rate limit); `make build` recomputes the factor and its validation.',
                 '2. `make blocks BLOCKS=100` doubles the blocks per fixed window; the per-day table and the holdout are recomputed by `make build`.',
                 '3. A complete-day extract needs BigQuery (`make bq`, credentials) or an archival node; the reconciliation code accepts any extract with the same schema.',
                 '4. A second reference independent of Dune needs an Intents Explorer JWT or a Dune API key; neither is available to this team.\n',
@@ -350,8 +370,8 @@ def metrics_doc() -> str:
         ('users', 'same events', 'observed unique non-solver accounts, never expanded'),
         ('intents_reconciliation_daily.*', 'reconcile.py', 'per sampled day: observed, expanded, reference, difference, coverage, pricing and routing components, holdout role'),
         ('qaa_sensitivity.json', 'qaa.py', 'criteria, thresholds, name-only baseline, inclusion weighting, hour split, model agreement'),
-        ('signal_oos.json', 'signal.py', 'pre-registered out-of-sample evaluation with frozen sign, purge and walk-forward hit rate'),
-        ('value_bridge.json', 'bridge.py', 'volume -> fees -> captured revenue -> labelled buyback -> executed purchases -> held tokens; issuance from total supply; three scenarios'),
+        ('signal_oos.json', 'signal.py', 'retrospective, temporally separated out-of-sample evaluation: frozen sign, purge, familywise criterion, walk-forward hit rate, prospective plan'),
+        ('value_bridge.json', 'bridge.py', 'volume -> fees -> captured revenue -> labelled buyback -> NEAR withdrawn from Intents into the buyback wallet (purchase attribution inferred) -> ledger at the cutoff; issuance from total supply; three scenarios'),
         ('total_supply', 'NearBlocks', 'daily total supply; its yearly change is the issuance used for dilution (circulating_supply is stale in the source)'),
     ]
     return '# Metric definitions (generated)\n\n| Column | Source | Definition |\n|---|---|---|\n' + '\n'.join(f'| `{a}` | {b} | {c} |' for a,b,c in rows) + '\n'

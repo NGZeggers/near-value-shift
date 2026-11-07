@@ -1,5 +1,11 @@
 {
  "protocol": {
+  "declaration": "retrospective validation with temporal separation: protocol and split declared 2026-11-06 over a history that earlier exploratory analyses of this project had already used; the code enforces calibration/evaluation separation but cannot establish that the evaluation period was unknown when the protocol was designed",
+  "prospective": {
+   "frozen_on": "2026-11-06",
+   "rule": "this protocol is not re-tuned; a prospective result uses only data published after 2026-11-06",
+   "intents_and_qaa": "not evaluable under the declared calibration end; their prospective plan freezes calibration at the data cutoff and evaluates 20 weeks of data published after it (purged by h); the dates are listed per test and nothing is scored before then"
+  },
   "hypothesis": "a four-week rise in usage is associated with the subsequent h-week NEAR log return in excess of the benchmark, with the sign fixed in calibration",
   "signal_transform": "weekly means of the daily series; log of the trailing four-week mean, differenced by four weeks; QAA only from the frozen past-only model, available on the first day of the following month",
   "target": "forward h-week log return of NEAR minus the same return of the benchmark (BTC or ETH)",
@@ -13,7 +19,8 @@
   ],
   "calibration_end": "2025-06-29",
   "purge": "evaluation starts h weeks after the calibration end so that no calibration target overlaps an evaluation week",
-  "fixed_rule": "the sign of the calibration Spearman IC is frozen; success requires the evaluation IC under that sign to be positive with a circular block-bootstrap 95% interval above zero",
+  "fixed_rule": "the sign of the calibration Spearman IC is frozen; success requires the evaluation IC under that sign to be positive with the Bonferroni-adjusted (24 tests) circular block-bootstrap 95% interval above zero; the unadjusted interval is reported as exploratory only",
+  "benchmark_predictor_treatment": "the two naive predictors are not members of the 24-test family and are not tested for passing; their evaluation IC is a comparison level that a usage metric should exceed to add information beyond persistence and the market",
   "walk_forward": "expanding window: each evaluation week re-estimates the sign on targets already realized at that week (purged by h) and predicts the direction of the next target; hit rate reported",
   "family": "6 metrics x 2 horizons x 2 benchmarks = 24 declared tests; Bonferroni intervals reported",
   "benchmark_predictors": {
@@ -53,11 +60,13 @@
     -0.26039261987518225,
     0.6250661382503007
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.6129032258064516,
    "walk_forward_n": 62,
-   "sign_agrees": true,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": true
   },
   {
    "predictor": "txns",
@@ -81,11 +90,13 @@
     -0.5996765378557282,
     0.6831608033434265
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.43548387096774194,
    "walk_forward_n": 62,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   },
   {
    "predictor": "tx_fee_near",
@@ -109,11 +120,13 @@
     -0.7957238190139906,
     0.6214380998919026
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.41935483870967744,
    "walk_forward_n": 62,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   },
   {
    "predictor": "tx_volume_usd",
@@ -137,11 +150,13 @@
     -0.6883496327124619,
     0.40941890355620547
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.43548387096774194,
    "walk_forward_n": 62,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   },
   {
    "predictor": "intents_volume_usd",
@@ -150,7 +165,15 @@
    "benchmark": "btc",
    "n_calibration": 22,
    "n_evaluation": 62,
-   "status": "not evaluable: too few calibration or evaluation weeks"
+   "status": "not evaluable: too few calibration or evaluation weeks",
+   "prospective_plan": {
+    "freeze_date": "2026-10-04",
+    "calibration_weeks_at_freeze": 88,
+    "calibration_sufficient_at_freeze": true,
+    "evaluation_starts": "2026-11-01",
+    "evaluable_from": "2027-04-18",
+    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+   }
   },
   {
    "predictor": "qaa",
@@ -159,7 +182,15 @@
    "benchmark": "btc",
    "n_calibration": 0,
    "n_evaluation": 62,
-   "status": "not evaluable: too few calibration or evaluation weeks"
+   "status": "not evaluable: too few calibration or evaluation weeks",
+   "prospective_plan": {
+    "freeze_date": "2026-10-04",
+    "calibration_weeks_at_freeze": 64,
+    "calibration_sufficient_at_freeze": true,
+    "evaluation_starts": "2026-11-01",
+    "evaluable_from": "2027-04-18",
+    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+   }
   },
   {
    "predictor": "near_momentum",
@@ -183,11 +214,13 @@
     -0.8023828859341678,
     0.193999172115027
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.5,
    "walk_forward_n": 62,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   },
   {
    "predictor": "btc_trend",
@@ -211,11 +244,13 @@
     -0.7217875560501568,
     0.8402553924078295
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.5,
    "walk_forward_n": 62,
-   "sign_agrees": true,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": true
   },
   {
    "predictor": "active_accounts",
@@ -239,11 +274,13 @@
     -0.4508776015832338,
     0.5197069718113299
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.5,
    "walk_forward_n": 62,
-   "sign_agrees": true,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": true
   },
   {
    "predictor": "txns",
@@ -267,11 +304,13 @@
     -0.4868567427085921,
     0.7476431618166033
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.532258064516129,
    "walk_forward_n": 62,
-   "sign_agrees": true,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": true
   },
   {
    "predictor": "tx_fee_near",
@@ -295,11 +334,13 @@
     -0.7603875702302875,
     0.6927133491261094
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.5,
    "walk_forward_n": 62,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   },
   {
    "predictor": "tx_volume_usd",
@@ -323,11 +364,13 @@
     -0.6524357744501825,
     0.4044792960205204
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.5161290322580645,
    "walk_forward_n": 62,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   },
   {
    "predictor": "intents_volume_usd",
@@ -336,7 +379,15 @@
    "benchmark": "eth",
    "n_calibration": 22,
    "n_evaluation": 62,
-   "status": "not evaluable: too few calibration or evaluation weeks"
+   "status": "not evaluable: too few calibration or evaluation weeks",
+   "prospective_plan": {
+    "freeze_date": "2026-10-04",
+    "calibration_weeks_at_freeze": 88,
+    "calibration_sufficient_at_freeze": true,
+    "evaluation_starts": "2026-11-01",
+    "evaluable_from": "2027-04-18",
+    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+   }
   },
   {
    "predictor": "qaa",
@@ -345,7 +396,15 @@
    "benchmark": "eth",
    "n_calibration": 0,
    "n_evaluation": 62,
-   "status": "not evaluable: too few calibration or evaluation weeks"
+   "status": "not evaluable: too few calibration or evaluation weeks",
+   "prospective_plan": {
+    "freeze_date": "2026-10-04",
+    "calibration_weeks_at_freeze": 64,
+    "calibration_sufficient_at_freeze": true,
+    "evaluation_starts": "2026-11-01",
+    "evaluable_from": "2027-04-18",
+    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+   }
   },
   {
    "predictor": "near_momentum",
@@ -369,11 +428,13 @@
     -0.7213690143708631,
     0.36410273039077135
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.4032258064516129,
    "walk_forward_n": 62,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   },
   {
    "predictor": "btc_trend",
@@ -397,11 +458,13 @@
     -0.6382062339694076,
     0.8328105057555355
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.5161290322580645,
    "walk_forward_n": 62,
-   "sign_agrees": true,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": true
   },
   {
    "predictor": "active_accounts",
@@ -425,11 +488,13 @@
     -0.8275257503264174,
     0.4621080260991603
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.45652173913043476,
    "walk_forward_n": 46,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   },
   {
    "predictor": "txns",
@@ -453,11 +518,13 @@
     -0.7649095849957551,
     0.6225578924104208
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.3695652173913043,
    "walk_forward_n": 46,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   },
   {
    "predictor": "tx_fee_near",
@@ -481,11 +548,13 @@
     -0.8229393822594474,
     0.5999628736375824
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.32608695652173914,
    "walk_forward_n": 46,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   },
   {
    "predictor": "tx_volume_usd",
@@ -509,11 +578,13 @@
     -0.7467921413391176,
     0.9480331715549587
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.7391304347826086,
    "walk_forward_n": 46,
-   "sign_agrees": true,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": true
   },
   {
    "predictor": "intents_volume_usd",
@@ -522,7 +593,15 @@
    "benchmark": "btc",
    "n_calibration": 22,
    "n_evaluation": 46,
-   "status": "not evaluable: too few calibration or evaluation weeks"
+   "status": "not evaluable: too few calibration or evaluation weeks",
+   "prospective_plan": {
+    "freeze_date": "2026-08-09",
+    "calibration_weeks_at_freeze": 80,
+    "calibration_sufficient_at_freeze": true,
+    "evaluation_starts": "2026-11-01",
+    "evaluable_from": "2027-06-13",
+    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+   }
   },
   {
    "predictor": "qaa",
@@ -531,7 +610,15 @@
    "benchmark": "btc",
    "n_calibration": 0,
    "n_evaluation": 46,
-   "status": "not evaluable: too few calibration or evaluation weeks"
+   "status": "not evaluable: too few calibration or evaluation weeks",
+   "prospective_plan": {
+    "freeze_date": "2026-08-09",
+    "calibration_weeks_at_freeze": 56,
+    "calibration_sufficient_at_freeze": true,
+    "evaluation_starts": "2026-11-01",
+    "evaluable_from": "2027-06-13",
+    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+   }
   },
   {
    "predictor": "near_momentum",
@@ -555,11 +642,13 @@
     -0.653909342713755,
     0.925113369033616
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.5217391304347826,
    "walk_forward_n": 46,
-   "sign_agrees": true,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": true
   },
   {
    "predictor": "btc_trend",
@@ -583,11 +672,13 @@
     -0.2954887074743469,
     0.8070240969291268
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": true,
+   "status": "nominal interval above zero only: exploratory, not accepted under the familywise criterion",
    "walk_forward_hit_rate": 0.6521739130434783,
    "walk_forward_n": 46,
-   "sign_agrees": true,
-   "passes_declared_criterion": true,
-   "status": "association persists out of sample"
+   "sign_agrees": true
   },
   {
    "predictor": "active_accounts",
@@ -611,11 +702,13 @@
     -0.9158706761760786,
     0.4194126777881164
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.45652173913043476,
    "walk_forward_n": 46,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   },
   {
    "predictor": "txns",
@@ -639,11 +732,13 @@
     -0.8518123237907508,
     0.5478097889309027
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.30434782608695654,
    "walk_forward_n": 46,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   },
   {
    "predictor": "tx_fee_near",
@@ -667,11 +762,13 @@
     -0.8823078407390695,
     0.4648789780578979
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.2826086956521739,
    "walk_forward_n": 46,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   },
   {
    "predictor": "tx_volume_usd",
@@ -695,11 +792,13 @@
     -0.6982874200188991,
     0.9255354728801745
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.8260869565217391,
    "walk_forward_n": 46,
-   "sign_agrees": true,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": true
   },
   {
    "predictor": "intents_volume_usd",
@@ -708,7 +807,15 @@
    "benchmark": "eth",
    "n_calibration": 22,
    "n_evaluation": 46,
-   "status": "not evaluable: too few calibration or evaluation weeks"
+   "status": "not evaluable: too few calibration or evaluation weeks",
+   "prospective_plan": {
+    "freeze_date": "2026-08-09",
+    "calibration_weeks_at_freeze": 80,
+    "calibration_sufficient_at_freeze": true,
+    "evaluation_starts": "2026-11-01",
+    "evaluable_from": "2027-06-13",
+    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+   }
   },
   {
    "predictor": "qaa",
@@ -717,7 +824,15 @@
    "benchmark": "eth",
    "n_calibration": 0,
    "n_evaluation": 46,
-   "status": "not evaluable: too few calibration or evaluation weeks"
+   "status": "not evaluable: too few calibration or evaluation weeks",
+   "prospective_plan": {
+    "freeze_date": "2026-08-09",
+    "calibration_weeks_at_freeze": 56,
+    "calibration_sufficient_at_freeze": true,
+    "evaluation_starts": "2026-11-01",
+    "evaluable_from": "2027-06-13",
+    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+   }
   },
   {
    "predictor": "near_momentum",
@@ -741,11 +856,13 @@
     -0.48448502193129245,
     0.9384736094139207
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.6086956521739131,
    "walk_forward_n": 46,
-   "sign_agrees": true,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": true
   },
   {
    "predictor": "btc_trend",
@@ -769,17 +886,20 @@
     -0.7833818868647872,
     0.19913345761747364
    ],
+   "family_tests": 24,
+   "passes_declared_criterion": false,
+   "passes_nominal_interval_exploratory": false,
+   "status": "no out-of-sample association established",
    "walk_forward_hit_rate": 0.34782608695652173,
    "walk_forward_n": 46,
-   "sign_agrees": false,
-   "passes_declared_criterion": false,
-   "status": "no out-of-sample association established"
+   "sign_agrees": false
   }
  ],
  "summary": {
   "usage_tests": 24,
   "evaluable": 16,
   "passing": 0,
+  "passing_nominal_only": 0,
   "not_evaluable": [
    "intents_volume_usd h=4 vs btc",
    "qaa h=4 vs btc",
@@ -790,7 +910,17 @@
    "intents_volume_usd h=12 vs eth",
    "qaa h=12 vs eth"
   ],
+  "prospective_evaluable_from": {
+   "intents_volume_usd h=4 vs btc": "2027-04-18",
+   "qaa h=4 vs btc": "2027-04-18",
+   "intents_volume_usd h=4 vs eth": "2027-04-18",
+   "qaa h=4 vs eth": "2027-04-18",
+   "intents_volume_usd h=12 vs btc": "2027-06-13",
+   "qaa h=12 vs btc": "2027-06-13",
+   "intents_volume_usd h=12 vs eth": "2027-06-13",
+   "qaa h=12 vs eth": "2027-06-13"
+  },
   "best_naive_benchmark_ic": 0.429663891458526,
-  "conclusion": "no usage metric passes the declared out-of-sample criterion"
+  "conclusion": "no usage metric passes the declared familywise out-of-sample criterion"
  }
 }

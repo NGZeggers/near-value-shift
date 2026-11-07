@@ -96,3 +96,88 @@ def test_oos_fails_a_signal_without_predictive_content():
     o = signal.oos_table(_weekly(effect=0.0))
     assert o["summary"]["passing"] == 0
     assert set(r["kind"] for r in o["tests"]) == {"usage", "naive_benchmark"}
+
+
+def test_bridge_rejects_missing_or_non_boolean_statuses(tmp_path, monkeypatch):
+    """Second audit, point C: an absent or non-boolean status must never count as success."""
+    _daily(tmp_path)
+    monkeypatch.setattr(bridge, "DERIVED", tmp_path)
+    monkeypatch.setattr(bridge, "MODELS", tmp_path)
+    monkeypatch.setattr(bridge, "TRACE", tmp_path / "no_trace.json")
+    ts = str(int(pd.Timestamp("2026-06-01").timestamp()) * 10**9)
+    base = {"predecessor_account_id": "intents.near", "receiver_account_id": bridge.BUYBACK_WALLET, "block_timestamp": ts}
+    txns = [
+        {**base, "receipt_id": "ok", "receipt_outcome": {"status": True}, "actions": [{"action": "TRANSFER", "deposit": 100 * 1e24}]},
+        {**base, "receipt_id": "missing", "actions": [{"action": "TRANSFER", "deposit": 100 * 1e24}]},                           # no receipt_outcome at all
+        {**base, "receipt_id": "empty", "receipt_outcome": {}, "actions": [{"action": "TRANSFER", "deposit": 100 * 1e24}]},      # outcome without status
+        {**base, "receipt_id": "string", "receipt_outcome": {"status": "true"}, "actions": [{"action": "TRANSFER", "deposit": 100 * 1e24}]},
+        {**base, "receipt_id": "one", "receipt_outcome": {"status": 1}, "actions": [{"action": "TRANSFER", "deposit": 100 * 1e24}]},
+        {**base, "receipt_id": "dict", "receipt_outcome": {"status": {"SuccessValue": ""}}, "actions": [{"action": "TRANSFER", "deposit": 100 * 1e24}]},
+        {**base, "receipt_id": "failed", "receipt_outcome": {"status": False}, "actions": [{"action": "TRANSFER", "deposit": 100 * 1e24}]},
+    ]
+    snaps = {"nearblocks_buybacks_txns": {"source": "s", "fetched_at": "t", "data": {"wallet": bridge.BUYBACK_WALLET, "txns": txns}},
+             "nearblocks_buybacks_account": {"source": "s", "fetched_at": "t", "data": {"amount": str(int(100 * 1e24)), "created": {"block_timestamp": ts}}}}
+    monkeypatch.setattr(bridge, "load_raw", lambda name, optional=False: snaps.get(name))
+    out = bridge.run()
+    r = out["receipts"]
+    assert abs(r["near_in"] - 100) < 1e-9                       # only the explicit boolean success counts
+    assert r["receipts_excluded"] == {"failed": 1, "missing_or_invalid_status": 5}
+    assert bridge.receipt_status(None) == "missing_or_invalid_status" and bridge.receipt_status({"status": True}) == "success"
+    led = r["ledger"]
+    assert abs(led["reconstructed_balance_at_fetch_near"] - 100) < 1e-9 and abs(led["unexplained_residual_near"]) < 1e-9
+    steps = {s["step"]: s for s in out["steps"]}
+    assert "inferred" in steps[5]["status"] and "observed" in steps[5]["status"]
+    assert "inferred" in steps[6]["status"] and abs(steps[6]["near"] - 100) < 1e-9
+
+
+def test_bridge_ledger_reconciles_at_cutoff_not_at_fetch(tmp_path, monkeypatch):
+    _daily(tmp_path)
+    monkeypatch.setattr(bridge, "DERIVED", tmp_path)
+    monkeypatch.setattr(bridge, "MODELS", tmp_path)
+    monkeypatch.setattr(bridge, "TRACE", tmp_path / "no_trace.json")
+    t_in = str(int(pd.Timestamp("2026-06-01").timestamp()) * 10**9)
+    t_after = str(int(pd.Timestamp("2026-11-03").timestamp()) * 10**9)
+    W = bridge.BUYBACK_WALLET
+    txns = [
+        {"receipt_id": "a", "predecessor_account_id": "intents.near", "receiver_account_id": W, "block_timestamp": t_in, "receipt_outcome": {"status": True}, "actions": [{"action": "TRANSFER", "deposit": 100 * 1e24}]},
+        {"receipt_id": "b", "predecessor_account_id": W, "receiver_account_id": "x.near", "block_timestamp": t_in, "receipt_outcome": {"status": True}, "transaction_hash": "T1",
+         "outcomes_agg": {"transaction_fee": 1e24}, "actions": [{"action": "TRANSFER", "deposit": 10 * 1e24}]},
+        {"receipt_id": "c", "predecessor_account_id": W, "receiver_account_id": W, "block_timestamp": t_in, "receipt_outcome": {"status": True}, "transaction_hash": "T1",
+         "outcomes_agg": {"transaction_fee": 1e24}, "actions": [{"action": "FUNCTION_CALL", "method": "confirm", "deposit": 0}]},   # same transaction: fee counted once
+        {"receipt_id": "d", "predecessor_account_id": "intents.near", "receiver_account_id": W, "block_timestamp": t_after, "receipt_outcome": {"status": True}, "actions": [{"action": "TRANSFER", "deposit": 50 * 1e24}]},
+    ]
+    snaps = {"nearblocks_buybacks_txns": {"source": "s", "fetched_at": "t", "data": {"wallet": W, "txns": txns}},
+             "nearblocks_buybacks_account": {"source": "s", "fetched_at": "t", "data": {"amount": str(int(139 * 1e24)), "created": {"block_timestamp": t_in}}}}
+    monkeypatch.setattr(bridge, "load_raw", lambda name, optional=False: snaps.get(name))
+    out = bridge.run()
+    led = out["receipts"]["ledger"]
+    assert abs(led["reconstructed_balance_at_fetch_near"] - (150 - 10 - 1)) < 1e-9 and abs(led["unexplained_residual_near"]) < 1e-9
+    assert abs(led["reconstructed_balance_at_cutoff_near"] - (100 - 10 - 1)) < 1e-9 and abs(led["inflows_after_cutoff_near"] - 50) < 1e-9
+    steps = {s["step"]: s for s in out["steps"]}
+    assert abs(steps[6]["share_of_previous"] - 89 / 100) < 1e-12        # at the cutoff, not snapshot balance / cutoff inflows
+
+
+def test_oos_criterion_is_familywise_not_nominal():
+    """Second audit, point A: the auditor's reproduction. Nominal interval excludes zero, familywise includes it -> no pass."""
+    draws = np.concatenate([np.full(40, -0.1), np.linspace(0.1, 0.9, 3960)])
+    c = signal.oos_criterion(draws, family=24)
+    lo, hi = c["ci95_block_bootstrap"]; flo, fhi = c["ci95_familywise_bonferroni"]
+    assert lo > 0 and flo < 0
+    assert c["passes_nominal_interval_exploratory"] is True and c["passes_declared_criterion"] is False
+    assert "exploratory" in c["status"]
+    strong = signal.oos_criterion(np.linspace(0.2, 0.9, 4000), family=24)
+    assert strong["passes_declared_criterion"] is True and "familywise" in strong["status"]
+
+
+def test_oos_protocol_declares_retrospective_scope_and_prospective_plan():
+    p = signal.OOS_PROTOCOL
+    assert "retrospective" in p["declaration"] and "cannot establish" in p["declaration"]
+    assert "Bonferroni" in p["fixed_rule"] and "not tested for passing" in p["benchmark_predictor_treatment"]
+    short = signal.oos_table(_weekly().iloc[-40:])
+    rows = [r for r in short["tests"] if r["kind"] == "usage"]
+    assert all("prospective_plan" in r for r in rows) and short["summary"]["prospective_evaluable_from"]
+    for r in rows:
+        plan = r["prospective_plan"]
+        assert pd.Timestamp(plan["evaluation_starts"]) - pd.Timestamp(plan["freeze_date"]) == pd.Timedelta(weeks=r["horizon_weeks"])
+        assert pd.Timestamp(plan["evaluable_from"]) - pd.Timestamp(plan["evaluation_starts"]) == pd.Timedelta(weeks=20 + r["horizon_weeks"])
+        assert pd.Timestamp(plan["freeze_date"]) > pd.Timestamp("2026-01-01") and plan["calibration_weeks_at_freeze"] > 0

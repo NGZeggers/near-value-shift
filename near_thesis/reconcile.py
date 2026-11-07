@@ -24,7 +24,8 @@ import pandas as pd
 
 from .config import DATA, DERIVED, MODELS
 from . import intents
-from .blocks import SUCCESS_STATUSES, INTRADAY_EVENTS, INTRADAY_MANIFEST, usable_windows
+from .blocks import (SUCCESS_STATUSES, INTRADAY_EVENTS, INTRADAY_MANIFEST, INTRADAY_VALIDATION_EVENTS, INTRADAY_VALIDATION_MANIFEST,
+                     INTRADAY_VALIDATION_RULE, usable_windows)
 
 ECONOMIC_UNIT = {
     "unit": "USD notional of settled swaps per UTC calendar day on intents.near",
@@ -204,12 +205,21 @@ def holdout(table: pd.DataFrame) -> dict:
     return out
 
 
-def intraday(prices: dict, blocks_per_day: pd.Series, llama: pd.Series, fixed_hours: tuple[int, ...] = (3, 15)) -> dict | None:
-    """Compare the two fixed windows with all hourly windows of the pre-declared days."""
-    if not INTRADAY_EVENTS.exists() or not INTRADAY_MANIFEST.exists():
+def _reference_days() -> list[str]:
+    """Sampled days with both fixed windows usable and a positive DefiLlama reference, from the committed per-day table."""
+    t = pd.read_csv(MODELS / "intents_reconciliation_daily.csv")
+    return sorted(t.loc[(t["windows_usable"] == 2) & (t["reference_usd"] > 0), "date"].astype(str))
+
+
+def intraday(prices: dict, blocks_per_day: pd.Series, llama: pd.Series, fixed_hours: tuple[int, ...] = (3, 15),
+             events=None, manifest=None) -> dict | None:
+    """Compare the two fixed windows with all hourly windows of the selected days (motivating extract by default)."""
+    events = INTRADAY_EVENTS if events is None else events
+    manifest = INTRADAY_MANIFEST if manifest is None else manifest
+    if not events.exists() or not manifest.exists():
         return None
-    man = json.loads(INTRADAY_MANIFEST.read_text())
-    raw = pd.read_csv(INTRADAY_EVENTS)
+    man = json.loads(manifest.read_text())
+    raw = pd.read_csv(events)
     if raw.empty and not man.get("windows"):
         return None
     usable = {(w["day"], int(w["hour"])): int(w["fetched"]) for w in man["windows"] if w.get("usable")}
@@ -265,7 +275,30 @@ def intraday(prices: dict, blocks_per_day: pd.Series, llama: pd.Series, fixed_ho
             "reading": ("Factor > 1 means the two fixed windows under-represent the day's hourly mean; even 24 hourly windows observe "
                         "about 1,200 of ~150,000 blocks, so this measures the intraday expansion error, not a complete day. "
                         "The median across days is used for the correction because a single hourly window can carry most of a day's "
-                        "sampled volume and dominate the mean")}
+                        "sampled volume and dominate the mean"),
+            "scope": ("the days were selected by reference volume and are not a representative sample of the history; the factor is a "
+                      "sensitivity and is not applied to the declared estimator. It is checked on separately selected validation days "
+                      "(see intraday_validation)")}
+
+
+def intraday_validation(prices: dict, blocks_per_day: pd.Series, llama: pd.Series, motivating: dict | None) -> dict:
+    """Pre-declared check of the motivating bias factor on validation days chosen by position, not by volume."""
+    out = {"rule": INTRADAY_VALIDATION_RULE, "status": "pending: validation days not fetched yet (make blocks-intraday-validation)"}
+    v = intraday(prices, blocks_per_day, llama, events=INTRADAY_VALIDATION_EVENTS, manifest=INTRADAY_VALIDATION_MANIFEST)
+    if not v:
+        return out
+    med_m = (motivating or {}).get("fixed_window_bias_factor_median")
+    med_v = v.get("fixed_window_bias_factor_median")
+    out.update({"status": "complete" if v.get("complete") else "partial extract", "days": v.get("days"), "fetched_at": v.get("fetched_at"),
+                "complete": v.get("complete"), "validation_median_factor": med_v, "validation_mean_factor": v.get("fixed_window_bias_factor_mean"),
+                "motivating_median_factor": med_m, "ratio_validation_over_motivating": (med_v / med_m) if (med_v and med_m) else None,
+                "validation_ratio_all_hours_to_reference_median": v.get("ratio_all_hours_to_reference_median")})
+    if med_v and med_m:
+        r = med_v / med_m
+        out["within_declared_range"] = bool(0.5 <= r <= 2.0)
+        out["verdict"] = ("validation days reproduce the motivating factor within the declared x0.5-x2 range" if out["within_declared_range"]
+                          else "validation days do not reproduce the motivating factor within the declared range: the correction is not supported")
+    return out
 
 
 def trace_examples(legs: pd.DataFrame, raw: pd.DataFrame, ef: pd.Series) -> list[dict]:
@@ -366,6 +399,7 @@ def run() -> dict:
     valuation = valuation_component(legs)
     routes = route_component(legs, roles)
     intra = intraday(prices, bpd, llama)
+    validation = intraday_validation(prices, bpd, llama, intra)
     alt = routes["alternative_definitions_total_usd"]
     ratio = pooled.get("ratio")
     residual = {}
@@ -384,11 +418,13 @@ def run() -> dict:
                     "two_sided_and_intraday_overshoot": bool(two_sided and bias and two_sided * bias > 1),
                     "reading": ("the identified components are definitional (one- versus two-sided) and intraday coverage; the remaining factor "
                                 "to reach parity after the measured intraday bias is unexplained and is reported as such, not attributed to "
-                                "missing large trades. The two-sided reading is a definitional bound, not a correction: if it and the full "
-                                "intraday correction both held the ratio would exceed parity, so they cannot both hold")}
+                                "missing large trades. The two-sided reading and the intraday factor are separate hypotheses: that their "
+                                "combination exceeds parity shows the two readings cannot both be taken at face value together, but it does not "
+                                "identify which one overstates, and estimation error and unidentified components remain")}
     out = {"computed": True, "economic_unit": ECONOMIC_UNIT, "pooled_ratio_all_days": pooled,
            "components": {"temporal_coverage": coverage, "valuation": valuation, "route_reconstruction": routes, "residual": residual},
            "holdout": holdout(table), "intraday": intra or {"available": False, "how": "make blocks-intraday (network, several hours under the public rate limit)"},
+           "intraday_validation": validation,
            "trace_examples": [e["kind"] for e in examples],
            "not_possible_here": ["complete-day extracts (FastNear public rate limit ~0.35 blocks/s; a NEAR day has ~150,000 blocks)",
                                  "a second reference independent of Dune (no Dune API key or Intents Explorer JWT)",

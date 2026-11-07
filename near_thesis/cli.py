@@ -26,6 +26,9 @@ def main(argv: list[str] | None = None) -> None:
     bi.add_argument("--blocks", type=int, default=50, help="blocks per hourly window")
     bi.add_argument("--workers", type=int, default=2)
     bi.add_argument("--offline", action="store_true", help="rebuild the intraday extract from cached blocks only")
+    bi.add_argument("--validation", action="store_true", help="fetch the pre-declared validation days instead (separate files; selection by position, not volume)")
+    bt = sub.add_parser("blocks-buyback-trace", help="read the execution block of a pre-declared sample of buyback-wallet receipts and match the Intents withdraw events")
+    bt.add_argument("--offline", action="store_true", help="cached blocks only")
 
     ve = sub.add_parser("verify-events", help="revalidate saved event receipts against full blocks; resumable and atomic")
     ve.add_argument("--offline", action="store_true", help="use only full verification blocks already cached")
@@ -56,7 +59,13 @@ def main(argv: list[str] | None = None) -> None:
         blocks.run(day_step=a.day_step, blocks_per_window=a.blocks, workers=a.workers, offline=a.offline)
     elif a.cmd == "blocks-intraday":
         from . import blocks
-        blocks.run_intraday(days=a.days or None, blocks_per_window=a.blocks, workers=a.workers, offline=a.offline)
+        if a.validation:
+            blocks.run_intraday_validation(blocks_per_window=a.blocks, workers=a.workers, offline=a.offline)
+        else:
+            blocks.run_intraday(days=a.days or None, blocks_per_window=a.blocks, workers=a.workers, offline=a.offline)
+    elif a.cmd == "blocks-buyback-trace":
+        from . import blocks
+        blocks.run_buyback_trace(offline=a.offline)
     elif a.cmd == "verify-events":
         from . import blocks
         blocks.verify_events(offline=a.offline)

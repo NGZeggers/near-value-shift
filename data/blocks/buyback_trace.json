@@ -1,0 +1,1497 @@
+{
+ "fetched_at": "2026-11-07T06:16:18+00:00",
+ "source": "https://mainnet.neardata.xyz/v0/block/{h}",
+ "rule": {
+  "declared": "2026-11-07, before reading any of these blocks",
+  "sample": "inbound TRANSFER receipts from intents.near sorted by block timestamp: every 80th receipt starting at the first, plus the five largest by amount",
+  "what_is_read": "the blocks from the originating transaction's block to the block in which the receipt executed (at most 8): dip4 native_withdraw / intents_executed and nep245 mt_burn events whose receiver and amount match the receipt, plus any dip4 token_diff event of the same Intents account in those blocks",
+  "what_it_establishes": "the NEAR arrived as a withdrawal from an Intents-side account balance (observed for every sampled receipt); the purchase itself is the earlier token_diff of the same account, observed only when it falls inside the blocks read, so purchase attribution for the whole inflow remains inferred"
+ },
+ "wallet": "buybacks.multisignature.near",
+ "receipts_in_snapshot_from_intents_near": 3197,
+ "sampled": 45,
+ "blocks_missing": 0,
+ "matched_native_withdraw": 45,
+ "with_token_diff_in_same_block": 16,
+ "with_wrap_near_bought_in_same_block": 16,
+ "distinct_intents_accounts": 16,
+ "intents_accounts": [
+  "0bcaf3e8753318a5e24741b4bf4b9f56495bace25339bd0fa88db8465eb83bd5",
+  "128507595b5953e712f519831998bef0abe0e4e8d5000f953f6b162defd1b37f",
+  "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+  "1f2d61f02199e34f617968d15daff0459781486c92ecf3c914e4d3f2ebdf172f",
+  "3306963d8329db40d0663769214b0591b7be73902e909afbf857096f91c843b7",
+  "3a21372c9fe8a111bec4f033b307212f4ad3ccf844ebd53ef2c7c395844e1797",
+  "52a9247f6150f6ab50266381474152df2ec4760a4dfd43846782506bf86be5b0",
+  "533b308dc99dace1dff9b04f802d1c2e0a019730711184f279d36ab5f9a9db08",
+  "560917f9cf9172286c37ed1dfd16552ea70aa15e63b16c1f832f7622a71c4d6d",
+  "569d7384b87f6b1e19cee9a15beb0330e006b6152d1cc2c41ba2af5d7235308c",
+  "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+  "9b60c25879de6b5052a7bda3186ab1d23615c9f6437319c6539e16ef54eedc32",
+  "aa44e433995b5399c8f657db167b3fe168dfe59653ed2bcb2381d4d1a6f82740",
+  "b63fe08372b2fb91b404febc3c893aa7bd99c94e79777c21bbdd722f68405078",
+  "bc6f93c6d4388b65e778d0e492dbf596f007a600e32678024e778c4eab846974",
+  "d499c7f6f32b9bcf07dcbf18b0fcf12b40797590eb2e5bdbace6072b3de8d907"
+ ],
+ "intents_side_balances_at_fetch": {},
+ "receipts": [
+  {
+   "receipt_id": "CxrBgPRbvY7XscAk4MUnhzrdFgJtD7Aau3ZP1WMKhcX5",
+   "transaction_hash": "BuC2pzbhD1SVerEPW2BXTtbj1ncacsFXEz7mSqQGHBDb",
+   "receipt_block_height": 195271967,
+   "transaction_block_height": 195271963,
+   "blocks_read": [
+    195271963,
+    195271964,
+    195271965,
+    195271966,
+    195271967
+   ],
+   "block_timestamp": 1776961254334462604,
+   "amount_yocto": "714146375047294778819477504",
+   "amount_near": 714.1463750472948,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/195271963",
+   "withdraw_event": {
+    "intent_hash": "7HmGpke9tJat5A1kgKTjEgkdxuutyPDbBXMDvZ9J3wmj",
+    "amount": "714146375047294833086480241",
+    "receipt_id_of_execute_intents": "A3CE1aTz1ChQRivWeys5C9CjP17ASEJcPfhV4g27NhNE",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "A3CE1aTz1ChQRivWeys5C9CjP17ASEJcPfhV4g27NhNE"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "A3CE1aTz1ChQRivWeys5C9CjP17ASEJcPfhV4g27NhNE",
+     "sold": [
+      "nep141:zec.omft.near"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "F5shdRH7ddcMorMnzFk7sMtf23ccibf6dU7gaJ56PLjc",
+   "transaction_hash": "CPTwTGAfGetUo5uZYkYDmf19LPuGWQ5cMBrygmiZ46Ab",
+   "receipt_block_height": 197143168,
+   "transaction_block_height": 197143164,
+   "blocks_read": [
+    197143164,
+    197143165,
+    197143166,
+    197143167,
+    197143168
+   ],
+   "block_timestamp": 1778072648569536809,
+   "amount_yocto": "961379565797092352977797120",
+   "amount_near": 961.3795657970924,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/197143164",
+   "withdraw_event": {
+    "intent_hash": "8nBvMkeAY7QyYpT4UrctwkAyJRW51JXfJvHG1Vhp3zXQ",
+    "amount": "961379565797092335384726360",
+    "receipt_id_of_execute_intents": "Dind81L1fF4tFCsme6wRfSro6LPdbVN3e1YikrrNHFrL",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "CxAy7gcyCNjaEthKfWYCjdtbG9bQtZoXjaausULNpo42",
+   "transaction_hash": "9EcA6NqenxynKYAkDYF1vA5xL8SwhxjPK4zKA27dNpfL",
+   "receipt_block_height": 198806020,
+   "transaction_block_height": 198806016,
+   "blocks_read": [
+    198806016,
+    198806017,
+    198806018,
+    198806019,
+    198806020
+   ],
+   "block_timestamp": 1779078196085380065,
+   "amount_yocto": "772336498098934703355592704",
+   "amount_near": 772.3364980989347,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/198806016",
+   "withdraw_event": {
+    "intent_hash": "7TpwkMknnCpQ98SMqrrZYYLsLpeX1jD7dD3rHRxeUSkk",
+    "amount": "772336498098934729133093368",
+    "receipt_id_of_execute_intents": "HoYsMbKdRmoaECmnJ9vaeaEEpvkQGvw6Z39V5azmXttc",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "HoYsMbKdRmoaECmnJ9vaeaEEpvkQGvw6Z39V5azmXttc"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "HoYsMbKdRmoaECmnJ9vaeaEEpvkQGvw6Z39V5azmXttc",
+     "sold": [
+      "nep141:gnosis-0x2a22f9c3b484c3629090feed35f17ff8f88f76f0.omft.near"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "EwCBhppSfKmfhXQ9dTg3xXMHb9DxFH73xCoc5j1H4uT",
+   "transaction_hash": "6mR5HLW3SqvPpERDYHKK7cr7Fv6KAh1RqucZoF65RrNG",
+   "receipt_block_height": 199832974,
+   "transaction_block_height": 199832970,
+   "blocks_read": [
+    199832970,
+    199832971,
+    199832972,
+    199832973,
+    199832974
+   ],
+   "block_timestamp": 1779703263217521223,
+   "amount_yocto": "691598239221000081026056192",
+   "amount_near": 691.5982392210001,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/199832970",
+   "withdraw_event": {
+    "intent_hash": "GirLMPo3LtjZFyA69uTzQvTGwYzyzgd6uf4Wof8uR1Ea",
+    "amount": "691598239221000048893867309",
+    "receipt_id_of_execute_intents": "9bhZaAxmqy9BZcFQ8a6i4oe12bzk72s24pHU98QLxpUk",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "9bhZaAxmqy9BZcFQ8a6i4oe12bzk72s24pHU98QLxpUk"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "9bhZaAxmqy9BZcFQ8a6i4oe12bzk72s24pHU98QLxpUk",
+     "sold": [
+      "nep245:v2_1.omni.hot.tg:10_11111111111111111111"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "CQ18Y5q1FjEph55ipdS4tfYDz5SdBs1Wpto6cMnYEVTy",
+   "transaction_hash": "AC48amPLsigV2tKdfpYXFoKk4ZBhaPRvdrnRDEXQ45K7",
+   "receipt_block_height": 200701129,
+   "transaction_block_height": 200701125,
+   "blocks_read": [
+    200701125,
+    200701126,
+    200701127,
+    200701128,
+    200701129
+   ],
+   "block_timestamp": 1780228053443324076,
+   "amount_yocto": "655698524337497179085078528",
+   "amount_near": 655.6985243374971,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/200701125",
+   "withdraw_event": {
+    "intent_hash": "1KfyzCeEmgEBPRQQvUYr4iQC1Mo9iDdLLY9KsRWzERQ",
+    "amount": "655698524337497162228925292",
+    "receipt_id_of_execute_intents": "6E3ueEn4Uo5W7vozTvwJUxGdxzHn7Z35wsUn2BoiTsxc",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "6E3ueEn4Uo5W7vozTvwJUxGdxzHn7Z35wsUn2BoiTsxc"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "6E3ueEn4Uo5W7vozTvwJUxGdxzHn7Z35wsUn2BoiTsxc",
+     "sold": [
+      "nep245:v2_1.omni.hot.tg:143_4EJiJxSALvGoTZbnc8K7Ft9533et"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "3SHaEqPfRezP4xGC4wGBscLvAjx79Vv9xLMRudTTjgne",
+   "transaction_hash": "Xf1y342ocrrWtMcDqbmrx19V8WNcNaFvna1Lcd9aQMU",
+   "receipt_block_height": 201341912,
+   "transaction_block_height": 201341908,
+   "blocks_read": [
+    201341908,
+    201341909,
+    201341910,
+    201341911,
+    201341912
+   ],
+   "block_timestamp": 1780615053775036136,
+   "amount_yocto": "5681709650923141740401524736",
+   "amount_near": 5681.709650923141,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/201341908",
+   "withdraw_event": {
+    "intent_hash": "CzRqSk1sH5gSBfhNgfFh6MruKA5KW9MsWxeTaAEE34Xt",
+    "amount": "5681709650923141442822435216",
+    "receipt_id_of_execute_intents": "G2pB39yiu85aJgW3tPBnyDVhJkRf39tRyK81ubmifCCG",
+    "caller": "intents.near"
+   },
+   "intents_account": "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "G2pB39yiu85aJgW3tPBnyDVhJkRf39tRyK81ubmifCCG"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "G2pB39yiu85aJgW3tPBnyDVhJkRf39tRyK81ubmifCCG",
+     "sold": [
+      "nep245:v2_1.omni.hot.tg:137_11111111111111111111"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "8zC6eHvHQ4M8vjYgauAca2cbBNdxvbXePUGyS8utJiD2",
+   "transaction_hash": "GwihrwWfjnvaqZQpiD8AxFoAnRG3FRhvaW2cLZqDkNtQ",
+   "receipt_block_height": 201347936,
+   "transaction_block_height": 201347932,
+   "blocks_read": [
+    201347932,
+    201347933,
+    201347934,
+    201347935,
+    201347936
+   ],
+   "block_timestamp": 1780618706485276865,
+   "amount_yocto": "5076714212964077763192422400",
+   "amount_near": 5076.714212964078,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/201347932",
+   "withdraw_event": {
+    "intent_hash": "F2nBv3uK7C3caRqkxHtZMykxjLFfPJ17yYWGfkpYydp3",
+    "amount": "5076714212964078108464133091",
+    "receipt_id_of_execute_intents": "BaXu3naR6qXZ4QjA9mPxq71tBujVED9C4JTtUpkFqrvC",
+    "caller": "intents.near"
+   },
+   "intents_account": "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "BaXu3naR6qXZ4QjA9mPxq71tBujVED9C4JTtUpkFqrvC"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "BaXu3naR6qXZ4QjA9mPxq71tBujVED9C4JTtUpkFqrvC",
+     "sold": [
+      "nep141:ltc.omft.near"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "3JGXPbsUsgGu6mHgkMs3JBjFnjSawR4uLgqpQ2jnwERJ",
+   "transaction_hash": "7sCm7szraPterzZ7WrkKdV2U6uqVj2a49vMidXPYbzNb",
+   "receipt_block_height": 201395320,
+   "transaction_block_height": 201395316,
+   "blocks_read": [
+    201395316,
+    201395317,
+    201395318,
+    201395319,
+    201395320
+   ],
+   "block_timestamp": 1780647612781217342,
+   "amount_yocto": "1038387469539657881850216448",
+   "amount_near": 1038.3874695396578,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/201395316",
+   "withdraw_event": {
+    "intent_hash": "8xjtivgN4gPzuJy9Ur4mZeK4xHE26nE9rbYupThAknuv",
+    "amount": "1038387469539657857774944823",
+    "receipt_id_of_execute_intents": "7Kup4UNPJN38H8NFQqHLjhb5cDssaVrYXqa1jjpDpdKZ",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "7Kup4UNPJN38H8NFQqHLjhb5cDssaVrYXqa1jjpDpdKZ"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "7Kup4UNPJN38H8NFQqHLjhb5cDssaVrYXqa1jjpDpdKZ",
+     "sold": [
+      "nep141:btc.omft.near"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "9kAvfVCspsaGEYjePXDk3XbjPgNjpnJQwjA1n4dXQrxr",
+   "transaction_hash": "CFZirtz8Y8jyeC7guSqNVZdR9xN8dSw2cXbWibj1Lph1",
+   "receipt_block_height": 202276724,
+   "transaction_block_height": 202276720,
+   "blocks_read": [
+    202276720,
+    202276721,
+    202276722,
+    202276723,
+    202276724
+   ],
+   "block_timestamp": 1781198515353936513,
+   "amount_yocto": "528511081648130444624920576",
+   "amount_near": 528.5110816481305,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/202276720",
+   "withdraw_event": {
+    "intent_hash": "BpgEJQvacXtZYBCHaL6yPiR3SEyZnTKc794znedPCQtp",
+    "amount": "528511081648130462498421307",
+    "receipt_id_of_execute_intents": "62G8SeTmYQhYbMLEQN2BDF7qwpyfrqH3yrWqUC1Li5oC",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "62G8SeTmYQhYbMLEQN2BDF7qwpyfrqH3yrWqUC1Li5oC"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "62G8SeTmYQhYbMLEQN2BDF7qwpyfrqH3yrWqUC1Li5oC",
+     "sold": [
+      "nep141:tron.omft.near"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "EuYU6bouCKyg8TEMtsTN9qM6a4sNgjXqHLdJJDJthBGM",
+   "transaction_hash": "GCWQDHn3CyXRr5QzBtWU8qp6r9cpY4pdN2QMDnFpj1q1",
+   "receipt_block_height": 203779401,
+   "transaction_block_height": 203779397,
+   "blocks_read": [
+    203779397,
+    203779398,
+    203779399,
+    203779400,
+    203779401
+   ],
+   "block_timestamp": 1782114816307061833,
+   "amount_yocto": "466240211118452849760010240",
+   "amount_near": 466.24021111845286,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/203779397",
+   "withdraw_event": {
+    "intent_hash": "EvCDp49vEDpMgHU85Z1EZp9CASY3wnpZwKo2nASDRPYS",
+    "amount": "466240211118452864219674186",
+    "receipt_id_of_execute_intents": "5oNmLkFX3yRNo2u7qGFpny8VNu1KbUzUj7qHW6EMWkEJ",
+    "caller": "intents.near"
+   },
+   "intents_account": "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "VZgg9rpvekFXqaJrhmBt3M55xxLEcTejNRDWrVBWkwh",
+   "transaction_hash": "4cJDtge11qeHpZZDWFsTTVUPrFEG6CjbSohTEQm4Ks3X",
+   "receipt_block_height": 205256487,
+   "transaction_block_height": 205256481,
+   "blocks_read": [
+    205256481,
+    205256482,
+    205256483,
+    205256484,
+    205256485,
+    205256486,
+    205256487
+   ],
+   "block_timestamp": 1783005968764995481,
+   "amount_yocto": "616553356302469815854956544",
+   "amount_near": 616.5533563024699,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/205256481",
+   "withdraw_event": {
+    "intent_hash": "8znCkvnsj16AQzhY7Bk48SKHHRvPJYbD2FUS7quZova1",
+    "amount": "616553356302469816365444781",
+    "receipt_id_of_execute_intents": "Cz13i6ytbVzQyckuDSDYB9LCazjkHLVCofRXcorRyJb4",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "Cz13i6ytbVzQyckuDSDYB9LCazjkHLVCofRXcorRyJb4"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "Cz13i6ytbVzQyckuDSDYB9LCazjkHLVCofRXcorRyJb4",
+     "sold": [
+      "nep141:ltc.omft.near"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "8VgBvoZGaCvhhMM2QcKAYJYpiKmSV9ZUuWNw1g6QH94V",
+   "transaction_hash": "CpeEq4dYCsAXdz1PJeDAe93dWDNBUcsjfrG3M5pFRTjT",
+   "receipt_block_height": 206523398,
+   "transaction_block_height": 206523394,
+   "blocks_read": [
+    206523394,
+    206523395,
+    206523396,
+    206523397,
+    206523398
+   ],
+   "block_timestamp": 1783781169347056814,
+   "amount_yocto": "525002686847132436843724800",
+   "amount_near": 525.0026868471324,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/206523394",
+   "withdraw_event": {
+    "intent_hash": "BKMzjUyd32oHaEw8gPXerJ6kwCnFQLVkKLnRhNFsUPkw",
+    "amount": "525002686847132406881430136",
+    "receipt_id_of_execute_intents": "BbZBvFiqDgFenqySoNEThXV21YKrvpkVo54vrtVvbokM",
+    "caller": "intents.near"
+   },
+   "intents_account": "9b60c25879de6b5052a7bda3186ab1d23615c9f6437319c6539e16ef54eedc32",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "3M496agnE1TcXkyjS6ffhMFF7R8kS596Pk23AQ5weSjg",
+   "transaction_hash": "HPQbwVBEUkfZ58T7ssqntqWvPneJtXfDDgp7QuXUcXNp",
+   "receipt_block_height": 207671579,
+   "transaction_block_height": 207671575,
+   "blocks_read": [
+    207671575,
+    207671576,
+    207671577,
+    207671578,
+    207671579
+   ],
+   "block_timestamp": 1784484692155246765,
+   "amount_yocto": "597186142009010278499352576",
+   "amount_near": 597.1861420090103,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/207671575",
+   "withdraw_event": {
+    "intent_hash": "4jTHQ3NBVQVF7QbcFta7bT7Qn5Vo45J2MrktuvgCJJ77",
+    "amount": "597186142009010251479445851",
+    "receipt_id_of_execute_intents": "H9b3vyaYg4LBnXHxE8KJZEQLnvXrG8Zep13hUfncRxZF",
+    "caller": "intents.near"
+   },
+   "intents_account": "52a9247f6150f6ab50266381474152df2ec4760a4dfd43846782506bf86be5b0",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "GChA9Yjxdpidyp461W9NiL7cuKQQ7zCXzGqfbvbgQMGR",
+   "transaction_hash": "87gQPwcgrqcooyJAKDQppzRLyjAGpxFUeoHJbfENjD6P",
+   "receipt_block_height": 208899780,
+   "transaction_block_height": 208899776,
+   "blocks_read": [
+    208899776,
+    208899777,
+    208899778,
+    208899779,
+    208899780
+   ],
+   "block_timestamp": 1785240036774283089,
+   "amount_yocto": "637638948990751707228012544",
+   "amount_near": 637.6389489907517,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/208899776",
+   "withdraw_event": {
+    "intent_hash": "DrwRaXcS9f8iTCjeMZfLTbrBhNQUb3aGE1ZEzBeFk6e4",
+    "amount": "637638948990751771002594930",
+    "receipt_id_of_execute_intents": "GEaGndMB8Hxp5mA1bCEuBxpQy232hCAiUbCaWMcgaVGG",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "GEaGndMB8Hxp5mA1bCEuBxpQy232hCAiUbCaWMcgaVGG"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "GEaGndMB8Hxp5mA1bCEuBxpQy232hCAiUbCaWMcgaVGG",
+     "sold": [
+      "nep141:gnosis-0x2a22f9c3b484c3629090feed35f17ff8f88f76f0.omft.near"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "6WJ4phgx1bYP48Fy2xhkUD9fCzuRrHV1Y5ETzSxYkr2P",
+   "transaction_hash": "CnrptnqSwSvsNWthf3cSdWnnHgg1u1i8CHQtjx66gySK",
+   "receipt_block_height": 210277273,
+   "transaction_block_height": 210277269,
+   "blocks_read": [
+    210277269,
+    210277270,
+    210277271,
+    210277272,
+    210277273
+   ],
+   "block_timestamp": 1786084589758107320,
+   "amount_yocto": "710111965737504510870290432",
+   "amount_near": 710.1119657375045,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/210277269",
+   "withdraw_event": {
+    "intent_hash": "34ZXS9UEdiWPrWRqmzSWKiLvM1SjxFLmkuJbjbmbdUt7",
+    "amount": "710111965737504558917984111",
+    "receipt_id_of_execute_intents": "HyrWyCpdz3jnYcjcUWWapXbGASzGdEmENG6DvX6gmQ6P",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "HyrWyCpdz3jnYcjcUWWapXbGASzGdEmENG6DvX6gmQ6P"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "HyrWyCpdz3jnYcjcUWWapXbGASzGdEmENG6DvX6gmQ6P",
+     "sold": [
+      "nep245:v2_1.omni.hot.tg:56_2w93GqMcEmQFDru84j3HZZWt557r"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "D2BGzaqBSyXxdXTMxPrbg2vhpAxjSbhNNBncP1NP6xec",
+   "transaction_hash": "D1WPpeVSHbD66TuFi5karv3FLJytEJpvVuhBLtLSMB1X",
+   "receipt_block_height": 211673629,
+   "transaction_block_height": 211673625,
+   "blocks_read": [
+    211673625,
+    211673626,
+    211673627,
+    211673628,
+    211673629
+   ],
+   "block_timestamp": 1786939360649157233,
+   "amount_yocto": "659965578510838094830239744",
+   "amount_near": 659.9655785108381,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/211673625",
+   "withdraw_event": {
+    "intent_hash": "B4V6i1b5N7HG6KByyM6eQkbxMSGjpdbiAhE4Qm2dFnvx",
+    "amount": "659965578510838052521890218",
+    "receipt_id_of_execute_intents": "DE6CrKaqBSJxyyiZCLNLjEQnXEjVUDX5DjEnwXFMmk16",
+    "caller": "intents.near"
+   },
+   "intents_account": "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "DE6CrKaqBSJxyyiZCLNLjEQnXEjVUDX5DjEnwXFMmk16"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "DE6CrKaqBSJxyyiZCLNLjEQnXEjVUDX5DjEnwXFMmk16",
+     "sold": [
+      "nep245:v2_1.omni.hot.tg:56_11111111111111111111"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "EQQ6CrCUtoY6PjLeEvD8NJBQDwRAG1BshJcJWw5wXLQj",
+   "transaction_hash": "4GsKzeHhWVShZKRfYmYVtvieoTYJF4FyYNFcvAUnzosq",
+   "receipt_block_height": 212315542,
+   "transaction_block_height": 212315538,
+   "blocks_read": [
+    212315538,
+    212315539,
+    212315540,
+    212315541,
+    212315542
+   ],
+   "block_timestamp": 1787332698474459950,
+   "amount_yocto": "852595562706862394421805056",
+   "amount_near": 852.5955627068624,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/212315538",
+   "withdraw_event": {
+    "intent_hash": "7zXPNN2rq9ojov7cRef2veSkvQSxVavJ6ksCV3fhRexw",
+    "amount": "852595562706862341629130089",
+    "receipt_id_of_execute_intents": "5LkuMcWpciueQxmRFaqrVChxafygUAbuqxYG1zFKGoFW",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "E8inKA2u6hPUd2HfCzFPFdAyyzdHcoY4ENuzybkcY8n6",
+   "transaction_hash": "2jZwoiCEP6er93KxTSre5e3wJFKCZufx8LWaJ4jvyfeb",
+   "receipt_block_height": 213007195,
+   "transaction_block_height": 213007191,
+   "blocks_read": [
+    213007191,
+    213007192,
+    213007193,
+    213007194,
+    213007195
+   ],
+   "block_timestamp": 1787755303254888607,
+   "amount_yocto": "607461329544052695315251200",
+   "amount_near": 607.4613295440527,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/213007191",
+   "withdraw_event": {
+    "intent_hash": "DkodqMWX4cLTpGi1xRmTbE4JLahJFWQ3Fzin7rq9iHy3",
+    "amount": "607461329544052705149232848",
+    "receipt_id_of_execute_intents": "5GUYbbAB7boNsH5ahKGAmrHJLhxrJnLt9gTvoJamfkvu",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "8mpjLQ1krQzKv9xt7Z6ZtqgER6qdk7KRicK465jfFZCL",
+   "transaction_hash": "5khiFwREAp2kzuMGnhAAEL3zDDkyBEsaBrFvdZsJMZLS",
+   "receipt_block_height": 213829285,
+   "transaction_block_height": 213829281,
+   "blocks_read": [
+    213829281,
+    213829282,
+    213829283,
+    213829284,
+    213829285
+   ],
+   "block_timestamp": 1788262889774718725,
+   "amount_yocto": "512825854218843646832148480",
+   "amount_near": 512.8258542188437,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/213829281",
+   "withdraw_event": {
+    "intent_hash": "CyWdcm1qt9iQk492mjz7iyBD73Z9RdRKXRRhWYQBEbGt",
+    "amount": "512825854218843678014562260",
+    "receipt_id_of_execute_intents": "G8ininhZpQfcMwJLzQcKsBDmKBn34iVb4HmtWKBq8xY3",
+    "caller": "intents.near"
+   },
+   "intents_account": "0bcaf3e8753318a5e24741b4bf4b9f56495bace25339bd0fa88db8465eb83bd5",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "HdznQy5cCATsGWW8YeJWtHLmos3XpeGnhaRrmrmZ3Xw",
+   "transaction_hash": "8V9Lhpb3717VsyZnKE8HdwPrLtHUggAwZiWwbQ4GPkgL",
+   "receipt_block_height": 214261648,
+   "transaction_block_height": 214261644,
+   "blocks_read": [
+    214261644,
+    214261645,
+    214261646,
+    214261647,
+    214261648
+   ],
+   "block_timestamp": 1788536308219084258,
+   "amount_yocto": "688548461514238471547387904",
+   "amount_near": 688.5484615142385,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/214261644",
+   "withdraw_event": {
+    "intent_hash": "8FZxANK9W6QLeNtJGyXdcpDfzjgiQZmE6424vtgqUxsi",
+    "amount": "688548461514238482984589200",
+    "receipt_id_of_execute_intents": "B8ebMwPALdwqYQ9xqGjsy469ZyMwFbPpWHiGiwTy5fAq",
+    "caller": "intents.near"
+   },
+   "intents_account": "3a21372c9fe8a111bec4f033b307212f4ad3ccf844ebd53ef2c7c395844e1797",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "BXneAyvfsYgmvqmbSbzZmaFSChKEtDVh8ZLoo4mEtb7J",
+   "transaction_hash": "jEYr2MBwJPHdZaFDfWPYYBPUtwr2cGVSUYa2z2aKXi6",
+   "receipt_block_height": 214679686,
+   "transaction_block_height": 214679682,
+   "blocks_read": [
+    214679682,
+    214679683,
+    214679684,
+    214679685,
+    214679686
+   ],
+   "block_timestamp": 1788794931659860164,
+   "amount_yocto": "457396349461857676157779968",
+   "amount_near": 457.3963494618577,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/214679682",
+   "withdraw_event": {
+    "intent_hash": "CyhFYYPnMKJYncEvePV4436p3wjaMZVRAr5UYnu7RRu2",
+    "amount": "457396349461857653342874733",
+    "receipt_id_of_execute_intents": "YDnLrVJL45unJPB184EXtZnJcNVc53j6NiFYsJNK5Pi",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "72upphaD69Erpz8BTebSEeoN1vxMYxNrT2c2roH5XuV2",
+   "transaction_hash": "G7itkjCRVLR7DzDXKYSUFM7opqRAD8z17vbb47TTNdAG",
+   "receipt_block_height": 215227678,
+   "transaction_block_height": 215227674,
+   "blocks_read": [
+    215227674,
+    215227675,
+    215227676,
+    215227677,
+    215227678
+   ],
+   "block_timestamp": 1789133698848119865,
+   "amount_yocto": "480113002216296492415582208",
+   "amount_near": 480.1130022162965,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/215227674",
+   "withdraw_event": {
+    "intent_hash": "G3DZ8f7sZNc8L3pW8b4wXoBo6Ba9THEBppbR2zjWm8Wr",
+    "amount": "480113002216296494204377867",
+    "receipt_id_of_execute_intents": "4Zoxe249AGvAAK2YUcrG8fyMRjn69d1xPjQ2R6uy94q4",
+    "caller": "intents.near"
+   },
+   "intents_account": "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "4Zoxe249AGvAAK2YUcrG8fyMRjn69d1xPjQ2R6uy94q4"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "4Zoxe249AGvAAK2YUcrG8fyMRjn69d1xPjQ2R6uy94q4",
+     "sold": [
+      "nep141:token.sweat"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "Fsij7wwZ5aFgukTz4tAwgFfMpNNB1MZe89L6wvxTVmEg",
+   "transaction_hash": "5wG5URwuvBZAb7uPLBg9iqwU6aU6f9GxGhBzMF85fD7d",
+   "receipt_block_height": 215833334,
+   "transaction_block_height": 215833330,
+   "blocks_read": [
+    215833330,
+    215833331,
+    215833332,
+    215833333,
+    215833334
+   ],
+   "block_timestamp": 1789508734860484330,
+   "amount_yocto": "763769555401001251540828160",
+   "amount_near": 763.7695554010013,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/215833330",
+   "withdraw_event": {
+    "intent_hash": "7po3M1gTF1M5DUJ9kxqfegjWUYXSyfqv9D573U7BZ4pb",
+    "amount": "763769555401001213344490290",
+    "receipt_id_of_execute_intents": "HdX3odivGUvpKM4FsnTBQamccKZJTqnZ8DCo3Wr254YN",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "9PSk6jZc4kvRkSxX6GTdpB5jSSuHEfD29j2EmyxtFxf3",
+   "transaction_hash": "FtNN4Ly4fUhbQHVWnA5kZ2KVwhCXJJMDAFhtF5BomUng",
+   "receipt_block_height": 216161372,
+   "transaction_block_height": 216161368,
+   "blocks_read": [
+    216161368,
+    216161369,
+    216161370,
+    216161371,
+    216161372
+   ],
+   "block_timestamp": 1789710337907997555,
+   "amount_yocto": "599146283568526097754619904",
+   "amount_near": 599.1462835685261,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/216161368",
+   "withdraw_event": {
+    "intent_hash": "8zGjPqfiWaccY2x21117K4TjpkSyRefwuSqefM5FMVse",
+    "amount": "599146283568526086592505291",
+    "receipt_id_of_execute_intents": "5ystevw7bg5i2CeNPVSQ5uuMCsU38Go5quiwzb9TDamE",
+    "caller": "intents.near"
+   },
+   "intents_account": "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "5ystevw7bg5i2CeNPVSQ5uuMCsU38Go5quiwzb9TDamE"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "5ystevw7bg5i2CeNPVSQ5uuMCsU38Go5quiwzb9TDamE",
+     "sold": [
+      "nep141:npro.nearmobile.near"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "6qbffmi9Q29DnoGfZSAg3y1E56XkbW88uHQYp191SZct",
+   "transaction_hash": "3HXo7hRHZUa9GVDg97V5L2LX5j57LpgRvaumgEJfKBFT",
+   "receipt_block_height": 216179642,
+   "transaction_block_height": 216179638,
+   "blocks_read": [
+    216179638,
+    216179639,
+    216179640,
+    216179641,
+    216179642
+   ],
+   "block_timestamp": 1789721450534280906,
+   "amount_yocto": "4877514771580428484758994944",
+   "amount_near": 4877.514771580429,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/216179638",
+   "withdraw_event": {
+    "intent_hash": "2DKQmTKcAq1eWvJ5u6kepVHhz8rYuNcWxSC2RWnZrc2a",
+    "amount": "4877514771580428262551468371",
+    "receipt_id_of_execute_intents": "DTD96H3HdjyhoFVonXG2v7T3DqjkN4HMFqPxvg84AUH7",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "DTD96H3HdjyhoFVonXG2v7T3DqjkN4HMFqPxvg84AUH7"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "DTD96H3HdjyhoFVonXG2v7T3DqjkN4HMFqPxvg84AUH7",
+     "sold": [
+      "nep245:v2_1.omni.hot.tg:56_SZzgw3HSudhZcTwPWUTi2RJB19t"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "FjNvTgoAc9ZJ9xKqv2CDttEBrZwMzB3HRU4YwD4pq1GC",
+   "transaction_hash": "BDBECt1tiaJqwWAHMWirj8mBcu2zqygh6u6Fj1yisyKc",
+   "receipt_block_height": 216523504,
+   "transaction_block_height": 216523500,
+   "blocks_read": [
+    216523500,
+    216523501,
+    216523502,
+    216523503,
+    216523504
+   ],
+   "block_timestamp": 1789930884653186678,
+   "amount_yocto": "278238246482004334048444416",
+   "amount_near": 278.23824648200434,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/216523500",
+   "withdraw_event": {
+    "intent_hash": "A1TZ3BejZAA33jqS5o8aakJCaUnX4ntgbQgwX6ex1ag1",
+    "amount": "278238246482004318340778004",
+    "receipt_id_of_execute_intents": "Fk322hgfTKZdHdHUxbyWQ44QTFUCUwau4XQ53J8aF3R9",
+    "caller": "intents.near"
+   },
+   "intents_account": "533b308dc99dace1dff9b04f802d1c2e0a019730711184f279d36ab5f9a9db08",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "CQL8PozLpb7osXi9MWuQ3zdsQzE7WDnToX2UUHeP1ZQJ",
+   "transaction_hash": "DfJAztNkBSWw9D2TZPgBJUTFTqCPyvvJe8v2t7J87v8T",
+   "receipt_block_height": 216756057,
+   "transaction_block_height": 216756053,
+   "blocks_read": [
+    216756053,
+    216756054,
+    216756055,
+    216756056,
+    216756057
+   ],
+   "block_timestamp": 1790072192089117067,
+   "amount_yocto": "312756561055863971841572864",
+   "amount_near": 312.756561055864,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/216756053",
+   "withdraw_event": {
+    "intent_hash": "FXVCyXLpFcWrjhWLDRjWNWMmRkxFT9dfMNBzeb4QQ9vG",
+    "amount": "312756561055863940385257805",
+    "receipt_id_of_execute_intents": "BQJEWu1zo2L4RyAhsCzwdPLgjRD4w395Ygee7n1a9rXL",
+    "caller": "intents.near"
+   },
+   "intents_account": "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "8qBKjATQWykrv7A561T42GQcDZxUYag6UHyAAq4GZbjx",
+   "transaction_hash": "FfYDy2GwBZzQ1e7Y4zFSoJDEaqVkDeUeK1upGmniPRPw",
+   "receipt_block_height": 216961665,
+   "transaction_block_height": 216961661,
+   "blocks_read": [
+    216961661,
+    216961662,
+    216961663,
+    216961664,
+    216961665
+   ],
+   "block_timestamp": 1790199430201149875,
+   "amount_yocto": "485393117410815476058030080",
+   "amount_near": 485.3931174108155,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/216961661",
+   "withdraw_event": {
+    "intent_hash": "3j53KaATpn8fpgVFahByQNAFkGXSuA6WfNWYjGSnypty",
+    "amount": "485393117410815448547464343",
+    "receipt_id_of_execute_intents": "G6V7cSGgbP8hiQ2wEjxj9Jf9XEvmCo7rbYzDqkECYBuY",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "9Fcb4oioGmxoPCNd5wcr4rbYcncrkH5JibWBKMH5PsuF",
+   "transaction_hash": "HKm1QnAuz5Z8f3zXJrphPYjXrCr9AGyWP9KUhQR5s2AT",
+   "receipt_block_height": 217223758,
+   "transaction_block_height": 217223754,
+   "blocks_read": [
+    217223754,
+    217223755,
+    217223756,
+    217223757,
+    217223758
+   ],
+   "block_timestamp": 1790356910395177065,
+   "amount_yocto": "266973756563590097838014464",
+   "amount_near": 266.9737565635901,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/217223754",
+   "withdraw_event": {
+    "intent_hash": "CNW6VZG6rNASeBja69MTxvxXAwxLfFWDocvVhLcLghX5",
+    "amount": "266973756563590083494440731",
+    "receipt_id_of_execute_intents": "3JP8aAcXhzacC2c2SVVLrVG1ocMTFsEsMnRiqgL2qn5k",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "3MaWfcNMEjCVVe9ShbFUFyy2kz6Lk6KdefgMUfpN3njY",
+   "transaction_hash": "2msnJtLScEHaCA9Vm8NX1TiLdiwqdYE23GgqBg3XyKEC",
+   "receipt_block_height": 217653512,
+   "transaction_block_height": 217653508,
+   "blocks_read": [
+    217653508,
+    217653509,
+    217653510,
+    217653511,
+    217653512
+   ],
+   "block_timestamp": 1790611288149624834,
+   "amount_yocto": "366293204658494845109665792",
+   "amount_near": 366.29320465849486,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/217653508",
+   "withdraw_event": {
+    "intent_hash": "Bg5Feix4mxjkwKEBCRqtZVHk8MBDCgPHv1qZ16yqx7Vh",
+    "amount": "366293204658494829717089176",
+    "receipt_id_of_execute_intents": "4B4SYyum86ufjt4p321koVhSdq66DWogVLrbVgDwoki7",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [
+    "4B4SYyum86ufjt4p321koVhSdq66DWogVLrbVgDwoki7"
+   ],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": [
+    {
+     "receipt_id": "4B4SYyum86ufjt4p321koVhSdq66DWogVLrbVgDwoki7",
+     "sold": [
+      "nep141:token.rhealab.near"
+     ],
+     "bought": [
+      "nep141:wrap.near"
+     ]
+    }
+   ]
+  },
+  {
+   "receipt_id": "CJFTMw4Kh8DsVUNp9yF7VxMwEKC69QJFhEp68DN3MbCW",
+   "transaction_hash": "2C5PQ5eaThvZDaXzWypWbvWa4soPwbb4Y1sZNtGKNUaP",
+   "receipt_block_height": 217962328,
+   "transaction_block_height": 217962324,
+   "blocks_read": [
+    217962324,
+    217962325,
+    217962326,
+    217962327,
+    217962328
+   ],
+   "block_timestamp": 1790799443913888881,
+   "amount_yocto": "502741595336068455653703680",
+   "amount_near": 502.7415953360685,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/217962324",
+   "withdraw_event": {
+    "intent_hash": "9iPt7oQAhSF5wruTw87DaSvzrRdcJxTzYdRtjWA8NYbH",
+    "amount": "502741595336068441445734277",
+    "receipt_id_of_execute_intents": "9dUBP8oP2BiQU6Tpf6MyaSzN4rXwHCd2VZnimoHpjSGU",
+    "caller": "intents.near"
+   },
+   "intents_account": "560917f9cf9172286c37ed1dfd16552ea70aa15e63b16c1f832f7622a71c4d6d",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "36PWQkM24J5VKEmMaU9P2GjtxgTk1arQFCvsyTBHB1bj",
+   "transaction_hash": "7ZK6iCg6exhiggDpQq7ffSWK56TYRb3gAr3EAgwc2die",
+   "receipt_block_height": 218428177,
+   "transaction_block_height": 218428173,
+   "blocks_read": [
+    218428173,
+    218428174,
+    218428175,
+    218428176,
+    218428177
+   ],
+   "block_timestamp": 1791076392704320646,
+   "amount_yocto": "208893489469018541343637504",
+   "amount_near": 208.89348946901853,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/218428173",
+   "withdraw_event": {
+    "intent_hash": "Bk9hTYhBhiaajaAUFyf4HQwARf6YYF2AM4PGmuBCTXH9",
+    "amount": "208893489469018525752712887",
+    "receipt_id_of_execute_intents": "DsQg6Zuh1FCcBq5v6s5zDqfbZbZWQD9Fr3eEKwjR9kU4",
+    "caller": "intents.near"
+   },
+   "intents_account": "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "9yNQazWmnpHimc18QYXYWF9myP7nBnEDZPehE3fBnhN5",
+   "transaction_hash": "Fuhg276jSwaM4VDtnzeBNAxhPzKP9hYYkaCGFajNWYtz",
+   "receipt_block_height": 218934637,
+   "transaction_block_height": 218934633,
+   "blocks_read": [
+    218934633,
+    218934634,
+    218934635,
+    218934636,
+    218934637
+   ],
+   "block_timestamp": 1791374464345357479,
+   "amount_yocto": "253522899759436714758635520",
+   "amount_near": 253.5228997594367,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/218934633",
+   "withdraw_event": {
+    "intent_hash": "E3V4SB6ZYRG5m1XqR9R4epVAJykN8KKQjp2rG7B3RT7h",
+    "amount": "253522899759436709012950180",
+    "receipt_id_of_execute_intents": "3oP3S8EtBfqdWSoaGw1hKgGx5HNh9yNxJFrH6HCsA8Hg",
+    "caller": "intents.near"
+   },
+   "intents_account": "aa44e433995b5399c8f657db167b3fe168dfe59653ed2bcb2381d4d1a6f82740",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "5ma4c3XXi5eETTC3wg371Uz6qG8Hkp4GqMCqUxSvYF4p",
+   "transaction_hash": "3i7F9aZwMPCudQhij8htpLrGJMKyBmtNZcs17r31eZRB",
+   "receipt_block_height": 219195236,
+   "transaction_block_height": 219195232,
+   "blocks_read": [
+    219195232,
+    219195233,
+    219195234,
+    219195235,
+    219195236
+   ],
+   "block_timestamp": 1791528175892728214,
+   "amount_yocto": "235408890186257744143581184",
+   "amount_near": 235.40889018625774,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/219195232",
+   "withdraw_event": {
+    "intent_hash": "3o3w2YPaFo2ELCwP1EuPMZxTqZthD5BaqhXcqK6H5ny7",
+    "amount": "235408890186257747878978238",
+    "receipt_id_of_execute_intents": "Bw9jgNZL1mDrHUQmt3TLGELS9cabT2M7r7Gaim48KkTz",
+    "caller": "intents.near"
+   },
+   "intents_account": "bc6f93c6d4388b65e778d0e492dbf596f007a600e32678024e778c4eab846974",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "8Jr4KgUoypUzVk7j27qGzePfKiSp8Tq6HRvg1h1MqwWA",
+   "transaction_hash": "JAskXEM76ksJLSiQZWT9s7hCyvQbwDuayx9mhPbRgnhF",
+   "receipt_block_height": 219564028,
+   "transaction_block_height": 219564024,
+   "blocks_read": [
+    219564024,
+    219564025,
+    219564026,
+    219564027,
+    219564028
+   ],
+   "block_timestamp": 1791745170902109346,
+   "amount_yocto": "357046304945851620925636608",
+   "amount_near": 357.0463049458516,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/219564024",
+   "withdraw_event": {
+    "intent_hash": "4LpFxGbALYd9GpUUiVntRWZf2mUkyL7YcsuJBAMKZKK1",
+    "amount": "357046304945851611181534200",
+    "receipt_id_of_execute_intents": "FKNjuu8gwkHYACLjQNi1TydhkWig4cJpTCZNq4vHBdS7",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "FxP2anAHU7kns1LQc6V3wYAaeyyTnJW4UKwWtBvhXoF4",
+   "transaction_hash": "4HtkJoWVpcbD6V3r7grcyxKbTCALcGVoTvU1XJbHW5ey",
+   "receipt_block_height": 219922403,
+   "transaction_block_height": 219922396,
+   "blocks_read": [
+    219922396,
+    219922397,
+    219922398,
+    219922399,
+    219922400,
+    219922401,
+    219922402,
+    219922403
+   ],
+   "block_timestamp": 1791970819893652676,
+   "amount_yocto": "390218975799320500531888128",
+   "amount_near": 390.2189757993205,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/219922396",
+   "withdraw_event": {
+    "intent_hash": "6qRtRW6eRXahmeb7v9bJQAWG65rFZNs8gPZ6LJuYLASj",
+    "amount": "390218975799320528239215629",
+    "receipt_id_of_execute_intents": "2GusPANTDyMFMdsbPR8LzHLotjTQRcroQ75nTxcX2ihV",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "Hzpm8ZGcuqzkyc7CectNQYW4DJPvfTwZzWD8KhvY6GLT",
+   "transaction_hash": "Bb5PWU6wTif8AjUS9oTibt6SdFQzH8mmQZrbqTFvH6vV",
+   "receipt_block_height": 220002654,
+   "transaction_block_height": 220002650,
+   "blocks_read": [
+    220002650,
+    220002651,
+    220002652,
+    220002653,
+    220002654
+   ],
+   "block_timestamp": 1792023207419741585,
+   "amount_yocto": "4839976080890163225092423680",
+   "amount_near": 4839.976080890164,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/220002650",
+   "withdraw_event": {
+    "intent_hash": "H7JoPK73vcuRVe5QokuwEkf8DeenppW1TYHt2VuFhRkv",
+    "amount": "4839976080890163079357258817",
+    "receipt_id_of_execute_intents": "HBmjhBjq4qJ68mfBXdfdgyLhHBw3SVq8WLZZpVi4UPU6",
+    "caller": "intents.near"
+   },
+   "intents_account": "3306963d8329db40d0663769214b0591b7be73902e909afbf857096f91c843b7",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "CwLo1V6oYB2JhegqZhHEVN2wRKdnmzrTE2vF52sWrn8g",
+   "transaction_hash": "BJ7DHhR6LhFunt9FPFC7StaPSV5fV3YNfCVJQfs4xC2V",
+   "receipt_block_height": 220005025,
+   "transaction_block_height": 220005021,
+   "blocks_read": [
+    220005021,
+    220005022,
+    220005023,
+    220005024,
+    220005025
+   ],
+   "block_timestamp": 1792024609375261107,
+   "amount_yocto": "8641924799631252928461799424",
+   "amount_near": 8641.924799631253,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/220005021",
+   "withdraw_event": {
+    "intent_hash": "EYT7spbTiyvmjEaMFMKoQ4nZawYKBgpSzwxFFQE1Aw7U",
+    "amount": "8641924799631253438889553488",
+    "receipt_id_of_execute_intents": "8khkepkSrGNVCrkg62aXMnNJUPE6QaLxRAGXxnCKd99",
+    "caller": "intents.near"
+   },
+   "intents_account": "b63fe08372b2fb91b404febc3c893aa7bd99c94e79777c21bbdd722f68405078",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "HHDgtimECEUDnT6HSHAZ1ruukp4ne8wmq49srj9H9Zgd",
+   "transaction_hash": "BrcwPhjTk9wqiPcFNyuCFcwggv6Nxjkaw8S2F7yPbtc6",
+   "receipt_block_height": 220384563,
+   "transaction_block_height": 220384559,
+   "blocks_read": [
+    220384559,
+    220384560,
+    220384561,
+    220384562,
+    220384563
+   ],
+   "block_timestamp": 1792250431673426973,
+   "amount_yocto": "229423805765076709692932096",
+   "amount_near": 229.4238057650767,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/220384559",
+   "withdraw_event": {
+    "intent_hash": "EeyyvQXcwLiTqmHmTz3HDkx7TYnwrLTesTQ9mr458RzK",
+    "amount": "229423805765076722425088989",
+    "receipt_id_of_execute_intents": "BLfPtEV2Ct6T7cQ9FKyLNPEagsuRdwv212z4pzBovxEf",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "J1nT2cxjesUsj5E59jvtF7JnvYFBqP8yArmK81tMUBn6",
+   "transaction_hash": "3A3AYoF4EUpjWGwcJ4nx4m6koPhX1pc1cfsCpgD3JEbk",
+   "receipt_block_height": 220862706,
+   "transaction_block_height": 220862702,
+   "blocks_read": [
+    220862702,
+    220862703,
+    220862704,
+    220862705,
+    220862706
+   ],
+   "block_timestamp": 1792535687910211005,
+   "amount_yocto": "201518469248307772335849472",
+   "amount_near": 201.51846924830778,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/220862702",
+   "withdraw_event": {
+    "intent_hash": "757hcbqSq6GwkwVnpyREUMdg76UJ775KMiZJH5f7fF6Y",
+    "amount": "201518469248307773487561389",
+    "receipt_id_of_execute_intents": "2hhMBgwZwV4nxmhcLBGDoXgss2awViXLMU5A2eTaMvjn",
+    "caller": "intents.near"
+   },
+   "intents_account": "569d7384b87f6b1e19cee9a15beb0330e006b6152d1cc2c41ba2af5d7235308c",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "9YDym9rUtCHeo11CrqM2ccFG89pNw16W9MU5tCYg2AiG",
+   "transaction_hash": "91MJGH4VNHkRP7jMJNsqKYiZNqxAurYvWB4JXxJer62L",
+   "receipt_block_height": 221296130,
+   "transaction_block_height": 221296126,
+   "blocks_read": [
+    221296126,
+    221296127,
+    221296128,
+    221296129,
+    221296130
+   ],
+   "block_timestamp": 1792792023281347752,
+   "amount_yocto": "230284114999831062537830400",
+   "amount_near": 230.28411499983108,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/221296126",
+   "withdraw_event": {
+    "intent_hash": "GSHiFWRjTjhpcbFiJvQxAnDnnFJo8s3a83NyKoe3XYXK",
+    "amount": "230284114999831075569530424",
+    "receipt_id_of_execute_intents": "9zV9E3apvvJSa4Foxwsgj6PFV6H9nHt9TDk436xAEmza",
+    "caller": "intents.near"
+   },
+   "intents_account": "d499c7f6f32b9bcf07dcbf18b0fcf12b40797590eb2e5bdbace6072b3de8d907",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "HndVhh88X7cNDYMM2L2S5sfPy51iAiPScwxLoVMy27FY",
+   "transaction_hash": "8fPwCif5gC6nDUp7KbNsGBAWfvUvj89w4NJp9Y495bdD",
+   "receipt_block_height": 221724781,
+   "transaction_block_height": 221724777,
+   "blocks_read": [
+    221724777,
+    221724778,
+    221724779,
+    221724780,
+    221724781
+   ],
+   "block_timestamp": 1793038624949279557,
+   "amount_yocto": "394491628595484079832432640",
+   "amount_near": 394.4916285954841,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/221724777",
+   "withdraw_event": {
+    "intent_hash": "8oBh6NkxmMdouBbVeyirUd2HGZHqoiJDjy42aN2wW8PF",
+    "amount": "394491628595484083870767965",
+    "receipt_id_of_execute_intents": "9oR7jKpbzJo6563SxiXmNUfi3DdZ3bqStheNQGvUsKGN",
+    "caller": "intents.near"
+   },
+   "intents_account": "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "zg9kbZ1x4ayNjGmjFBA6NABLDiGCDWBHXHsPuxzdp6b",
+   "transaction_hash": "Am53FW1ZiKKTpPj7ZtK5GEtmYhLyyBM3YSn5sQgg6t6M",
+   "receipt_block_height": 222072506,
+   "transaction_block_height": 222072502,
+   "blocks_read": [
+    222072502,
+    222072503,
+    222072504,
+    222072505,
+    222072506
+   ],
+   "block_timestamp": 1793246533839612194,
+   "amount_yocto": "289022861524042334882234368",
+   "amount_near": 289.02286152404236,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/222072502",
+   "withdraw_event": {
+    "intent_hash": "BFbNhr9453mAAxRoUYhX9hetWyfgMN8fZc7QPAxkFdwx",
+    "amount": "289022861524042340084529580",
+    "receipt_id_of_execute_intents": "8nusTDZ5Lm8i4H2fdN2tBHdkk8ssGA86zvFJVCcZddS7",
+    "caller": "intents.near"
+   },
+   "intents_account": "1f2d61f02199e34f617968d15daff0459781486c92ecf3c914e4d3f2ebdf172f",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "3KFtXPfP4hxBPMj1DVMtwrwJzo276hw2ESF1k1jm4hfV",
+   "transaction_hash": "HUr9hV8a13adYxcY1by3a5ztN4gkaiyLyMYmpkkSyPHx",
+   "receipt_block_height": 222354833,
+   "transaction_block_height": 222354829,
+   "blocks_read": [
+    222354829,
+    222354830,
+    222354831,
+    222354832,
+    222354833
+   ],
+   "block_timestamp": 1793411485374617413,
+   "amount_yocto": "272954020145582882485698560",
+   "amount_near": 272.9540201455829,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/222354829",
+   "withdraw_event": {
+    "intent_hash": "BoQn15aqfD7jbyRMgJYKQNaQwWAubysAwnAb6bkH1bpE",
+    "amount": "272954020145582886881712272",
+    "receipt_id_of_execute_intents": "3s48fMyFC3fudfWdjUG1ciYYCar8fpjLi5yv39dh3LMi",
+    "caller": "intents.near"
+   },
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  },
+  {
+   "receipt_id": "31MaVtaFnFNZUPsxCPKSgYmqnRz4LWfJnVN8hS35VyHv",
+   "transaction_hash": "CxzhQaWF7veNkiM4RMZc3bvS6HMFNXzqmxeXD5dDuj1p",
+   "receipt_block_height": 222907341,
+   "transaction_block_height": 222907336,
+   "blocks_read": [
+    222907336,
+    222907337,
+    222907338,
+    222907339,
+    222907340,
+    222907341
+   ],
+   "block_timestamp": 1793730283080165971,
+   "amount_yocto": "261773216204540723888914432",
+   "amount_near": 261.77321620454074,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/222907336",
+   "withdraw_event": {
+    "intent_hash": "DchQDh2yRNJbLQw5f6us3NrsgcumueRd9Y8gYjDuWXQz",
+    "amount": "261773216204540729808918254",
+    "receipt_id_of_execute_intents": "2vDydHgS3NrYxzdAGzyUyL99yhCHZzUHPJYc3BcNCX6D",
+    "caller": "intents.near"
+   },
+   "intents_account": "128507595b5953e712f519831998bef0abe0e4e8d5000f953f6b162defd1b37f",
+   "mt_burn_token": "nep141:wrap.near",
+   "token_diff_same_block": [],
+   "match": "native_withdraw event with matching receiver and amount",
+   "swap_observed": []
+  }
+ ]
+}

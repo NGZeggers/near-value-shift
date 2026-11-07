@@ -125,3 +125,45 @@ def test_economic_unit_and_tolerance_are_declared_text():
     assert "half gross participant notional" in reconcile.ECONOMIC_UNIT["our_measure"]
     assert "dune.near.dataset_near_intents_metrics" in reconcile.ECONOMIC_UNIT["reference"]
     assert "before" in reconcile.TOLERANCE["declared"] and "before" in reconcile.HOLDOUT_RULE
+
+
+def test_intraday_validation_rule_is_declared_and_pending_without_data(tmp_path, monkeypatch):
+    from near_thesis import blocks
+    rule = blocks.INTRADAY_VALIDATION_RULE
+    assert "before any validation block" in rule["declared"] and "position" in rule["selection"] and "median" in rule["aggregation"]
+    monkeypatch.setattr(reconcile, "INTRADAY_VALIDATION_EVENTS", tmp_path / "none.csv")
+    monkeypatch.setattr(reconcile, "INTRADAY_VALIDATION_MANIFEST", tmp_path / "none.json")
+    out = reconcile.intraday_validation({}, pd.Series(dtype=float), pd.Series(dtype=float), {"fixed_window_bias_factor_median": 2.8})
+    assert out["status"].startswith("pending") and "within_declared_range" not in out
+
+
+def test_intraday_validation_days_pick_positions_not_volume(monkeypatch):
+    from near_thesis import blocks
+    days = [f"2026-01-{d:02d}" for d in range(1, 13)]      # 12 candidate days, motivating ones excluded first
+    monkeypatch.setattr(reconcile, "_reference_days", lambda: days + ["2026-02-01"])
+    picked = blocks.intraday_validation_days(["2026-02-01"])
+    assert picked == [days[3], days[6], days[9]]
+
+
+def test_intraday_validation_verdict_uses_declared_range(tmp_path, monkeypatch):
+    man = {"days": ["2026-03-01"], "selection_rule": "test", "fetched_at": "x", "blocks_per_window": 10, "complete": True,
+           "windows": [{"day": "2026-03-01", "hour": h, "start_height": h * 10, "n": 10, "fetched": 10, "usable": True} for h in range(24)]}
+    rows = []
+    for h in range(24):
+        usd = 10 if h in (3, 15) else 30
+        log = json.dumps({"standard": "dip4", "event": "token_diff", "data": [
+            {"account_id": "u", "intent_hash": f"u{h}", "diff": {"usdc": str(-usd * 10**6), "zzz": "1"}},
+            {"account_id": "mm", "intent_hash": f"m{h}", "diff": {"usdc": str(usd * 10**6), "zzz": "-1"}}]})
+        rows.append({"block_date": "2026-03-01", "block_timestamp": h, "receipt_id": f"r{h}", "caller": "relay", "log": "EVENT_JSON:" + log,
+                     "window_day": "2026-03-01", "window_hour": h, "block_height": h * 10, "execution_status": "SUCCESS_VALUE"})
+    (tmp_path / "v.csv").write_text(pd.DataFrame(rows).to_csv(index=False))
+    (tmp_path / "v.json").write_text(json.dumps(man))
+    monkeypatch.setattr(reconcile, "INTRADAY_VALIDATION_EVENTS", tmp_path / "v.csv")
+    monkeypatch.setattr(reconcile, "INTRADAY_VALIDATION_MANIFEST", tmp_path / "v.json")
+    monkeypatch.setattr(intents, "_REGISTRY", {"usdc": ("usdc", 6, "usd-coin")})
+    day = pd.Timestamp("2026-03-01")
+    factor = (22 * 30 + 2 * 10) / 24 / 10
+    out = reconcile.intraday_validation({}, pd.Series({day: 24_000.0}), pd.Series({day: 100_000.0}), {"fixed_window_bias_factor_median": factor})
+    assert out["within_declared_range"] is True and "reproduce" in out["verdict"]
+    out2 = reconcile.intraday_validation({}, pd.Series({day: 24_000.0}), pd.Series({day: 100_000.0}), {"fixed_window_bias_factor_median": factor * 3})
+    assert out2["within_declared_range"] is False and "not supported" in out2["verdict"]

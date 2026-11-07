@@ -275,7 +275,7 @@ def oos_specs() -> list[dict]:
     rows = [r for r in o["tests"] if r.get("horizon_weeks") == 12 and r.get("benchmark") == "btc" and "ic_evaluation_signed" in r]
     if not rows:
         return []
-    return [_spec("oos", "4. Price and usage", "Pre-registered out-of-sample test: evaluation-period IC with the sign frozen in calibration (12 weeks vs BTC)",
+    return [_spec("oos", "4. Price and usage", "Out-of-sample test (retrospective, temporally separated): evaluation-period IC with the sign frozen in calibration (12 weeks vs BTC)",
         f"Calibration through {o['protocol']['calibration_end']}, evaluation purged by the horizon. {o['summary']['conclusion']}. "
         "Two naive predictors (NEAR momentum, BTC trend) are evaluated the same way as references; Intents volume and QAA are not evaluable for lack of calibration weeks.",
         "ranked", [{"name": "evaluation IC (signed)", "points": [[_label(r["predictor"]) if r["kind"] == "usage" else r["predictor"].replace("_", " "), round(r["ic_evaluation_signed"], 2)] for r in rows]}],

@@ -166,7 +166,7 @@
    "after_both": 1.424194489209782,
    "unexplained_factor_to_parity": 1.4043025830760694,
    "two_sided_and_intraday_overshoot": true,
-   "reading": "the identified components are definitional (one- versus two-sided) and intraday coverage; the remaining factor to reach parity after the measured intraday bias is unexplained and is reported as such, not attributed to missing large trades. The two-sided reading is a definitional bound, not a correction: if it and the full intraday correction both held the ratio would exceed parity, so they cannot both hold"
+   "reading": "the identified components are definitional (one- versus two-sided) and intraday coverage; the remaining factor to reach parity after the measured intraday bias is unexplained and is reported as such, not attributed to missing large trades. The two-sided reading and the intraday factor are separate hypotheses: that their combination exceeds parity shows the two readings cannot both be taken at face value together, but it does not identify which one overstates, and estimation error and unidentified components remain"
   }
  },
  "holdout": {
@@ -403,7 +403,18 @@
   "fixed_window_bias_factor_median": 2.8197878661858384,
   "aggregate_used_for_correction": "median",
   "ratio_all_hours_to_reference_median": 0.8714477516340748,
-  "reading": "Factor > 1 means the two fixed windows under-represent the day's hourly mean; even 24 hourly windows observe about 1,200 of ~150,000 blocks, so this measures the intraday expansion error, not a complete day. The median across days is used for the correction because a single hourly window can carry most of a day's sampled volume and dominate the mean"
+  "reading": "Factor > 1 means the two fixed windows under-represent the day's hourly mean; even 24 hourly windows observe about 1,200 of ~150,000 blocks, so this measures the intraday expansion error, not a complete day. The median across days is used for the correction because a single hourly window can carry most of a day's sampled volume and dominate the mean",
+  "scope": "the days were selected by reference volume and are not a representative sample of the history; the factor is a sensitivity and is not applied to the declared estimator. It is checked on separately selected validation days (see intraday_validation)"
+ },
+ "intraday_validation": {
+  "rule": {
+   "declared": "2026-11-07, after the motivating days were measured and before any validation block was fetched",
+   "selection": "sampled days with both fixed windows usable and a DefiLlama reference, excluding the three motivating days, sorted chronologically; take the days at positions floor(n/4), floor(n/2) and floor(3n/4)",
+   "aggregation": "median of the per-day fixed-window bias factors over the validation days",
+   "acceptance": "the motivating median is considered supported if the validation median lies within x0.5 to x2 of it; the range reflects the day-level dispersion already observed on the motivating days (2.0 to 7.7)",
+   "not_a_correction_of_the_estimator": "the declared estimator stays uncorrected; the factor is published as a sensitivity in either outcome"
+  },
+  "status": "pending: validation days not fetched yet (make blocks-intraday-validation)"
  },
  "trace_examples": [
   "simple_two_party_fully_priced",

@@ -371,15 +371,16 @@ INTRADAY_SELECTION_RULE = ("sampled days with both fixed windows usable and a De
                            "the day closest to the 2026 median and the day closest to the 2025 median; declared before fetching")
 
 
-def intraday_plan(days: list[str], blocks_per_window: int = 50, hours: tuple[int, ...] = INTRADAY_HOURS) -> list[dict]:
+def intraday_plan(days: list[str], blocks_per_window: int = 50, hours: tuple[int, ...] = INTRADAY_HOURS, plan_path: Path | None = None) -> list[dict]:
     """One window per hour for each selected day. Hours already planned in sample_plan.json reuse their start heights."""
+    plan_path = INTRADAY_PLAN if plan_path is None else plan_path
     known = {}
     if (BLOCKS / "sample_plan.json").exists():
         for w in json.loads((BLOCKS / "sample_plan.json").read_text()):
             known[(w["day"], int(w["hour"]))] = int(w["start_height"])
     out = []
-    if INTRADAY_PLAN.exists():
-        out = json.loads(INTRADAY_PLAN.read_text())
+    if plan_path.exists():
+        out = json.loads(plan_path.read_text())
     have = {(w["day"], int(w["hour"])) for w in out}
     todo = [(d, h) for d in days for h in hours if (d, h) not in have]
     if not todo:
@@ -393,29 +394,34 @@ def intraday_plan(days: list[str], blocks_per_window: int = 50, hours: tuple[int
             anchors = [v for (d, _), v in known.items() if d == day] or [v for v in known.values()]
             h = find_height_fast(ts, min(anchors) if anchors else 130_000_000, top)
         out.append({"day": day, "hour": hr, "start_height": h, "n": blocks_per_window})
-        INTRADAY_PLAN.write_text(json.dumps(sorted(out, key=lambda w: (w["day"], w["hour"])), indent=1))
+        plan_path.write_text(json.dumps(sorted(out, key=lambda w: (w["day"], w["hour"])), indent=1))
         print(f"  intraday window {day} {hr:02d}:00 -> height {h}", flush=True)
     return sorted(out, key=lambda w: (w["day"], w["hour"]))
 
 
-def run_intraday(days: list[str] | None = None, blocks_per_window: int = 50, workers: int = 2, offline: bool = False) -> dict:
+def run_intraday(days: list[str] | None = None, blocks_per_window: int = 50, workers: int = 2, offline: bool = False, *,
+                 plan_path: Path | None = None, events_path: Path | None = None, manifest_path: Path | None = None, selection_rule: str | None = None) -> dict:
     """Fetch every hourly window of the selected days (resumable through the shared block cache) and write
     data/blocks/intraday_events.csv plus intraday_manifest.json. Acquisition only: no reconciliation happens here."""
+    plan_path = INTRADAY_PLAN if plan_path is None else plan_path
+    events_path = INTRADAY_EVENTS if events_path is None else events_path
+    manifest_path = INTRADAY_MANIFEST if manifest_path is None else manifest_path
+    selection_rule = INTRADAY_SELECTION_RULE if selection_rule is None else selection_rule
     BLOCKS.mkdir(parents=True, exist_ok=True)
     if days is None:
-        if not INTRADAY_PLAN.exists():
+        if not plan_path.exists():
             raise ValueError("No intraday plan; pass --days")
-        days = sorted({w["day"] for w in json.loads(INTRADAY_PLAN.read_text())})
-    if offline and not INTRADAY_PLAN.exists():
-        raise ValueError("Offline intraday extraction requires an existing intraday_plan.json")
-    P = intraday_plan(days, blocks_per_window) if not offline else [w for w in json.loads(INTRADAY_PLAN.read_text()) if w["day"] in set(days)]
+        days = sorted({w["day"] for w in json.loads(plan_path.read_text())})
+    if offline and not plan_path.exists():
+        raise ValueError("Offline intraday extraction requires an existing intraday plan")
+    P = intraday_plan(days, blocks_per_window, plan_path=plan_path) if not offline else [w for w in json.loads(plan_path.read_text()) if w["day"] in set(days)]
     P = [w for w in P if w["day"] in set(days)]
     heights = [(i, w["start_height"] + j) for i, w in enumerate(P) for j in range(blocks_per_window)]
     if offline:
         heights = [(i, h) for i, h in heights if (CACHE / f"{h}.json").exists()]
     print(f"intraday: {len(P)} windows over {len(days)} days, {len(heights)} blocks" + (" (offline)" if offline else ""), flush=True)
     t0 = time.time(); fetched: dict[int, int] = {}; missing = 0; done = 0
-    tmp = INTRADAY_EVENTS.with_suffix(".csv.tmp")
+    tmp = events_path.with_suffix(".csv.tmp")
     with tmp.open("w", newline="") as fe:
         we = csv.writer(fe)
         we.writerow(["block_date", "block_timestamp", "receipt_id", "caller", "log", "window_day", "window_hour", "block_height", "execution_status"])
@@ -434,12 +440,183 @@ def run_intraday(days: list[str] | None = None, blocks_per_window: int = 50, wor
                 if done % 100 == 0:
                     el = time.time() - t0
                     print(f"  {done}/{len(heights)} blocks, {missing} missing, {el:,.0f}s, rate {_rate[0]:.2f}/s, eta {(len(heights) - done) / max(done / el, 1e-9) / 60:,.0f} min", flush=True)
-    tmp.replace(INTRADAY_EVENTS)
+    tmp.replace(events_path)
     wins = [dict(w, fetched=fetched.get(i, 0), usable=fetched.get(i, 0) >= min_usable(blocks_per_window)) for i, w in enumerate(P)]
     man = {"fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": NEARDATA, "days": sorted(set(days)),
-           "hours": list(INTRADAY_HOURS), "blocks_per_window": blocks_per_window, "selection_rule": INTRADAY_SELECTION_RULE,
+           "hours": list(INTRADAY_HOURS), "blocks_per_window": blocks_per_window, "selection_rule": selection_rule,
            "windows": wins, "blocks_requested": len(P) * blocks_per_window, "blocks_fetched": sum(fetched.values()), "blocks_missing": missing,
            "complete": sum(fetched.values()) + missing >= len(P) * blocks_per_window}
-    INTRADAY_MANIFEST.write_text(json.dumps(man, indent=1))
+    manifest_path.write_text(json.dumps(man, indent=1))
     print(f"intraday done: {man['blocks_fetched']} blocks in {time.time() - t0:,.0f}s (complete={man['complete']})")
     return man
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Validation days for the intraday correction. Declared 2026-11-07, after the three motivating days were measured and
+# before any validation block was fetched. Selection is by position in the chronological list, not by volume, so the
+# validation days are not chosen for being large or typical; aggregation and the acceptance range are fixed here.
+INTRADAY_VALIDATION_PLAN = BLOCKS / "intraday_validation_plan.json"
+INTRADAY_VALIDATION_EVENTS = BLOCKS / "intraday_validation_events.csv"
+INTRADAY_VALIDATION_MANIFEST = BLOCKS / "intraday_validation_manifest.json"
+INTRADAY_VALIDATION_RULE = {
+    "declared": "2026-11-07, after the motivating days were measured and before any validation block was fetched",
+    "selection": ("sampled days with both fixed windows usable and a DefiLlama reference, excluding the three motivating days, "
+                  "sorted chronologically; take the days at positions floor(n/4), floor(n/2) and floor(3n/4)"),
+    "aggregation": "median of the per-day fixed-window bias factors over the validation days",
+    "acceptance": ("the motivating median is considered supported if the validation median lies within x0.5 to x2 of it; "
+                   "the range reflects the day-level dispersion already observed on the motivating days (2.0 to 7.7)"),
+    "not_a_correction_of_the_estimator": "the declared estimator stays uncorrected; the factor is published as a sensitivity in either outcome",
+}
+
+
+def intraday_validation_days(motivating: list[str]) -> list[str]:
+    """Apply INTRADAY_VALIDATION_RULE to the committed sample (days with both fixed windows usable and a reference)."""
+    from .reconcile import _reference_days
+    cands = sorted(d for d in _reference_days() if d not in set(motivating))
+    n = len(cands)
+    if n < 3:
+        return cands
+    return [cands[n // 4], cands[n // 2], cands[3 * n // 4]]
+
+
+def run_intraday_validation(blocks_per_window: int = 50, workers: int = 2, offline: bool = False) -> dict:
+    """Same acquisition as run_intraday on the validation days, written to separate files so the motivating extract is untouched."""
+    import json as _json
+    motivating = sorted({w["day"] for w in _json.loads(INTRADAY_PLAN.read_text())}) if INTRADAY_PLAN.exists() else []
+    if INTRADAY_VALIDATION_PLAN.exists():
+        days = sorted({w["day"] for w in _json.loads(INTRADAY_VALIDATION_PLAN.read_text())})
+    else:
+        days = intraday_validation_days(motivating)
+    print(f"intraday validation days (by position, excluding {motivating}): {days}", flush=True)
+    man = run_intraday(days=days, blocks_per_window=blocks_per_window, workers=workers, offline=offline,
+                       plan_path=INTRADAY_VALIDATION_PLAN, events_path=INTRADAY_VALIDATION_EVENTS, manifest_path=INTRADAY_VALIDATION_MANIFEST,
+                       selection_rule=INTRADAY_VALIDATION_RULE["selection"] + "; " + INTRADAY_VALIDATION_RULE["declared"])
+    man["role"] = "validation"; man["rule"] = INTRADAY_VALIDATION_RULE; man["motivating_days"] = motivating
+    INTRADAY_VALIDATION_MANIFEST.write_text(_json.dumps(man, indent=1))
+    return man
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Buyback receipt trace: for a pre-declared sample of inbound NEAR receipts of the buyback multisig, read the block in
+# which each receipt executed and record the Intents event that produced it. Declared 2026-11-07 before any block was read.
+BUYBACK_TRACE = BLOCKS / "buyback_trace.json"
+BUYBACK_TRACE_RULE = {
+    "declared": "2026-11-07, before reading any of these blocks",
+    "sample": "inbound TRANSFER receipts from intents.near sorted by block timestamp: every 80th receipt starting at the first, plus the five largest by amount",
+    "what_is_read": ("the blocks from the originating transaction's block to the block in which the receipt executed (at most 8): dip4 native_withdraw / "
+                     "intents_executed and nep245 mt_burn events whose receiver and amount match the receipt, plus any dip4 token_diff event of the same "
+                     "Intents account in those blocks"),
+    "what_it_establishes": ("the NEAR arrived as a withdrawal from an Intents-side account balance (observed for every sampled receipt); the purchase itself is "
+                            "the earlier token_diff of the same account, observed only when it falls inside the blocks read, so purchase attribution for the "
+                            "whole inflow remains inferred"),
+}
+INTENTS_RPC = "https://rpc.mainnet.fastnear.com"
+
+
+def _view(contract: str, method: str, args: dict) -> object:
+    import base64
+    body = {"jsonrpc": "2.0", "id": "v", "method": "query", "params": {"request_type": "call_function", "finality": "final", "account_id": contract,
+                                                                       "method_name": method, "args_base64": base64.b64encode(json.dumps(args).encode()).decode()}}
+    r = requests.post(INTENTS_RPC, json=body, timeout=30, headers=UA)
+    r.raise_for_status()
+    res = r.json().get("result") or {}
+    if "error" in res or "result" not in res:
+        return {"error": res.get("error", "no result")}
+    return json.loads(bytes(res["result"]))
+
+
+def buyback_trace_sample(txns: list[dict], wallet: str, every: int = 80, largest: int = 5) -> list[dict]:
+    inb = [t for t in txns if t.get("predecessor_account_id") == "intents.near" and t.get("receiver_account_id") == wallet
+           and any(a.get("action") == "TRANSFER" and a.get("deposit") for a in t.get("actions") or [])]
+    inb.sort(key=lambda t: int(t["block_timestamp"]))
+    pick = {t["receipt_id"]: t for t in inb[::every]}
+    for t in sorted(inb, key=lambda t: -float(sum(float(a["deposit"]) for a in t["actions"] if a.get("action") == "TRANSFER")))[:largest]:
+        pick[t["receipt_id"]] = t
+    return sorted(pick.values(), key=lambda t: int(t["block_timestamp"]))
+
+
+def trace_receipt(t: dict, blocks_read: list[dict]) -> dict:
+    """Match one inbound receipt to the Intents events emitted between its transaction block and its execution block (cached extract format)."""
+    amount = int(sum(float(a["deposit"]) for a in t["actions"] if a.get("action") == "TRANSFER"))
+    events = [e for b in blocks_read for e in b.get("events", [])]
+    heights = [b["height"] for b in blocks_read]
+    out = {"receipt_id": t["receipt_id"], "transaction_hash": t.get("transaction_hash"), "receipt_block_height": int(t["receipt_block"]["block_height"]),
+           "transaction_block_height": int((t.get("block") or {}).get("block_height") or t["receipt_block"]["block_height"]), "blocks_read": heights,
+           "block_timestamp": blocks_read[-1]["ts"] if blocks_read else None,
+           "amount_yocto": str(amount), "amount_near": amount / 1e24, "block_url": NEARDATA.format(h=heights[0]) if heights else None,
+           "withdraw_event": None, "intents_account": None, "mt_burn_token": None, "token_diff_same_block": [], "match": "no matching event in the blocks read"}
+    for rid, pred, log, status in events:
+        if not log.startswith("EVENT_JSON:"):
+            continue
+        try:
+            ev = json.loads(log[len("EVENT_JSON:"):])
+        except ValueError:
+            continue
+        data = ev.get("data") or []
+        if ev.get("event") == "native_withdraw":
+            for d in data:
+                if d.get("receiver_id") == t["receiver_account_id"] and abs(int(d.get("amount", 0)) - amount) <= 1e18:
+                    out.update({"withdraw_event": {"intent_hash": d.get("intent_hash"), "amount": d.get("amount"), "receipt_id_of_execute_intents": rid, "caller": pred},
+                                "intents_account": d.get("account_id"), "match": "native_withdraw event with matching receiver and amount",
+                                "block_url": NEARDATA.format(h=next((b["height"] for b in blocks_read if any(e[0] == rid for e in b.get("events", []))), heights[0]))})
+        elif ev.get("event") == "mt_burn" and out["intents_account"]:
+            for d in data:
+                if d.get("owner_id") == out["intents_account"] and any(abs(int(x) - amount) <= 1e18 for x in d.get("amounts", [])):
+                    out["mt_burn_token"] = (d.get("token_ids") or [None])[0]
+    if out["intents_account"]:
+        swaps = []
+        for rid, pred, log, status in events:
+            if '"token_diff"' in log and out["intents_account"] in log:
+                out["token_diff_same_block"].append(rid)
+                try:
+                    for d in json.loads(log[len("EVENT_JSON:"):]).get("data") or []:
+                        if d.get("account_id") == out["intents_account"]:
+                            diff = {k: int(v) for k, v in (d.get("diff") or {}).items()}
+                            swaps.append({"receipt_id": rid, "sold": sorted(k for k, v in diff.items() if v < 0), "bought": sorted(k for k, v in diff.items() if v > 0)})
+                except (ValueError, TypeError):
+                    pass
+        out["swap_observed"] = swaps
+    return out
+
+
+def run_buyback_trace(offline: bool = False) -> dict:
+    from .http import load_raw
+    raw = load_raw("nearblocks_buybacks_txns")
+    wallet = raw["data"]["wallet"]
+    sample = buyback_trace_sample(raw["data"]["txns"], wallet)
+    print(f"buyback trace: {len(sample)} receipts of {sum(1 for t in raw['data']['txns'] if t.get('predecessor_account_id') == 'intents.near')} inbound from intents.near", flush=True)
+    rows, missing = [], 0
+    for i, t in enumerate(sample, 1):
+        h_end = int(t["receipt_block"]["block_height"])
+        h_start = int((t.get("block") or {}).get("block_height") or h_end)
+        h_start = max(h_start, h_end - 7)
+        read = []
+        for h in range(h_start, h_end + 1):
+            b = fetch_block(h, offline=offline)
+            if b is None:
+                missing += 1
+            else:
+                read.append(b)
+        rows.append(trace_receipt(t, read) if read else {"receipt_id": t["receipt_id"], "receipt_block_height": h_end, "match": "blocks not available"})
+        if i % 10 == 0:
+            print(f"  {i}/{len(sample)} receipts, {missing} blocks missing", flush=True)
+    accounts = sorted({r["intents_account"] for r in rows if r.get("intents_account")})
+    balances = {}
+    if not offline:
+        for acc in accounts:
+            try:
+                res = _view("intents.near", "mt_tokens_for_owner", {"account_id": acc})
+                balances[acc] = {"token_ids_held": len(res), "holds_wrap_near": any(x.get("token_id") == "nep141:wrap.near" for x in res)} if isinstance(res, list) else res
+            except (requests.RequestException, ValueError) as e:
+                balances[acc] = {"error": str(e)}
+    out = {"fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": NEARDATA, "rule": BUYBACK_TRACE_RULE, "wallet": wallet,
+           "receipts_in_snapshot_from_intents_near": sum(1 for t in raw["data"]["txns"] if t.get("predecessor_account_id") == "intents.near"),
+           "sampled": len(sample), "blocks_missing": missing,
+           "matched_native_withdraw": sum(1 for r in rows if r.get("withdraw_event")),
+           "with_token_diff_in_same_block": sum(1 for r in rows if r.get("token_diff_same_block")),
+           "with_wrap_near_bought_in_same_block": sum(1 for r in rows if any("nep141:wrap.near" in sw.get("bought", []) for sw in r.get("swap_observed") or [])),
+           "distinct_intents_accounts": len(accounts),
+           "intents_accounts": accounts, "intents_side_balances_at_fetch": balances, "receipts": rows}
+    BUYBACK_TRACE.write_text(json.dumps(out, indent=1))
+    print(f"buyback trace done: {out['matched_native_withdraw']}/{len(sample)} matched native_withdraw, accounts {accounts}")
+    return out

@@ -44,25 +44,25 @@
   },
   {
    "step": 5,
-   "name": "Executed purchases: NEAR settled by intents.near into buybacks.multisignature.near",
+   "name": "NEAR withdrawn from Intents into buybacks.multisignature.near",
    "short": "NEAR received by buyback wallet",
    "usd": 4482150.531897206,
    "near": 1643862.0814239217,
-   "status": "observed (NearBlocks receipts, valued at the daily NEAR price)",
+   "status": "observed (receipts, valued at the daily NEAR price); attribution to executed purchases inferred",
    "source": "https://api.nearblocks.io/v1/account/buybacks.multisignature.near/txns?per_page=250 (paginated)",
    "share_of_previous": 0.5942361692841919,
-   "note": "3081 swap-output transfers from 2026-03-18 to 2026-11-01; a further 510,068 NEAR arrived from the other revenue wallets (treasury moves, excluded here as the adapter excludes them) and 8,293 NEAR from other accounts. The wallet was created 2026-03-18, after the adapter's buyback start 2026-02-23, so labelled revenue before that date cannot be matched to this wallet"
+   "note": "3081 inbound transfers from intents.near from 2026-03-18 to 2026-11-01; a further 510,068 NEAR arrived from the other revenue wallets (treasury moves, excluded here as the adapter excludes them) and 8,293 NEAR from other accounts. Trace of a pre-declared sample (45 of 3197 receipts, every 80th plus the five largest): 45 match a dip4 native_withdraw of wrapped NEAR from 16 distinct Intents-side accounts; for 16 the funding swap (token_diff of the same account, 16 buying wrap.near) is in the same blocks, for the other 29 it is outside the blocks read and the purchase is not observed. Receipts excluded: 0 failed, 0 without an explicit status. The wallet was created 2026-03-18, after the adapter's buyback start 2026-02-23, so labelled revenue before that date cannot be matched to this wallet"
   },
   {
    "step": 6,
-   "name": "Destination of purchased tokens",
+   "name": "Destination at the analysis cutoff (ledger reconstructed from receipts)",
    "short": "Held in the multisig",
-   "near": 2202267.809503736,
+   "near": 2150197.799594706,
    "usd": null,
-   "status": "observed balance (held in the multisig; no burn observed)",
-   "source": "NearBlocks account snapshot 2026-11-07T00:13:36+00:00",
-   "share_of_previous": 1.018520288756273,
-   "note": "balance at the snapshot divided by all inbound NEAR before the cutoff; outbound transfers before the cutoff: 12,025 NEAR. Holding is not supply destruction"
+   "status": "inferred: balance at the cutoff reconstructed from receipts; the snapshot balance is shown separately at its own date",
+   "source": "NearBlocks receipts to 2026-11-01; account snapshot 2026-11-07T00:13:36+00:00",
+   "share_of_previous": 0.9944385847513281,
+   "note": "inbound before the cutoff minus outbound (12,025 NEAR) minus gas, divided by all inbound NEAR before the cutoff. Snapshot balance at fetch 2,202,268 NEAR versus 2,202,268 NEAR reconstructed to the same date (residual -0.3 NEAR); inflows after the cutoff 52,070 NEAR. No burn observed; holding is not supply destruction"
   }
  ],
  "dilution": {
@@ -85,6 +85,7 @@
   },
   "net_new_usd_at_average_price": 65618303.387734525,
   "buyback_near_received_12m": 1643862.0814239217,
+  "buyback_measure": "NEAR withdrawn from Intents into the buyback wallet (observed); purchase attribution inferred",
   "buyback_to_issuance_ratio": 0.05198244947366874,
   "note": "buybacks are held, not burned, so they do not reduce supply and are not netted twice: issuance is counted once here and buybacks once above"
  },
@@ -93,6 +94,22 @@
   "fetched_at": "2026-11-07T00:13:36+00:00",
   "transfers_in": 3110,
   "transfers_out": 3,
+  "receipts_excluded": {
+   "failed": 0,
+   "missing_or_invalid_status": 0
+  },
+  "ledger": {
+   "method": "sum of successful inbound TRANSFER receipts minus outbound TRANSFER receipts minus gas of wallet-signed transactions; no storage or staking terms",
+   "reconstructed_balance_at_fetch_near": 2202268.1329241702,
+   "snapshot_balance_at_fetch_near": 2202267.809503736,
+   "unexplained_residual_near": -0.32342043425887823,
+   "unexplained_residual_share_of_inflows": -1.4606035067422615e-07,
+   "reconstructed_balance_at_cutoff_near": 2150197.799594706,
+   "cutoff": "2026-11-01",
+   "inflows_after_cutoff_near": 52070.333329464396,
+   "outflows_after_cutoff_near": 0.0,
+   "gas_paid_near_total": 0.0189541036820643
+  },
   "near_in_total": 2162222.8185488097,
   "usd_in_total_at_daily_price": 5680599.332039204,
   "near_in": 1643862.0814239217,
@@ -115,6 +132,153 @@
   "balance_near_at_fetch": 2202267.809503736,
   "wallet_created": "2026-03-18",
   "adapter_buyback_start": "2026-02-23"
+ },
+ "trace": {
+  "fetched_at": "2026-11-07T06:16:18+00:00",
+  "source": "https://mainnet.neardata.xyz/v0/block/{h}",
+  "rule": {
+   "declared": "2026-11-07, before reading any of these blocks",
+   "sample": "inbound TRANSFER receipts from intents.near sorted by block timestamp: every 80th receipt starting at the first, plus the five largest by amount",
+   "what_is_read": "the blocks from the originating transaction's block to the block in which the receipt executed (at most 8): dip4 native_withdraw / intents_executed and nep245 mt_burn events whose receiver and amount match the receipt, plus any dip4 token_diff event of the same Intents account in those blocks",
+   "what_it_establishes": "the NEAR arrived as a withdrawal from an Intents-side account balance (observed for every sampled receipt); the purchase itself is the earlier token_diff of the same account, observed only when it falls inside the blocks read, so purchase attribution for the whole inflow remains inferred"
+  },
+  "wallet": "buybacks.multisignature.near",
+  "receipts_in_snapshot_from_intents_near": 3197,
+  "sampled": 45,
+  "blocks_missing": 0,
+  "matched_native_withdraw": 45,
+  "with_token_diff_in_same_block": 16,
+  "with_wrap_near_bought_in_same_block": 16,
+  "distinct_intents_accounts": 16,
+  "intents_accounts": [
+   "0bcaf3e8753318a5e24741b4bf4b9f56495bace25339bd0fa88db8465eb83bd5",
+   "128507595b5953e712f519831998bef0abe0e4e8d5000f953f6b162defd1b37f",
+   "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "1f2d61f02199e34f617968d15daff0459781486c92ecf3c914e4d3f2ebdf172f",
+   "3306963d8329db40d0663769214b0591b7be73902e909afbf857096f91c843b7",
+   "3a21372c9fe8a111bec4f033b307212f4ad3ccf844ebd53ef2c7c395844e1797",
+   "52a9247f6150f6ab50266381474152df2ec4760a4dfd43846782506bf86be5b0",
+   "533b308dc99dace1dff9b04f802d1c2e0a019730711184f279d36ab5f9a9db08",
+   "560917f9cf9172286c37ed1dfd16552ea70aa15e63b16c1f832f7622a71c4d6d",
+   "569d7384b87f6b1e19cee9a15beb0330e006b6152d1cc2c41ba2af5d7235308c",
+   "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "9b60c25879de6b5052a7bda3186ab1d23615c9f6437319c6539e16ef54eedc32",
+   "aa44e433995b5399c8f657db167b3fe168dfe59653ed2bcb2381d4d1a6f82740",
+   "b63fe08372b2fb91b404febc3c893aa7bd99c94e79777c21bbdd722f68405078",
+   "bc6f93c6d4388b65e778d0e492dbf596f007a600e32678024e778c4eab846974",
+   "d499c7f6f32b9bcf07dcbf18b0fcf12b40797590eb2e5bdbace6072b3de8d907"
+  ],
+  "intents_side_balances_at_fetch": {},
+  "examples": [
+   {
+    "receipt_id": "CxrBgPRbvY7XscAk4MUnhzrdFgJtD7Aau3ZP1WMKhcX5",
+    "transaction_hash": "BuC2pzbhD1SVerEPW2BXTtbj1ncacsFXEz7mSqQGHBDb",
+    "receipt_block_height": 195271967,
+    "transaction_block_height": 195271963,
+    "blocks_read": [
+     195271963,
+     195271964,
+     195271965,
+     195271966,
+     195271967
+    ],
+    "block_timestamp": 1776961254334462604,
+    "amount_yocto": "714146375047294778819477504",
+    "amount_near": 714.1463750472948,
+    "block_url": "https://mainnet.neardata.xyz/v0/block/195271963",
+    "withdraw_event": {
+     "intent_hash": "7HmGpke9tJat5A1kgKTjEgkdxuutyPDbBXMDvZ9J3wmj",
+     "amount": "714146375047294833086480241",
+     "receipt_id_of_execute_intents": "A3CE1aTz1ChQRivWeys5C9CjP17ASEJcPfhV4g27NhNE",
+     "caller": "intents.near"
+    },
+    "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+    "mt_burn_token": "nep141:wrap.near",
+    "token_diff_same_block": [
+     "A3CE1aTz1ChQRivWeys5C9CjP17ASEJcPfhV4g27NhNE"
+    ],
+    "match": "native_withdraw event with matching receiver and amount",
+    "swap_observed": [
+     {
+      "receipt_id": "A3CE1aTz1ChQRivWeys5C9CjP17ASEJcPfhV4g27NhNE",
+      "sold": [
+       "nep141:zec.omft.near"
+      ],
+      "bought": [
+       "nep141:wrap.near"
+      ]
+     }
+    ]
+   },
+   {
+    "receipt_id": "F5shdRH7ddcMorMnzFk7sMtf23ccibf6dU7gaJ56PLjc",
+    "transaction_hash": "CPTwTGAfGetUo5uZYkYDmf19LPuGWQ5cMBrygmiZ46Ab",
+    "receipt_block_height": 197143168,
+    "transaction_block_height": 197143164,
+    "blocks_read": [
+     197143164,
+     197143165,
+     197143166,
+     197143167,
+     197143168
+    ],
+    "block_timestamp": 1778072648569536809,
+    "amount_yocto": "961379565797092352977797120",
+    "amount_near": 961.3795657970924,
+    "block_url": "https://mainnet.neardata.xyz/v0/block/197143164",
+    "withdraw_event": {
+     "intent_hash": "8nBvMkeAY7QyYpT4UrctwkAyJRW51JXfJvHG1Vhp3zXQ",
+     "amount": "961379565797092335384726360",
+     "receipt_id_of_execute_intents": "Dind81L1fF4tFCsme6wRfSro6LPdbVN3e1YikrrNHFrL",
+     "caller": "intents.near"
+    },
+    "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+    "mt_burn_token": "nep141:wrap.near",
+    "token_diff_same_block": [],
+    "match": "native_withdraw event with matching receiver and amount",
+    "swap_observed": []
+   },
+   {
+    "receipt_id": "CxAy7gcyCNjaEthKfWYCjdtbG9bQtZoXjaausULNpo42",
+    "transaction_hash": "9EcA6NqenxynKYAkDYF1vA5xL8SwhxjPK4zKA27dNpfL",
+    "receipt_block_height": 198806020,
+    "transaction_block_height": 198806016,
+    "blocks_read": [
+     198806016,
+     198806017,
+     198806018,
+     198806019,
+     198806020
+    ],
+    "block_timestamp": 1779078196085380065,
+    "amount_yocto": "772336498098934703355592704",
+    "amount_near": 772.3364980989347,
+    "block_url": "https://mainnet.neardata.xyz/v0/block/198806016",
+    "withdraw_event": {
+     "intent_hash": "7TpwkMknnCpQ98SMqrrZYYLsLpeX1jD7dD3rHRxeUSkk",
+     "amount": "772336498098934729133093368",
+     "receipt_id_of_execute_intents": "HoYsMbKdRmoaECmnJ9vaeaEEpvkQGvw6Z39V5azmXttc",
+     "caller": "intents.near"
+    },
+    "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+    "mt_burn_token": "nep141:wrap.near",
+    "token_diff_same_block": [
+     "HoYsMbKdRmoaECmnJ9vaeaEEpvkQGvw6Z39V5azmXttc"
+    ],
+    "match": "native_withdraw event with matching receiver and amount",
+    "swap_observed": [
+     {
+      "receipt_id": "HoYsMbKdRmoaECmnJ9vaeaEEpvkQGvw6Z39V5azmXttc",
+      "sold": [
+       "nep141:gnosis-0x2a22f9c3b484c3629090feed35f17ff8f88f76f0.omft.near"
+      ],
+      "bought": [
+       "nep141:wrap.near"
+      ]
+     }
+    ]
+   }
+  ]
  },
  "scenarios": {
   "adverse": {

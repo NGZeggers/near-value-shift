@@ -3,7 +3,7 @@
 PY := uv run
 
 BLOCKS ?= 50   # blocks per sampling window for `make blocks` (budget: ~0.35 blocks/s)
-.PHONY: all build setup fetch bq blocks blocks-intraday onchain onchain-verify features models charts thesis site notebook index check-generated test clean
+.PHONY: all build setup fetch bq blocks blocks-intraday blocks-intraday-validation blocks-buyback-trace onchain onchain-verify features models charts thesis site notebook index check-generated test clean
 .NOTPARALLEL:
 
 all: fetch build
@@ -59,6 +59,12 @@ endif
 
 blocks-intraday:  ## hourly windows for the pre-declared reconciliation days (network; resumable through the block cache)
 	$(PY) near-thesis blocks-intraday --days 2026-09-25 2026-04-13 2025-08-31 --blocks $(BLOCKS)
+
+blocks-intraday-validation:  ## hourly windows for the pre-declared validation days (selection by position; network; resumable)
+	$(PY) near-thesis blocks-intraday --validation --blocks $(BLOCKS)
+
+blocks-buyback-trace:  ## execution blocks of a pre-declared sample of buyback-wallet receipts (network; ~50 blocks)
+	$(PY) near-thesis blocks-buyback-trace
 
 verify-events:    ## verify historical event statuses from full blocks (resumable; network required)
 	$(PY) near-thesis verify-events

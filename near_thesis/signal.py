@@ -21,15 +21,25 @@ METRICS = ["active_accounts", "txns", "tx_fee_near", "tx_volume_usd", "intents_v
 HORIZONS = [4, 12]
 SEED = 20261114
 
-# Pre-registered out-of-sample protocol (declared 2026-11-06 before the evaluation period was scored).
+# Out-of-sample protocol declared 2026-11-06. Retrospective: the history had already been examined in exploratory analyses of
+# the previous version, so this is a temporally separated validation, not a prospective one (see "declaration").
 OOS_PROTOCOL = {
+    "declaration": ("retrospective validation with temporal separation: protocol and split declared 2026-11-06 over a history that earlier "
+                    "exploratory analyses of this project had already used; the code enforces calibration/evaluation separation but cannot "
+                    "establish that the evaluation period was unknown when the protocol was designed"),
+    "prospective": {"frozen_on": "2026-11-06", "rule": "this protocol is not re-tuned; a prospective result uses only data published after 2026-11-06",
+                    "intents_and_qaa": ("not evaluable under the declared calibration end; their prospective plan freezes calibration at the data cutoff and evaluates "
+                                        "20 weeks of data published after it (purged by h); the dates are listed per test and nothing is scored before then")},
     "hypothesis": "a four-week rise in usage is associated with the subsequent h-week NEAR log return in excess of the benchmark, with the sign fixed in calibration",
     "signal_transform": "weekly means of the daily series; log of the trailing four-week mean, differenced by four weeks; QAA only from the frozen past-only model, available on the first day of the following month",
     "target": "forward h-week log return of NEAR minus the same return of the benchmark (BTC or ETH)",
     "horizons_weeks": HORIZONS, "benchmarks": ["btc", "eth"],
     "calibration_end": "2025-06-29",
     "purge": "evaluation starts h weeks after the calibration end so that no calibration target overlaps an evaluation week",
-    "fixed_rule": "the sign of the calibration Spearman IC is frozen; success requires the evaluation IC under that sign to be positive with a circular block-bootstrap 95% interval above zero",
+    "fixed_rule": ("the sign of the calibration Spearman IC is frozen; success requires the evaluation IC under that sign to be positive with the "
+                   "Bonferroni-adjusted (24 tests) circular block-bootstrap 95% interval above zero; the unadjusted interval is reported as exploratory only"),
+    "benchmark_predictor_treatment": ("the two naive predictors are not members of the 24-test family and are not tested for passing; their evaluation IC is a "
+                                      "comparison level that a usage metric should exceed to add information beyond persistence and the market"),
     "walk_forward": "expanding window: each evaluation week re-estimates the sign on targets already realized at that week (purged by h) and predicts the direction of the next target; hit rate reported",
     "family": "6 metrics x 2 horizons x 2 benchmarks = 24 declared tests; Bonferroni intervals reported",
     "benchmark_predictors": {"near_momentum": "trailing four-week NEAR excess log return (persistence)",
@@ -109,6 +119,22 @@ def ic_table(w: pd.DataFrame) -> list[dict]:
     return out
 
 
+OOS_FAMILY = 24
+
+
+def oos_criterion(draws: np.ndarray, family: int = OOS_FAMILY) -> dict:
+    """Declared criterion: the familywise (Bonferroni) interval must lie above zero. The nominal interval is exploratory."""
+    lo, hi = _interval(draws, 0.05)
+    flo, fhi = _interval(draws, 0.05 / family)
+    fam = bool(np.isfinite(flo) and flo > 0)
+    nom = bool(np.isfinite(lo) and lo > 0)
+    return {"ci95_block_bootstrap": [lo, hi], "ci95_familywise_bonferroni": [flo, fhi], "family_tests": family,
+            "passes_declared_criterion": fam, "passes_nominal_interval_exploratory": nom,
+            "status": ("association persists out of sample (familywise interval above zero)" if fam
+                       else "nominal interval above zero only: exploratory, not accepted under the familywise criterion" if nom
+                       else "no out-of-sample association established")}
+
+
 def _oos_one(sig: pd.Series, fwd: pd.Series, h: int, calibration_end: pd.Timestamp) -> dict:
     df = pd.DataFrame({"sig": sig, "fwd": fwd}).replace([np.inf, -np.inf], np.nan).dropna()
     cal = df[df.index <= calibration_end]
@@ -116,13 +142,21 @@ def _oos_one(sig: pd.Series, fwd: pd.Series, h: int, calibration_end: pd.Timesta
     out = {"n_calibration": int(len(cal)), "n_evaluation": int(len(eva))}
     if len(cal) < OOS_PROTOCOL["minimum_rows"]["calibration"] or len(eva) < OOS_PROTOCOL["minimum_rows"]["evaluation"]:
         out["status"] = "not evaluable: too few calibration or evaluation weeks"
+        if len(df):
+            freeze = df.index[-1]      # last signal week whose h-week target is already realized at the data cutoff
+            n_eval = OOS_PROTOCOL["minimum_rows"]["evaluation"]
+            out["prospective_plan"] = {"freeze_date": str(freeze.date()), "calibration_weeks_at_freeze": int(len(df)),
+                                       "calibration_sufficient_at_freeze": bool(len(df) >= OOS_PROTOCOL["minimum_rows"]["calibration"]),
+                                       "evaluation_starts": str((freeze + pd.Timedelta(weeks=h)).date()),
+                                       "evaluable_from": str((freeze + pd.Timedelta(weeks=2 * h + n_eval)).date()),
+                                       "rule": ("fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then "
+                                                f"{n_eval} evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion")}
         return out
     rho_cal = stats.spearmanr(cal["sig"], cal["fwd"]).statistic
     sign = 1.0 if rho_cal >= 0 else -1.0
     rho_eval = stats.spearmanr(sign * eva["sig"], eva["fwd"]).statistic
     draws = _bootstrap_rhos((sign * eva["sig"]).to_numpy(), eva["fwd"].to_numpy(), block=max(h, 8), n_boot=4000)
-    lo, hi = _interval(draws, 0.05)
-    flo, fhi = _interval(draws, 0.05 / 24)
+    crit = oos_criterion(draws)
     # walk-forward: re-estimate the sign each evaluation week using only targets realized by then
     hits, n_wf = 0, 0
     for t in eva.index:
@@ -136,15 +170,14 @@ def _oos_one(sig: pd.Series, fwd: pd.Series, h: int, calibration_end: pd.Timesta
             hits += int(np.sign(pred) == np.sign(eva.loc[t, "fwd"]))
     out.update({"calibration_start": str(cal.index[0].date()), "calibration_end": str(cal.index[-1].date()), "ic_calibration": float(rho_cal), "frozen_sign": sign,
                 "evaluation_start": str(eva.index[0].date()), "evaluation_end": str(eva.index[-1].date()),
-                "ic_evaluation_signed": float(rho_eval), "ci95_block_bootstrap": [lo, hi], "ci95_familywise_bonferroni": [flo, fhi],
+                "ic_evaluation_signed": float(rho_eval), **crit,
                 "walk_forward_hit_rate": (hits / n_wf) if n_wf else None, "walk_forward_n": n_wf,
-                "sign_agrees": bool(rho_eval > 0), "passes_declared_criterion": bool(np.isfinite(lo) and lo > 0),
-                "status": "association persists out of sample" if (np.isfinite(lo) and lo > 0) else "no out-of-sample association established"})
+                "sign_agrees": bool(rho_eval > 0)})
     return out
 
 
 def oos_table(w: pd.DataFrame) -> dict:
-    """Pre-registered out-of-sample evaluation of the usage signals and of two naive benchmark predictors."""
+    """Temporally separated (retrospective) out-of-sample evaluation of the usage signals and of two naive benchmark predictors."""
     lp = np.log(w["near_price"])
     bench = {"btc": np.log(w["price_bitcoin"]), "eth": np.log(w["price_ethereum"])}
     cal_end = pd.Timestamp(OOS_PROTOCOL["calibration_end"])
@@ -161,12 +194,18 @@ def oos_table(w: pd.DataFrame) -> dict:
     usage = [r for r in rows if r["kind"] == "usage"]
     evaluable = [r for r in usage if "ic_evaluation_signed" in r]
     passing = [r for r in evaluable if r["passes_declared_criterion"]]
+    nominal_only = [r for r in evaluable if r["passes_nominal_interval_exploratory"] and not r["passes_declared_criterion"]]
     best_naive = max((r["ic_evaluation_signed"] for r in rows if r["kind"] == "naive_benchmark" and "ic_evaluation_signed" in r), default=None)
-    conclusion = ("no usage metric passes the declared out-of-sample criterion" if evaluable and not passing
-                  else f"{len(passing)} of {len(evaluable)} evaluable usage tests pass the declared criterion" if evaluable
+    conclusion = ("no usage metric passes the declared familywise out-of-sample criterion" if evaluable and not passing
+                  else f"{len(passing)} of {len(evaluable)} evaluable usage tests pass the declared familywise criterion" if evaluable
                   else "no usage test is evaluable under the declared protocol")
+    if nominal_only:
+        conclusion += f" ({len(nominal_only)} would pass the unadjusted interval only; exploratory)"
+    plans = {f"{r['predictor']} h={r['horizon_weeks']} vs {r['benchmark']}": r["prospective_plan"]["evaluable_from"] for r in usage if r.get("prospective_plan")}
     return {"protocol": OOS_PROTOCOL, "tests": rows, "summary": {"usage_tests": len(usage), "evaluable": len(evaluable), "passing": len(passing),
+            "passing_nominal_only": len(nominal_only),
             "not_evaluable": [f"{r['predictor']} h={r['horizon_weeks']} vs {r['benchmark']}" for r in usage if "ic_evaluation_signed" not in r],
+            "prospective_evaluable_from": plans,
             "best_naive_benchmark_ic": best_naive, "conclusion": conclusion}}
 
 

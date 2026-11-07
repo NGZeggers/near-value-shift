@@ -288,7 +288,7 @@ def build(d: pd.DataFrame, m: pd.DataFrame, qs: dict, ins: dict, ic: list, vg: l
                                  f"the dominant assumption is {bridge['dominant_assumption']['dominant']}. Scenarios, not forecasts."),
                         "href": "#chart-value_bridge", "kind": "assumption"})
     if oos_sum.get("conclusion"):
-        against.append({"text": f"Pre-registered out-of-sample test (calibration through {oos['protocol']['calibration_end']}, frozen sign, purged evaluation): {oos_sum['conclusion']}; "
+        against.append({"text": f"Temporally separated out-of-sample test (retrospective: protocol declared 2026-11-06 on already-examined history; calibration through {oos['protocol']['calibration_end']}, frozen sign, purged evaluation, familywise criterion): {oos_sum['conclusion']}; "
                                 f"{len(oos_sum.get('not_evaluable', []))} of {oos_sum.get('usage_tests', 0)} declared tests are not evaluable for lack of calibration weeks (Intents, QAA).",
                         "href": "#chart-oos", "kind": "inconclusive"})
     if int_ic:
@@ -366,7 +366,7 @@ def sensitivity_table(ratio: dict, cross_ok: bool, qaa_last, qsens: dict, recon:
         if qsens.get("name_only_baseline"):
             variants.append({"label": "name-only split (no clustering)", "value": f"{qsens['name_only_baseline']['latest_month']:.0%}"})
         if qsens.get("inclusion_probability_weighting"):
-            variants.append({"label": "inclusion-probability weighted", "value": f"{qsens['inclusion_probability_weighting']['latest_month_weighted']:.0%}"})
+            variants.append({"label": "inclusion-probability weighted (sensitivity under assumptions)", "value": f"{qsens['inclusion_probability_weighting']['latest_month_weighted']:.0%}"})
         if qsens.get("by_window_hour"):
             variants += [{"label": f"accounts seen at {h}:00 UTC", "value": f"{v:.0%}"} for h, v in qsens["by_window_hour"]["latest_month"].items()]
         if qsens.get("model_agreement"):

@@ -41,7 +41,14 @@
   "latest_month_weighted": 0.6062052972545628,
   "mean_abs_difference": 0.014157880147480683,
   "direction": "weighted below unweighted",
-  "reading": "corrects visibility among observed accounts only; never-observed accounts remain outside the index"
+  "reading": "a sensitivity under stated assumptions, not a demonstrated correction of the observation bias",
+  "assumptions": [
+   "each account's per-window activity probability is constant over the month and estimated from the same windows that observe it",
+   "windows are independent draws for every account; the fixed 03:00/15:00 UTC design is treated as if it were random",
+   "accounts never seen in any window have no weight: the index covers observed accounts only",
+   "heterogeneity between accounts beyond activity frequency is ignored"
+  ],
+  "validation": "not validated externally; a fuller observation of the same months would be needed to test it"
  },
  "by_window_hour": {
   "hours": [

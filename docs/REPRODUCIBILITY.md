@@ -76,11 +76,13 @@ The build reads committed snapshots. Full SHA-256 hashes cover raw files, block 
 
 | File | Bytes | SHA-256 |
 |---|---|---|
+| data/blocks/buyback_trace.json | 53154 | `0d8693da1e245ba6e046e72d681c4ae5d1099e2ad3540f4d099d82a91a67433a` |
 | data/blocks/event_verification.json | 334 | `22a626709daebc13b1ec3eb2664eb91c4932d276b299bbebb599df83f13c1ece` |
 | data/blocks/intents_events_sampled.csv | 4383281 | `c9aeb3830f15e2e597b431d67a7314c82be01dd0a4e89f851b06baa7614bb111` |
 | data/blocks/intraday_events.csv | 4540589 | `a00304f64fe688ca145ce750a1ea34ea2eb4e0ca4073f4845caea4e57dbdcf8c` |
 | data/blocks/intraday_manifest.json | 9713 | `2e8300b85118d37940ab83445ec8316b3de7f43af87cc3daaab26b078556f504` |
 | data/blocks/intraday_plan.json | 5948 | `29af1a11f27a9f6088eee37a40a70429796ef3e00bde7627c476cd97366754bc` |
+| data/blocks/intraday_validation_plan.json | 1984 | `6cb87b09bdaa5baa02497f683e80e201d78d20af55d18bf8e1e31bd7c54b7499` |
 | data/blocks/sample_manifest.json | 12580 | `444e3843e6290d33e115270aab918b23a5896fe6a419afa281c1e832a1716642` |
 | data/blocks/sample_plan.json | 8185 | `d46b1ffc11cc483d0a2838e50b1256584c59a5f4b8ee9b6c975d9372dfb63d78` |
 | data/blocks/tx_sampled.csv | 22653523 | `3a7de3ac562a89bb6e83d030262f67bbc30d8d44073e18e03eb6beca181f38e2` |

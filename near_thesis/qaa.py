@@ -292,7 +292,12 @@ def sensitivity(df: pd.DataFrame, x: pd.DataFrame, labels: np.ndarray, monthly: 
     weighted = (quality * w).groupby(df["month"]).sum() / w.groupby(df["month"]).sum()
     freq = {"latest_month_unweighted": float(q_m.iloc[-1]), "latest_month_weighted": float(weighted.iloc[-1]),
             "mean_abs_difference": float((weighted - q_m).abs().mean()), "direction": "weighted below unweighted" if weighted.iloc[-1] < q_m.iloc[-1] else "weighted above unweighted",
-            "reading": "corrects visibility among observed accounts only; never-observed accounts remain outside the index"}
+            "reading": "a sensitivity under stated assumptions, not a demonstrated correction of the observation bias",
+            "assumptions": ["each account's per-window activity probability is constant over the month and estimated from the same windows that observe it",
+                            "windows are independent draws for every account; the fixed 03:00/15:00 UTC design is treated as if it were random",
+                            "accounts never seen in any window have no weight: the index covers observed accounts only",
+                            "heterogeneity between accounts beyond activity frequency is ignored"],
+            "validation": "not validated externally; a fuller observation of the same months would be needed to test it"}
     # hour of observation
     by_hour = None
     tx = DATA / "blocks" / "tx_sampled.csv"
