@@ -1,0 +1,436 @@
+{
+ "fetched_at": "2026-11-07T19:36:37+00:00",
+ "source": "https://mainnet.neardata.xyz/v0/block/{h}",
+ "rule": {
+  "declared": "2026-11-07, after the first trace was published and before any additional block was read",
+  "population": "the sampled receipts whose Intents account had no token_diff in the blocks between the originating transaction and the receipt",
+  "search": "read the blocks immediately before the originating transaction block, newest first, up to 40 blocks (about 45 seconds), and stop at the first block that carries a token_diff event of that Intents account",
+  "what_it_establishes": "whether the funding swap of the withdrawal is visible shortly before it; a swap found this way is an observed exchange of the same Intents-side account, not proof that the withdrawn NEAR was bought with those exact proceeds; the origin of the sold asset (bridge deposit, earlier swap) is not traced"
+ },
+ "blocks_back": 40,
+ "receipts_searched": 29,
+ "blocks_read": 1065,
+ "blocks_missing": 1,
+ "swap_found": 6,
+ "wrap_near_bought": 6,
+ "distance_blocks": [
+  4,
+  16,
+  21,
+  27,
+  37,
+  40
+ ],
+ "first_pass_with_swap_in_range": 16,
+ "sampled": 45,
+ "receipts": [
+  {
+   "receipt_id": "F5shdRH7ddcMorMnzFk7sMtf23ccibf6dU7gaJ56PLjc",
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "transaction_block_height": 197143164,
+   "blocks_scanned_back": 21,
+   "earliest_block_scanned": 197143143,
+   "swap_found": true,
+   "blocks_before_withdrawal": 21,
+   "swap": {
+    "receipt_id": "2AziUPTkmPcrR2r4JimbFWowV9qrbsjJ7miVpxFha3GQ",
+    "block_height": 197143143,
+    "status": "SUCCESS_VALUE",
+    "sold": [
+     "nep141:eth-0x514910771af9ca656af840dff83e8264ecf986ca.omft.near"
+    ],
+    "bought": [
+     "nep141:wrap.near"
+    ]
+   },
+   "wrap_near_bought": true,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/197143143"
+  },
+  {
+   "receipt_id": "EuYU6bouCKyg8TEMtsTN9qM6a4sNgjXqHLdJJDJthBGM",
+   "intents_account": "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "transaction_block_height": 203779397,
+   "blocks_scanned_back": 37,
+   "earliest_block_scanned": 203779360,
+   "swap_found": true,
+   "blocks_before_withdrawal": 37,
+   "swap": {
+    "receipt_id": "9o8NFGCK4hVfHdioSd8ApX3arHqyhbcrbvKzsRpP53va",
+    "block_height": 203779360,
+    "status": "SUCCESS_VALUE",
+    "sold": [
+     "nep141:base.omft.near"
+    ],
+    "bought": [
+     "nep141:wrap.near"
+    ]
+   },
+   "wrap_near_bought": true,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/203779360"
+  },
+  {
+   "receipt_id": "8VgBvoZGaCvhhMM2QcKAYJYpiKmSV9ZUuWNw1g6QH94V",
+   "intents_account": "9b60c25879de6b5052a7bda3186ab1d23615c9f6437319c6539e16ef54eedc32",
+   "transaction_block_height": 206523394,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 206523354,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "3M496agnE1TcXkyjS6ffhMFF7R8kS596Pk23AQ5weSjg",
+   "intents_account": "52a9247f6150f6ab50266381474152df2ec4760a4dfd43846782506bf86be5b0",
+   "transaction_block_height": 207671575,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 207671535,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "EQQ6CrCUtoY6PjLeEvD8NJBQDwRAG1BshJcJWw5wXLQj",
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "transaction_block_height": 212315538,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 212315498,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "E8inKA2u6hPUd2HfCzFPFdAyyzdHcoY4ENuzybkcY8n6",
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "transaction_block_height": 213007191,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 213007151,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "8mpjLQ1krQzKv9xt7Z6ZtqgER6qdk7KRicK465jfFZCL",
+   "intents_account": "0bcaf3e8753318a5e24741b4bf4b9f56495bace25339bd0fa88db8465eb83bd5",
+   "transaction_block_height": 213829281,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 213829241,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "HdznQy5cCATsGWW8YeJWtHLmos3XpeGnhaRrmrmZ3Xw",
+   "intents_account": "3a21372c9fe8a111bec4f033b307212f4ad3ccf844ebd53ef2c7c395844e1797",
+   "transaction_block_height": 214261644,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 214261604,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "BXneAyvfsYgmvqmbSbzZmaFSChKEtDVh8ZLoo4mEtb7J",
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "transaction_block_height": 214679682,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 214679642,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "Fsij7wwZ5aFgukTz4tAwgFfMpNNB1MZe89L6wvxTVmEg",
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "transaction_block_height": 215833330,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 215833290,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "FjNvTgoAc9ZJ9xKqv2CDttEBrZwMzB3HRU4YwD4pq1GC",
+   "intents_account": "533b308dc99dace1dff9b04f802d1c2e0a019730711184f279d36ab5f9a9db08",
+   "transaction_block_height": 216523500,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 216523460,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "CQL8PozLpb7osXi9MWuQ3zdsQzE7WDnToX2UUHeP1ZQJ",
+   "intents_account": "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "transaction_block_height": 216756053,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 216756013,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "8qBKjATQWykrv7A561T42GQcDZxUYag6UHyAAq4GZbjx",
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "transaction_block_height": 216961661,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 216961621,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "9Fcb4oioGmxoPCNd5wcr4rbYcncrkH5JibWBKMH5PsuF",
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "transaction_block_height": 217223754,
+   "blocks_scanned_back": 27,
+   "earliest_block_scanned": 217223727,
+   "swap_found": true,
+   "blocks_before_withdrawal": 27,
+   "swap": {
+    "receipt_id": "7KM82Vz8bNRPXk3xJaXPkrwfdSVX5BcFzbnMsxoJosTw",
+    "block_height": 217223727,
+    "status": "SUCCESS_VALUE",
+    "sold": [
+     "nep141:token.rhealab.near"
+    ],
+    "bought": [
+     "nep141:wrap.near"
+    ]
+   },
+   "wrap_near_bought": true,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/217223727"
+  },
+  {
+   "receipt_id": "CJFTMw4Kh8DsVUNp9yF7VxMwEKC69QJFhEp68DN3MbCW",
+   "intents_account": "560917f9cf9172286c37ed1dfd16552ea70aa15e63b16c1f832f7622a71c4d6d",
+   "transaction_block_height": 217962324,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 217962284,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "36PWQkM24J5VKEmMaU9P2GjtxgTk1arQFCvsyTBHB1bj",
+   "intents_account": "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "transaction_block_height": 218428173,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 218428133,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "9yNQazWmnpHimc18QYXYWF9myP7nBnEDZPehE3fBnhN5",
+   "intents_account": "aa44e433995b5399c8f657db167b3fe168dfe59653ed2bcb2381d4d1a6f82740",
+   "transaction_block_height": 218934633,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 218934593,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "5ma4c3XXi5eETTC3wg371Uz6qG8Hkp4GqMCqUxSvYF4p",
+   "intents_account": "bc6f93c6d4388b65e778d0e492dbf596f007a600e32678024e778c4eab846974",
+   "transaction_block_height": 219195232,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 219195192,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "8Jr4KgUoypUzVk7j27qGzePfKiSp8Tq6HRvg1h1MqwWA",
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "transaction_block_height": 219564024,
+   "blocks_scanned_back": 4,
+   "earliest_block_scanned": 219564020,
+   "swap_found": true,
+   "blocks_before_withdrawal": 4,
+   "swap": {
+    "receipt_id": "2XLvHUhKKm7rH5WChHdKp6tDfnJaqsy5wQq9M7jTAYWW",
+    "block_height": 219564020,
+    "status": "SUCCESS_VALUE",
+    "sold": [
+     "nep141:tron.omft.near"
+    ],
+    "bought": [
+     "nep141:wrap.near"
+    ]
+   },
+   "wrap_near_bought": true,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/219564020"
+  },
+  {
+   "receipt_id": "FxP2anAHU7kns1LQc6V3wYAaeyyTnJW4UKwWtBvhXoF4",
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "transaction_block_height": 219922396,
+   "blocks_scanned_back": 15,
+   "earliest_block_scanned": 219922380,
+   "swap_found": true,
+   "blocks_before_withdrawal": 16,
+   "swap": {
+    "receipt_id": "4yVdPjah9vEL7mVsro4nhKVKbtjgCKNrr72j6sovYh1t",
+    "block_height": 219922380,
+    "status": "SUCCESS_VALUE",
+    "sold": [
+     "nep245:v2_1.omni.hot.tg:56_11111111111111111111"
+    ],
+    "bought": [
+     "nep141:wrap.near"
+    ]
+   },
+   "wrap_near_bought": true,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/219922380"
+  },
+  {
+   "receipt_id": "Hzpm8ZGcuqzkyc7CectNQYW4DJPvfTwZzWD8KhvY6GLT",
+   "intents_account": "3306963d8329db40d0663769214b0591b7be73902e909afbf857096f91c843b7",
+   "transaction_block_height": 220002650,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 220002610,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "CwLo1V6oYB2JhegqZhHEVN2wRKdnmzrTE2vF52sWrn8g",
+   "intents_account": "b63fe08372b2fb91b404febc3c893aa7bd99c94e79777c21bbdd722f68405078",
+   "transaction_block_height": 220005021,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 220004981,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "HHDgtimECEUDnT6HSHAZ1ruukp4ne8wmq49srj9H9Zgd",
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "transaction_block_height": 220384559,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 220384519,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "J1nT2cxjesUsj5E59jvtF7JnvYFBqP8yArmK81tMUBn6",
+   "intents_account": "569d7384b87f6b1e19cee9a15beb0330e006b6152d1cc2c41ba2af5d7235308c",
+   "transaction_block_height": 220862702,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 220862662,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "9YDym9rUtCHeo11CrqM2ccFG89pNw16W9MU5tCYg2AiG",
+   "intents_account": "d499c7f6f32b9bcf07dcbf18b0fcf12b40797590eb2e5bdbace6072b3de8d907",
+   "transaction_block_height": 221296126,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 221296086,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "HndVhh88X7cNDYMM2L2S5sfPy51iAiPScwxLoVMy27FY",
+   "intents_account": "143f2bb439575c286f4f585163f0e5fb4e464f8ce57ec06ae80741407d3cfb31",
+   "transaction_block_height": 221724777,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 221724737,
+   "swap_found": true,
+   "blocks_before_withdrawal": 40,
+   "swap": {
+    "receipt_id": "6o77mRJCW2m8PvBXAoLvG29yz1MyYHLKP2MgxmWWGbAy",
+    "block_height": 221724737,
+    "status": "SUCCESS_VALUE",
+    "sold": [
+     "nep141:zec.omft.near"
+    ],
+    "bought": [
+     "nep141:wrap.near"
+    ]
+   },
+   "wrap_near_bought": true,
+   "block_url": "https://mainnet.neardata.xyz/v0/block/221724737"
+  },
+  {
+   "receipt_id": "zg9kbZ1x4ayNjGmjFBA6NABLDiGCDWBHXHsPuxzdp6b",
+   "intents_account": "1f2d61f02199e34f617968d15daff0459781486c92ecf3c914e4d3f2ebdf172f",
+   "transaction_block_height": 222072502,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 222072462,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "3KFtXPfP4hxBPMj1DVMtwrwJzo276hw2ESF1k1jm4hfV",
+   "intents_account": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+   "transaction_block_height": 222354829,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 222354789,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  },
+  {
+   "receipt_id": "31MaVtaFnFNZUPsxCPKSgYmqnRz4LWfJnVN8hS35VyHv",
+   "intents_account": "128507595b5953e712f519831998bef0abe0e4e8d5000f953f6b162defd1b37f",
+   "transaction_block_height": 222907336,
+   "blocks_scanned_back": 40,
+   "earliest_block_scanned": 222907296,
+   "swap_found": false,
+   "blocks_before_withdrawal": null,
+   "swap": null,
+   "wrap_near_bought": false,
+   "block_url": null
+  }
+ ]
+}

@@ -51,7 +51,7 @@
    "status": "observed (receipts, valued at the daily NEAR price); attribution to executed purchases inferred",
    "source": "https://api.nearblocks.io/v1/account/buybacks.multisignature.near/txns?per_page=250 (paginated)",
    "share_of_previous": 0.5942361692841919,
-   "note": "3081 inbound transfers from intents.near from 2026-03-18 to 2026-11-01; a further 510,068 NEAR arrived from the other revenue wallets (treasury moves, excluded here as the adapter excludes them) and 8,293 NEAR from other accounts. Trace of a pre-declared sample (45 of 3197 receipts, every 80th plus the five largest): 45 match a dip4 native_withdraw of wrapped NEAR from 16 distinct Intents-side accounts; for 16 the funding swap (token_diff of the same account, 16 buying wrap.near) is in the same blocks, for the other 29 it is outside the blocks read and the purchase is not observed. Receipts excluded: 0 failed, 0 without an explicit status. The wallet was created 2026-03-18, after the adapter's buyback start 2026-02-23, so labelled revenue before that date cannot be matched to this wallet"
+   "note": "3081 inbound transfers from intents.near from 2026-03-18 to 2026-11-01; a further 510,068 NEAR arrived from the other revenue wallets (treasury moves, excluded here as the adapter excludes them) and 8,293 NEAR from other accounts. Trace of a pre-declared sample (45 of 3197 receipts, every 80th plus the five largest): 45 match a dip4 native_withdraw of wrapped NEAR from 16 distinct Intents-side accounts; for 16 the funding swap (token_diff of the same account, 16 buying wrap.near) is in the same blocks, for the other 29 it is outside the blocks read and the purchase is not observed. A second pre-declared pass over those found the funding swap within 40 blocks before the withdrawal for 6 more (22 of 45 in total); the origin of the sold asset is not traced. Receipts excluded: 0 failed, 0 without an explicit status. The wallet was created 2026-03-18, after the adapter's buyback start 2026-02-23, so labelled revenue before that date cannot be matched to this wallet"
   },
   {
    "step": 6,
@@ -169,6 +169,34 @@
    "d499c7f6f32b9bcf07dcbf18b0fcf12b40797590eb2e5bdbace6072b3de8d907"
   ],
   "intents_side_balances_at_fetch": {},
+  "funding_swap_found_within_extension": 6,
+  "funding_swap_observed_total": 22,
+  "extension": {
+   "fetched_at": "2026-11-07T19:36:37+00:00",
+   "source": "https://mainnet.neardata.xyz/v0/block/{h}",
+   "rule": {
+    "declared": "2026-11-07, after the first trace was published and before any additional block was read",
+    "population": "the sampled receipts whose Intents account had no token_diff in the blocks between the originating transaction and the receipt",
+    "search": "read the blocks immediately before the originating transaction block, newest first, up to 40 blocks (about 45 seconds), and stop at the first block that carries a token_diff event of that Intents account",
+    "what_it_establishes": "whether the funding swap of the withdrawal is visible shortly before it; a swap found this way is an observed exchange of the same Intents-side account, not proof that the withdrawn NEAR was bought with those exact proceeds; the origin of the sold asset (bridge deposit, earlier swap) is not traced"
+   },
+   "blocks_back": 40,
+   "receipts_searched": 29,
+   "blocks_read": 1065,
+   "blocks_missing": 1,
+   "swap_found": 6,
+   "wrap_near_bought": 6,
+   "distance_blocks": [
+    4,
+    16,
+    21,
+    27,
+    37,
+    40
+   ],
+   "first_pass_with_swap_in_range": 16,
+   "sampled": 45
+  },
   "examples": [
    {
     "receipt_id": "CxrBgPRbvY7XscAk4MUnhzrdFgJtD7Aau3ZP1WMKhcX5",
