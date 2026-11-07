@@ -220,3 +220,31 @@ def test_prospective_plan_is_persisted_and_invariant_to_new_history(tmp_path):
     revised.loc[revised.index[:30], "active_accounts"] *= 1.5                 # a revised history is flagged, not silently recalibrated
     pr, _ = planned(revised)
     assert pr["calibration_data_unchanged"] is False and pr["frozen_sign"] == e["frozen_sign"]
+
+
+def test_prospective_evaluation_detects_a_changed_protocol(tmp_path, monkeypatch):
+    """The auditor's reproduction: the hash lives at the root of the frozen file and must be compared, not defaulted to unchanged."""
+    full = _weekly(n=130, seed=5)
+    w60 = full.iloc[:60]
+    path = tmp_path / "oos_freeze.json"
+    plan = signal.freeze_prospective_plan(w60, str((w60.index.max() + pd.Timedelta(days=6)).date()), path=path)
+    assert plan["protocol_sha256"] == signal.protocol_hash() and "protocol_sha256" not in next(iter(plan["tests"].values()))
+
+    def flag(w):
+        o = signal.oos_table(w, freeze_path=path)
+        return [t["prospective_plan"] for t in o["tests"] if t["kind"] == "usage"][0], o["summary"]["prospective"]["protocol_unchanged"]
+
+    p_same, s_same = flag(full)
+    assert p_same["protocol_unchanged"] is True and s_same is True and p_same["protocol_sha256_persisted"] == plan["protocol_sha256"]
+    changed = dict(signal.OOS_PROTOCOL)
+    changed["fixed_rule"] = changed["fixed_rule"] + " (re-tuned)"
+    monkeypatch.setattr(signal, "OOS_PROTOCOL", changed)
+    p_changed, s_changed = flag(full)
+    assert p_changed["protocol_unchanged"] is False and s_changed is False
+    monkeypatch.setattr(signal, "OOS_PROTOCOL", dict(signal.OOS_PROTOCOL, minimum_rows={"calibration": 30, "evaluation": 10}))
+    assert flag(full)[1] is False
+    # a frozen file without a root hash is treated as changed, never as unchanged
+    stale = json.loads(path.read_text()); stale.pop("protocol_sha256")
+    path.write_text(json.dumps(stale))
+    monkeypatch.undo()
+    assert flag(full)[1] is False

@@ -141,3 +141,21 @@ Resultado: ninguna métrica de uso supera el criterio declarado; el veredicto lo
 - `make test`: 122 pruebas aprobadas (1 nueva de invariancia; la prueba del protocolo se reescribe para el plan persistido y el borrador etiquetado).
 - Comprobaciones de navegador: 47 de 47 aprobadas.
 - `make check-generated`: artefactos regenerados coincidentes con el commit (ejecutado tras confirmar los cambios).
+
+---
+
+## Quinta pasada: respuesta a la cuarta revisión (94/100, base `327592b`)
+
+**English summary.** The fourth review found one defect: the protocol hash is stored at the root of the frozen plan but the evaluation looked it up inside each test entry, so a missing key defaulted to "unchanged" and a re-tuned protocol was not detected. The evaluation now receives the persisted root hash explicitly, a missing hash counts as changed, and a test reproduces the detection.
+
+| Punto | Estado | Qué se hizo y dónde verificarlo |
+| --- | --- | --- |
+| `protocol_unchanged` siempre `True` | Hecho | `signal.prospective_evaluation(df, entry, persisted_protocol_sha256)` recibe el hash de la raíz de `oos_freeze.json` (pasado desde `oos_table` a `_oos_one`), publica `protocol_sha256_persisted` y devuelve `protocol_unchanged=False` si el hash actual difiere o si el fichero no trae hash; ya no hay valor por defecto que lo marque como igual. Prueba `test_prospective_evaluation_detects_a_changed_protocol`: con el protocolo intacto el indicador es `True`; al modificar `fixed_rule` o `minimum_rows` pasa a `False` por prueba y en el resumen; un fichero congelado sin hash en la raíz también se marca como cambiado. |
+| Pendientes científicos | Abiertos, declarados | Reconciliación global del volumen, validación externa de QAA y atribución completa de las recompras, sin cambios. |
+
+### Verificación de esta pasada
+
+- `make build` completo; con los datos y el protocolo actuales `protocol_unchanged` y `calibration_data_unchanged` son `True`.
+- `make test`: 123 pruebas aprobadas (1 nueva).
+- Comprobaciones de navegador: 47 de 47 aprobadas.
+- `make check-generated`: artefactos regenerados coincidentes con el commit (ejecutado tras confirmar los cambios).

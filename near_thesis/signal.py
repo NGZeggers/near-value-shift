@@ -233,8 +233,10 @@ def load_frozen_plan(path=PROSPECTIVE_FREEZE) -> dict | None:
     return json.loads(path.read_text()) if path.exists() else None
 
 
-def prospective_evaluation(df: pd.DataFrame, entry: dict) -> dict:
-    """Score the frozen plan on the fixed evaluation weeks; nothing is recomputed and no date moves."""
+def prospective_evaluation(df: pd.DataFrame, entry: dict, persisted_protocol_sha256: str | None = None) -> dict:
+    """Score the frozen plan on the fixed evaluation weeks; nothing is recomputed and no date moves.
+
+    `persisted_protocol_sha256` is the hash stored at the root of the frozen file; a missing hash counts as changed, never as unchanged."""
     weeks = pd.DatetimeIndex([pd.Timestamp(d) for d in entry["evaluation_signal_weeks"]])
     cal_now = df[df.index <= pd.Timestamp(entry["calibration_end"])]
     eva = df[df.index.isin(weeks)]
@@ -242,7 +244,8 @@ def prospective_evaluation(df: pd.DataFrame, entry: dict) -> dict:
            "last_signal_week_with_realized_target": entry["last_signal_week_with_realized_target"],
            "calibration_weeks": entry["calibration_weeks"], "calibration_sufficient": entry["calibration_sufficient"],
            "calibration_data_unchanged": bool(len(cal_now) and _calibration_hash(cal_now) == entry["calibration_sha256"]),
-           "protocol_unchanged": bool(protocol_hash() == entry.get("protocol_sha256", protocol_hash())),
+           "protocol_sha256_persisted": persisted_protocol_sha256,
+           "protocol_unchanged": bool(persisted_protocol_sha256 is not None and protocol_hash() == persisted_protocol_sha256),
            "frozen_sign": entry["frozen_sign"], "ic_calibration": entry["ic_calibration"],
            "interim_signal_weeks_excluded": len(entry["interim_signal_weeks_excluded"]),
            "evaluation_starts": entry["evaluation_starts"], "evaluation_ends": entry["evaluation_ends"], "evaluable_from": entry["evaluable_from"],
@@ -259,7 +262,8 @@ def prospective_evaluation(df: pd.DataFrame, entry: dict) -> dict:
     return out
 
 
-def _oos_one(sig: pd.Series, fwd: pd.Series, h: int, calibration_end: pd.Timestamp, frozen: dict | None = None) -> dict:
+def _oos_one(sig: pd.Series, fwd: pd.Series, h: int, calibration_end: pd.Timestamp, frozen: dict | None = None,
+             persisted_protocol_sha256: str | None = None) -> dict:
     df = _pairs(sig, fwd)
     cal = df[df.index <= calibration_end]
     eva = df[df.index > calibration_end + pd.Timedelta(weeks=h)]
@@ -267,7 +271,7 @@ def _oos_one(sig: pd.Series, fwd: pd.Series, h: int, calibration_end: pd.Timesta
     if len(cal) < OOS_PROTOCOL["minimum_rows"]["calibration"] or len(eva) < OOS_PROTOCOL["minimum_rows"]["evaluation"]:
         out["status"] = "not evaluable: too few calibration or evaluation weeks"
         if frozen:
-            out["prospective_plan"] = prospective_evaluation(df, frozen)
+            out["prospective_plan"] = prospective_evaluation(df, frozen, persisted_protocol_sha256)
         elif len(df):
             out["prospective_plan"] = _draft_plan(df, h)
         return out
@@ -312,7 +316,7 @@ def oos_table(w: pd.DataFrame, frozen_plan: dict | None = None, freeze_path=PROS
             fwd = (lp.shift(-h) - lp) - (lb.shift(-h) - lb)
             for m, sig in predictors.items():
                 rows.append({"predictor": m, "kind": "usage", "horizon_weeks": h, "benchmark": bname,
-                             **_oos_one(sig, fwd, h, cal_end, frozen_tests.get(_test_key(m, h, bname)))})
+                             **_oos_one(sig, fwd, h, cal_end, frozen_tests.get(_test_key(m, h, bname)), frozen_plan.get("protocol_sha256"))})
             for name, fn in naive.items():
                 rows.append({"predictor": name, "kind": "naive_benchmark", "horizon_weeks": h, "benchmark": bname, **_oos_one(fn(lb), fwd, h, cal_end)})
     usage = [r for r in rows if r["kind"] == "usage"]
