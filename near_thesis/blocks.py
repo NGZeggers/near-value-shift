@@ -356,3 +356,90 @@ def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_windo
     man = write_manifest(P, fetched, blocks_per_window, day_step, windows, missing, requested)
     print(f"done: {sum(fetched.values())} blocks in {time.time() - t0:,.0f}s -> data/blocks/ (complete={man['complete']})")
     return man
+
+
+# ---------- intraday profile for selected sampled days (reconciliation of the fixed-window expansion) ----------
+
+INTRADAY_HOURS = tuple(range(24))
+INTRADAY_PLAN = BLOCKS / "intraday_plan.json"
+INTRADAY_EVENTS = BLOCKS / "intraday_events.csv"
+INTRADAY_MANIFEST = BLOCKS / "intraday_manifest.json"
+# Declared before any intraday block was fetched (2026-11-06). Days come from the committed fixed-window sample,
+# restricted to days with both windows usable and a DefiLlama reference value: the day with the highest reference
+# volume, the 2026 day closest to the 2026 median, and the 2025 day closest to the 2025 median.
+INTRADAY_SELECTION_RULE = ("sampled days with both fixed windows usable and a DefiLlama reference; pick the highest-volume day, "
+                           "the day closest to the 2026 median and the day closest to the 2025 median; declared before fetching")
+
+
+def intraday_plan(days: list[str], blocks_per_window: int = 50, hours: tuple[int, ...] = INTRADAY_HOURS) -> list[dict]:
+    """One window per hour for each selected day. Hours already planned in sample_plan.json reuse their start heights."""
+    known = {}
+    if (BLOCKS / "sample_plan.json").exists():
+        for w in json.loads((BLOCKS / "sample_plan.json").read_text()):
+            known[(w["day"], int(w["hour"]))] = int(w["start_height"])
+    out = []
+    if INTRADAY_PLAN.exists():
+        out = json.loads(INTRADAY_PLAN.read_text())
+    have = {(w["day"], int(w["hour"])) for w in out}
+    todo = [(d, h) for d in days for h in hours if (d, h) not in have]
+    if not todo:
+        return out
+    top = latest_height()
+    for day, hr in todo:
+        if (day, hr) in known:
+            h = known[(day, hr)]
+        else:
+            ts = int(datetime.fromisoformat(day).replace(hour=hr, tzinfo=timezone.utc).timestamp() * 1e9)
+            anchors = [v for (d, _), v in known.items() if d == day] or [v for v in known.values()]
+            h = find_height_fast(ts, min(anchors) if anchors else 130_000_000, top)
+        out.append({"day": day, "hour": hr, "start_height": h, "n": blocks_per_window})
+        INTRADAY_PLAN.write_text(json.dumps(sorted(out, key=lambda w: (w["day"], w["hour"])), indent=1))
+        print(f"  intraday window {day} {hr:02d}:00 -> height {h}", flush=True)
+    return sorted(out, key=lambda w: (w["day"], w["hour"]))
+
+
+def run_intraday(days: list[str] | None = None, blocks_per_window: int = 50, workers: int = 2, offline: bool = False) -> dict:
+    """Fetch every hourly window of the selected days (resumable through the shared block cache) and write
+    data/blocks/intraday_events.csv plus intraday_manifest.json. Acquisition only: no reconciliation happens here."""
+    BLOCKS.mkdir(parents=True, exist_ok=True)
+    if days is None:
+        if not INTRADAY_PLAN.exists():
+            raise ValueError("No intraday plan; pass --days")
+        days = sorted({w["day"] for w in json.loads(INTRADAY_PLAN.read_text())})
+    if offline and not INTRADAY_PLAN.exists():
+        raise ValueError("Offline intraday extraction requires an existing intraday_plan.json")
+    P = intraday_plan(days, blocks_per_window) if not offline else [w for w in json.loads(INTRADAY_PLAN.read_text()) if w["day"] in set(days)]
+    P = [w for w in P if w["day"] in set(days)]
+    heights = [(i, w["start_height"] + j) for i, w in enumerate(P) for j in range(blocks_per_window)]
+    if offline:
+        heights = [(i, h) for i, h in heights if (CACHE / f"{h}.json").exists()]
+    print(f"intraday: {len(P)} windows over {len(days)} days, {len(heights)} blocks" + (" (offline)" if offline else ""), flush=True)
+    t0 = time.time(); fetched: dict[int, int] = {}; missing = 0; done = 0
+    tmp = INTRADAY_EVENTS.with_suffix(".csv.tmp")
+    with tmp.open("w", newline="") as fe:
+        we = csv.writer(fe)
+        we.writerow(["block_date", "block_timestamp", "receipt_id", "caller", "log", "window_day", "window_hour", "block_height", "execution_status"])
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            futs = {ex.submit(fetch_block, h, offline=offline): (i, h) for i, h in heights}
+            for f in as_completed(futs):
+                i, h = futs[f]; w = P[i]
+                b = f.result(); done += 1
+                if b is None:
+                    missing += 1
+                else:
+                    fetched[i] = fetched.get(i, 0) + 1
+                    day = datetime.fromtimestamp(b["ts"] / 1e9, tz=timezone.utc).strftime("%Y-%m-%d")
+                    for rid, pred, log, status in b["events"]:
+                        we.writerow([day, b["ts"], rid, pred, log, w["day"], w["hour"], b["height"], status])
+                if done % 100 == 0:
+                    el = time.time() - t0
+                    print(f"  {done}/{len(heights)} blocks, {missing} missing, {el:,.0f}s, rate {_rate[0]:.2f}/s, eta {(len(heights) - done) / max(done / el, 1e-9) / 60:,.0f} min", flush=True)
+    tmp.replace(INTRADAY_EVENTS)
+    wins = [dict(w, fetched=fetched.get(i, 0), usable=fetched.get(i, 0) >= min_usable(blocks_per_window)) for i, w in enumerate(P)]
+    man = {"fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": NEARDATA, "days": sorted(set(days)),
+           "hours": list(INTRADAY_HOURS), "blocks_per_window": blocks_per_window, "selection_rule": INTRADAY_SELECTION_RULE,
+           "windows": wins, "blocks_requested": len(P) * blocks_per_window, "blocks_fetched": sum(fetched.values()), "blocks_missing": missing,
+           "complete": sum(fetched.values()) + missing >= len(P) * blocks_per_window}
+    INTRADAY_MANIFEST.write_text(json.dumps(man, indent=1))
+    print(f"intraday done: {man['blocks_fetched']} blocks in {time.time() - t0:,.0f}s (complete={man['complete']})")
+    return man

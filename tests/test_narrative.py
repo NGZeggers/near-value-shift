@@ -34,6 +34,19 @@ def test_story_blocks_are_complete_and_anchored():
     assert len(spec["kpis"]) == 6
     ratio = next(k for k in spec["kpis"] if k["unit"] == "ratio")
     assert ratio["state"] in {"pass", "fail", "open"}
+    # every main claim carries an evidence kind, and every method link resolves to a chart, section or repository document
+    kinds = set(spec["kinds"])
+    assert kinds == {"observed", "estimate", "assumption", "inconclusive"}
+    for item in spec["verdict"]["checks"] + spec["argument"] + spec["against"] + spec["kpis"] + spec["sensitivity"]:
+        assert item["kind"] in kinds, item
+    docs = {"#sensitivity"}
+    for item in spec["verdict"]["checks"] + spec["argument"]:
+        assert item["links"], item
+        for link in item["links"]:
+            assert link["href"] in ids or link["href"] in docs or link["href"].startswith("https://github.com/NGZeggers/near-value-shift/blob/main/"), link
+    for row in spec["sensitivity"]:
+        assert row["variants"] and row["effect"] and row["href"] in ids
+    assert spec["dates"]["analysis_cutoff"] == spec["data_through"]
 
 
 def test_story_is_deterministic():

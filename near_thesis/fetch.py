@@ -119,6 +119,49 @@ def fetch_github() -> None:
     save_raw("github_commit_activity", f"{GITHUB}/repos/<repo>/stats/commit_activity", out)
 
 
+BUYBACK_WALLET = "buybacks.multisignature.near"   # NEAR's buyback multisig (DefiLlama fees/near-intents adapter, query 6740088)
+NEARBLOCKS_SLEEP_S = 12   # the key-less NearBlocks tier allows a few requests per minute
+
+
+def _nearblocks_paged(url: str, key: str) -> list:
+    """Follow NearBlocks cursor pagination slowly enough for the key-less tier; back off on 429."""
+    out, cursor = [], None
+    while True:
+        page = url + (f"&cursor={cursor}" if cursor else "")
+        for attempt in range(8):
+            try:
+                d = fetch_json(page)
+                break
+            except Exception as e:  # noqa: BLE001  rate-limit answers arrive as HTTP 429 or as a JSON error body
+                print(f"  nearblocks: {e}; waiting 45s")
+                time.sleep(45)
+        else:
+            raise RuntimeError(f"NearBlocks pagination failed for {url}")
+        rows = d.get(key) or []
+        if isinstance(d, dict) and d.get("message") and not rows:
+            print(f"  nearblocks: {d['message']}; waiting 45s"); time.sleep(45); continue
+        out.extend(rows)
+        cursor = d.get("cursor")
+        print(f"  {len(out)} rows so far", flush=True)
+        if not cursor or not rows:
+            return out
+        time.sleep(NEARBLOCKS_SLEEP_S)
+
+
+def fetch_buybacks() -> None:
+    """Receipts of the buyback multisig and its current balance (NearBlocks, key-less). Inbound NEAR transfers from
+    intents.near are executed purchases arriving as NEAR; the balance shows what is still held (not burned)."""
+    print("NearBlocks: buyback multisig receipts and balance (executed purchases and held tokens)")
+    acct = fetch_json(f"{NEARBLOCKS}/account/{BUYBACK_WALLET}")
+    save_raw("nearblocks_buybacks_account", f"{NEARBLOCKS}/account/{BUYBACK_WALLET}", acct["account"][0],
+             note="current balance of the buyback multisig in yoctoNEAR; held tokens, not a burn")
+    time.sleep(NEARBLOCKS_SLEEP_S)
+    txns = _nearblocks_paged(f"{NEARBLOCKS}/account/{BUYBACK_WALLET}/txns?per_page=250", "txns")
+    save_raw("nearblocks_buybacks_txns", f"{NEARBLOCKS}/account/{BUYBACK_WALLET}/txns?per_page=250 (paginated)",
+             {"wallet": BUYBACK_WALLET, "txns": txns},
+             note="all receipts involving the buyback multisig; inbound TRANSFER actions with predecessor intents.near are executed buybacks settled as NEAR")
+
+
 def fetch_intents_explorer() -> None:
     """Reserved integration; explicit requests must fail rather than claim a pull."""
     raise NotImplementedError("Intents Explorer is not supported; use block extraction or optional BigQuery")
@@ -126,7 +169,8 @@ def fetch_intents_explorer() -> None:
 
 def run(only: list[str] | None = None) -> None:
     steps = {"nearblocks": fetch_nearblocks, "defillama": fetch_defillama, "rpc": fetch_rpc,
-             "prices": fetch_prices, "tokens": fetch_intents_tokens, "github": fetch_github, "intents": fetch_intents_explorer}
+             "prices": fetch_prices, "tokens": fetch_intents_tokens, "github": fetch_github, "buybacks": fetch_buybacks,
+             "intents": fetch_intents_explorer}
     failed: list[str] = []
     for name, fn in steps.items():
         if only and name not in only:

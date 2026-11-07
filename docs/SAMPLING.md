@@ -14,7 +14,9 @@ Features are aggregated by account-month inside usable windows. Rows in the bloc
 
 Retrospective HDBSCAN clusters all observed months for descriptive charts. A separate GMM fits only the first six calendar months, selects 3–6 components by BIC, then freezes scaler, component parameters and label mapping. Only subsequent months enter predictive tests, available on the first day of the next month. The frozen model is committed in `qaa_causal_model.json`; future observations cannot change its training set. This is frozen calibration, not repeated walk-forward retraining.
 
-QAA in sampled mode multiplies the observed quality-like share by NearBlocks monthly mean daily active accounts. Account inclusion depends on transaction frequency; the monthly sampled-account share and population daily-active share need not agree. QAA is therefore exploratory, with no guarantee of conservative bias or verified human identity. Silhouette measures geometric separation. Anchor-name profiles are weak proxies, not ground-truth accuracy. Strict/default/including-ambiguous shares and monthly cluster counts expose sensitivity and composition drift.
+Groups are named after observed behavior (`light_general`, `multi_app`, `intents_participant`, `miniapp_pattern`, `high_frequency_regular`, `heavy_unclassified`, `noise`); no name asserts a human or a bot, because no verified identity labels exist. About nine in ten account-months show a single transaction inside the sampled windows, so the clustering mostly separates name classes and action kinds; `qaa_sensitivity.json` reports the name-only baseline, the three criteria, label-threshold variants, noise bounds, the split by observation hour, the agreement between the retrospective and the frozen model, and an inclusion-probability weighting. `qaa_examples.json` lists typical and least-typical account-months per group.
+
+QAA in sampled mode multiplies the observed share by NearBlocks monthly mean daily active accounts. Account inclusion depends on transaction frequency; the inclusion-probability weighting corrects visibility only among observed accounts, so the share is the measured quantity and the count is an illustrative rescaling. QAA is therefore exploratory, with no guarantee of conservative bias or verified identity. Silhouette measures geometric separation. Anchor-name profiles are weak proxies, not ground-truth accuracy.
 
 ## L2: participant flows and heuristic roles
 
@@ -26,11 +28,17 @@ Role rules are explicit. Full-day mode requires at least 20 batches and 10 count
 
 Only additive batch/flow/withdrawal counts are expanded by blocks-in-day divided by blocks observed. **Unique users remain observed counts**. No daily-user upper-bound claim is made. All usable sampled days are retained, including observed zero-token-diff days; an unavailable window is not a zero observation.
 
+## Intraday profile for the reconciliation days
+
+`make blocks-intraday` fetches one 50-block window for every hour of three days chosen by a rule declared before any block was read: among sampled days with both fixed windows usable and a DefiLlama reference value, the day with the highest reference volume, the 2026 day closest to the 2026 median and the 2025 day closest to the 2025 median (2026-09-25, 2026-04-13 and 2025-08-31). The hours 03:00 and 15:00 reuse the main sample's heights. The extract (`data/blocks/intraday_events.csv`, manifest `intraday_manifest.json`) is acquisition only; `near_thesis/reconcile.py` compares the expansion from the two fixed hours with the expansion from all usable hours and reports the resulting bias factor per day. Twenty-four windows still observe about 1,200 of a day's roughly 150,000 blocks, so this measures the intraday expansion error, not a complete day.
+
 ## Aggregation and reconciliation
 
 Monthly/quarterly flow estimates use the mean of expanded sampled days times calendar days (or the reference series' available days for partial quarters). Day-bootstrap intervals condition on those observed days and do not account for intraday selection, missing large trades, pricing or route reconstruction. One observed day cannot identify an interval; its endpoints are missing.
 
 The pooled sample/reference ratio uses sums on matched reference days, including observed zeros. Quarterly ratios are displayed rather than assumed constant. Parity must fall inside the conditional interval to pass the project's consistency check. If it does not, THESIS.md calls the cross-check unresolved and treats it as evidence against independent confirmation. Missing large trades are a possible explanation, not an established cause. Full-day BigQuery extracts improve coverage but do not automatically fix pricing, role or reconstruction errors.
+
+The reconciliation layer (`near_thesis/reconcile.py`, generated report `docs/RECONCILIATION.md`) writes down the economic unit being compared, produces a per-day table (observed sampled volume, expansion factor, expanded estimate, reference, difference, window split, unpriced legs, unvalued account-intents), decomposes the gap into temporal coverage, valuation and route reconstruction with an explicit unexplained residual, and evaluates a tolerance declared before the evaluation (point ratio within x0.8 to x1.25 and interval covering 1.0) on validation days chosen by a declared rule (alternate chronological positions). Traceable receipt-level examples are in `intents_trace_examples.json`. The tolerance is not widened to make the comparison pass.
 
 ## Receipt status and input validation
 

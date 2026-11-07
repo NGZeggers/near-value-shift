@@ -25,6 +25,26 @@ NAME_CLASSES = ["tg", "sweat", "implicit", "named", "other"]
 SAMPLE_MAX = 250_000
 METHOD_VERSION = "qaa-v3-self-calls-windows"
 
+# Group names describe observed behavior only. No label asserts that an account is a human or a bot: the project has
+# no verified identity anchors, so names that implied identity were retired (see LEGACY_LABELS).
+GROUP_RULES = [
+    ("intents_participant", "median share of actions sent to intents.near above 20%"),
+    ("high_frequency_regular", "median of at least 200 transactions per month with regular inter-arrival gaps (gap CV below 0.6)"),
+    ("miniapp_pattern", "at least half of the accounts carry a .tg or .sweat name and the median account touches fewer than two contracts"),
+    ("heavy_unclassified", "median of at least 200 transactions per month without a regular gap pattern"),
+    ("multi_app", "median account touches at least two contracts or two methods"),
+    ("light_general", "none of the above: few actions, no mini-app name pattern"),
+    ("noise", "HDBSCAN outliers, not assigned to any group"),
+]
+GROUP_DEFINITIONS = dict(GROUP_RULES)
+LEGACY_LABELS = {"human_light": "light_general", "human_multi_app": "multi_app", "miniapp_farming": "miniapp_pattern",
+                 "automation": "high_frequency_regular", "heavy_unlabeled": "heavy_unclassified"}
+QUALITY = {"multi_app", "light_general", "intents_participant"}          # the default QAA numerator
+NON_QUALITY = {"high_frequency_regular", "miniapp_pattern"}              # excluded under every criterion
+# strict = multi_app only; default = QUALITY; broad = everything except NON_QUALITY (noise and heavy_unclassified count)
+CRITERIA = {"strict": "multi_app only", "default": "multi_app, light_general and intents_participant",
+            "including_ambiguous": "all groups except high_frequency_regular and miniapp_pattern (noise and heavy_unclassified count)"}
+
 
 def load_inputs() -> pd.DataFrame | None:
     f1, f2 = BQ_DIR / "l1_account_month_features.csv", BQ_DIR / "l1_account_month_actions.csv"
@@ -130,8 +150,9 @@ def fit_clusters(x: pd.DataFrame, *, k_range=range(3, 9)) -> tuple[np.ndarray, d
     return labels, info
 
 
-def label_clusters(df: pd.DataFrame, x: pd.DataFrame, labels: np.ndarray) -> pd.DataFrame:
-    """Rule-based naming of clusters from their medians. These rules are the documented assumptions."""
+def label_clusters(df: pd.DataFrame, x: pd.DataFrame, labels: np.ndarray, *, heavy_txns: int = 200, multi_contracts: int = 2) -> pd.DataFrame:
+    """Rule-based naming of clusters from their medians (GROUP_RULES). The thresholds are documented assumptions;
+    `sensitivity` re-runs them with alternative values."""
     prof = x.assign(cluster=labels, txns=df["txns"].to_numpy()).groupby("cluster").median(numeric_only=True)
     prof["size"] = pd.Series(labels).value_counts()
     prof["share"] = prof["size"] / len(labels)
@@ -141,22 +162,19 @@ def label_clusters(df: pd.DataFrame, x: pd.DataFrame, labels: np.ndarray) -> pd.
             names[c] = "noise"
         elif r["intents_share"] > 0.2:
             names[c] = "intents_participant"
-        elif r["txns"] >= 200 and r["gap_cv"] < 0.6:
-            names[c] = "automation"
-        elif r["name_tg"] + r["name_sweat"] >= 0.5 and r["log_contracts"] < np.log1p(2):
-            names[c] = "miniapp_farming"
-        elif r["txns"] >= 200:
-            names[c] = "heavy_unlabeled"
-        elif r["log_contracts"] >= np.log1p(2) or r["log_methods"] >= np.log1p(2):
-            names[c] = "human_multi_app"
+        elif r["txns"] >= heavy_txns and r["gap_cv"] < 0.6:
+            names[c] = "high_frequency_regular"
+        elif r["name_tg"] + r["name_sweat"] >= 0.5 and r["log_contracts"] < np.log1p(multi_contracts):
+            names[c] = "miniapp_pattern"
+        elif r["txns"] >= heavy_txns:
+            names[c] = "heavy_unclassified"
+        elif r["log_contracts"] >= np.log1p(multi_contracts) or r["log_methods"] >= np.log1p(multi_contracts):
+            names[c] = "multi_app"
         else:
-            names[c] = "human_light"
+            names[c] = "light_general"
     prof["label"] = pd.Series(names)
     prof.index.name = "cluster"
     return prof.reset_index()
-
-
-QUALITY = {"human_multi_app", "human_light", "intents_participant"}
 
 
 def _input_hash(x: pd.DataFrame) -> str:
@@ -184,6 +202,10 @@ def causal_monthly(df: pd.DataFrame, x: pd.DataFrame, *, sampled: bool, calibrat
     key = _input_hash(calibration)
     path = MODELS / "qaa_causal_model.json"
     saved = json.loads(path.read_text()) if path.exists() else {}
+    if saved.get("labels") and any(v in LEGACY_LABELS for v in saved["labels"].values()):
+        # identity-sounding names were retired; the frozen parameters are unchanged
+        saved["labels"] = {k: LEGACY_LABELS.get(v, v) for k, v in saved["labels"].items()}
+        path.write_text(json.dumps(saved, indent=1) + "\n")
     if saved.get("calibration_sha256") != key or os.getenv("QAA_REFIT"):
         scaler = RobustScaler().fit(x.loc[train, NUMERIC])
         z = np.hstack([scaler.transform(x.loc[train, NUMERIC]), x.loc[train, [f"name_{c}" for c in NAME_CLASSES]].to_numpy()])
@@ -219,6 +241,115 @@ def causal_monthly(df: pd.DataFrame, x: pd.DataFrame, *, sampled: bool, calibrat
     result.reset_index().to_csv(MODELS / "qaa_causal_monthly.csv", index=False)
     return {"computed": True, "method": saved["method"], "training_end": saved["training_end"],
             "first_available_at": str(result["available_at"].min().date()), "months": len(result), "k": saved["k"]}
+
+
+def inclusion_weights(active_windows: pd.Series, observed_windows: pd.Series) -> pd.Series:
+    """Weights that undo the higher visibility of frequently active accounts.
+
+    An account active in a of the W sampled windows has an estimated per-window activity probability a/W and is seen
+    at least once with probability 1 - (1 - a/W)^W. Weighting each observed account by the inverse of that probability
+    corrects the share only among accounts active in at least one window; accounts never seen stay unobserved."""
+    a = active_windows.clip(lower=1).astype(float)
+    w = observed_windows.clip(lower=1).astype(float)
+    p = 1 - (1 - (a / w).clip(upper=1)) ** w
+    return 1 / p.clip(lower=1e-9)
+
+
+def sensitivity(df: pd.DataFrame, x: pd.DataFrame, labels: np.ndarray, monthly: pd.DataFrame, *, sampled: bool) -> dict:
+    """How much the quality share depends on the criterion, the labeling thresholds, the model, the hour of
+    observation and the inclusion probability of accounts. All variants reuse the committed cluster assignment."""
+    lab = pd.Series(labels, index=df.index)
+    quality = lab.map(lambda l: l in QUALITY) if "label" not in df else df["label"].isin(QUALITY)
+    last = monthly.index[-1]
+    last_rows = df["month"] == last
+    seen_once = float((df["txns"] == 1).mean())
+    one_window = float((df["active_days"] == 1).mean())
+    # criterion: which groups count
+    lm = monthly.iloc[-1]
+    criteria = {"strict": float(lm["quality_share_strict"]), "default": float(lm["qaa_share"]), "including_ambiguous": float(lm["quality_share_including_ambiguous"]),
+                "groups_counted": {"strict": ["multi_app"], "default": sorted(QUALITY), "including_ambiguous": sorted(set(df["label"].unique()) - NON_QUALITY)},
+                "why_strict_is_low": (f"{seen_once:.0%} of account-months show exactly one transaction inside the sampled windows and {one_window:.0%} are active in a "
+                                      "single window, so multi-contract behavior is rarely observable; no cluster reaches a median of two contracts")}
+    # labeling thresholds
+    variants = {}
+    for ht, mc in [(100, 2), (200, 1), (400, 2), (200, 3)]:
+        prof = label_clusters(df, x, labels, heavy_txns=ht, multi_contracts=mc)
+        q = df[["cluster"]].merge(prof[["cluster", "label"]], on="cluster", how="left")["label"].isin(QUALITY)
+        variants[f"heavy_txns={ht},multi_contracts={mc}"] = float(q[last_rows.to_numpy()].mean())
+    # noise bounds
+    noise = df["label"] == "noise"
+    lower = float((quality & ~noise)[last_rows].mean())
+    upper = float((quality | noise)[last_rows].mean())
+    # name-only baseline: the share of accounts without a mini-app name pattern
+    name_ok = ~df["account"].str.endswith((".tg", ".sweat"))
+    base_m = name_ok.groupby(df["month"]).mean()
+    q_m = quality.groupby(df["month"]).mean()
+    name_only = {"latest_month": float(base_m.iloc[-1]), "mean_abs_difference_vs_default": float((base_m - q_m).abs().mean()),
+                 "correlation_with_default": float(base_m.corr(q_m)) if len(base_m) > 2 else None,
+                 "reading": "if the clustering share tracks the name-only share closely, the behavioral model adds little beyond the name class in these sparse windows"}
+    # inclusion-probability weighting
+    w = inclusion_weights(df["active_days"], df["observation_periods"] if "observation_periods" in df else df["month"].dt.days_in_month)
+    weighted = (quality * w).groupby(df["month"]).sum() / w.groupby(df["month"]).sum()
+    freq = {"latest_month_unweighted": float(q_m.iloc[-1]), "latest_month_weighted": float(weighted.iloc[-1]),
+            "mean_abs_difference": float((weighted - q_m).abs().mean()), "direction": "weighted below unweighted" if weighted.iloc[-1] < q_m.iloc[-1] else "weighted above unweighted",
+            "reading": "corrects visibility among observed accounts only; never-observed accounts remain outside the index"}
+    # hour of observation
+    by_hour = None
+    tx = DATA / "blocks" / "tx_sampled.csv"
+    if sampled and tx.exists():
+        t = pd.read_csv(tx, usecols=["window_day", "window_hour", "signer"])
+        t["month"] = pd.to_datetime(t["window_day"]).dt.to_period("M").dt.to_timestamp()
+        pairs = t.drop_duplicates(["month", "signer", "window_hour"]).rename(columns={"signer": "account"})
+        merged = pairs.merge(df[["month", "account"]].assign(quality=quality.to_numpy()), on=["month", "account"], how="inner")
+        hm = merged.groupby(["month", "window_hour"])["quality"].mean().unstack()
+        if hm.shape[1] >= 2:
+            cols = list(hm.columns)
+            by_hour = {"hours": [int(c) for c in cols], "latest_month": {str(int(c)): float(hm.iloc[-1][c]) for c in cols},
+                       "mean_abs_difference_between_hours": float((hm[cols[0]] - hm[cols[1]]).abs().mean()),
+                       "months": int(len(hm)), "reading": "shares computed separately on accounts observed in each fixed window"}
+    # model agreement: retrospective HDBSCAN versus frozen past-only GMM
+    agreement = None
+    cm = MODELS / "qaa_causal_monthly.csv"
+    if cm.exists():
+        c = pd.read_csv(cm, parse_dates=["month"]).set_index("month")["qaa_share"]
+        both = pd.concat([q_m.rename("descriptive"), c.rename("frozen")], axis=1).dropna()
+        if len(both):
+            agreement = {"months": int(len(both)), "latest": {"descriptive": float(both["descriptive"].iloc[-1]), "frozen": float(both["frozen"].iloc[-1])},
+                         "mean_abs_difference": float((both["descriptive"] - both["frozen"]).abs().mean()),
+                         "correlation": float(both["descriptive"].corr(both["frozen"])) if len(both) > 2 else None,
+                         "reading": "the two models label the same months differently; the level of the share depends on the model, its trend less so"}
+    scope = {"observed_unit": "accounts signing at least one transaction inside the sampled windows",
+             "account_months": int(len(df)), "share_with_one_transaction": seen_once, "share_active_in_one_window": one_window,
+             "population_extrapolation": ("the QAA count multiplies the sampled share by NearBlocks mean daily active accounts; "
+                                          "inclusion probability rises with activity, so the count is an illustrative rescaling and the share is the measured quantity"),
+             "identity": "no verified human or bot labels exist; groups are behavioral patterns"}
+    return {"latest_month": str(last.date())[:7], "criteria": criteria, "label_threshold_variants_default_share": variants,
+            "noise_bounds_default_share": {"noise_excluded": lower, "noise_included": upper},
+            "name_only_baseline": name_only, "inclusion_probability_weighting": freq, "by_window_hour": by_hour,
+            "model_agreement": agreement, "scope": scope,
+            "not_done": ["refits with other clustering hyper-parameters (platform-dependent HDBSCAN assignments would break the exact regression check; the committed assignment is reused)",
+                         "external human/bot labels (none available)"]}
+
+
+def examples(df: pd.DataFrame, x: pd.DataFrame, per_group: int = 3) -> list[dict]:
+    """Traceable account-months per group: the members closest to the group's median feature vector (typical cases)
+    plus the single farthest member (the least typical account the rule still covers)."""
+    cols = ["month", "account", "label", "txns", "active_days", "observation_periods", "distinct_receivers", "distinct_contracts",
+            "distinct_methods", "self_txns", "function_calls", "transfers", "intents_actions", "deposit_near", "gap_median_s", "gap_cv", "name_class"]
+    cols = [c for c in cols if c in df]
+    scale = x[NUMERIC].std().replace(0, 1.0)
+    out = []
+    for label, g in df.groupby("label"):
+        z = (x.loc[g.index, NUMERIC] - x.loc[g.index, NUMERIC].median()) / scale
+        dist = np.sqrt((z ** 2).sum(axis=1)).sort_values(kind="stable")
+        picks = [(i, "typical") for i in dist.index[:per_group]] + ([(dist.index[-1], "least_typical")] if len(dist) > per_group else [])
+        for idx, kind in picks:
+            row = {k: (None if isinstance(v, float) and np.isnan(v) else v) for k, v in df.loc[idx, cols].items()}
+            row["month"] = str(pd.Timestamp(row["month"]).date())[:7]
+            row["kind"] = kind
+            row["rule"] = GROUP_DEFINITIONS.get(label, "")
+            out.append(row)
+    return out
 
 
 def available_series(index: pd.DatetimeIndex) -> pd.Series | None:
@@ -274,8 +405,8 @@ def run() -> dict:
     monthly = monthly.join(shares)
     monthly["qaa"] = shares[[c for c in shares.columns if c in QUALITY]].sum(axis=1)
     monthly["qaa_share"] = monthly["qaa"] / monthly["active_accounts_bq"]
-    monthly["quality_share_strict"] = shares.get("human_multi_app", pd.Series(0, index=shares.index)) / monthly["active_accounts_bq"]
-    monthly["quality_share_including_ambiguous"] = 1 - shares[[c for c in shares if c in {"automation", "miniapp_farming"}]].sum(axis=1) / monthly["active_accounts_bq"]
+    monthly["quality_share_strict"] = shares.get("multi_app", pd.Series(0, index=shares.index)) / monthly["active_accounts_bq"]
+    monthly["quality_share_including_ambiguous"] = 1 - shares[[c for c in shares if c in NON_QUALITY]].sum(axis=1) / monthly["active_accounts_bq"]
     if source != "bigquery":
         # sampled mode: the share is the estimate; scale it by NearBlocks' monthly mean of daily active accounts
         nb = pd.read_csv(DERIVED / "monthly.csv", parse_dates=["month"]).set_index("month")["active_accounts"]
@@ -288,10 +419,15 @@ def run() -> dict:
     anchors = np.where(df["account"].str.endswith((".tg", ".sweat")), "miniapp_name_proxy", "unverified")
     pd.crosstab(pd.Series(anchors, name="anchor_proxy"), df["label"]).to_csv(MODELS / "qaa_anchor_profiles.csv")
     causal = causal_monthly(df, x, sampled=source != "bigquery")
+    sens = sensitivity(df, x, labels, monthly, sampled=source != "bigquery")
+    (MODELS / "qaa_sensitivity.json").write_text(json.dumps(sens, indent=1, default=str) + "\n")
+    (MODELS / "qaa_examples.json").write_text(json.dumps(examples(df, x), indent=1, default=str) + "\n")
     status = {"computed": True, "source": source, **info, "months": int(monthly.shape[0]),
               "labels": prof.set_index("cluster")["label"].to_dict(), "quality_labels": sorted(QUALITY),
+              "group_definitions": GROUP_DEFINITIONS, "criteria": CRITERIA,
               "method_version": METHOD_VERSION, "causal": causal,
-              "validation": "silhouette is geometric separation; anchor profiles use name proxies, not verified people; sensitivity shares reported monthly"}
+              "scope": sens["scope"],
+              "validation": "silhouette is geometric separation; group names describe behavior, not verified identity; see qaa_sensitivity.json"}
     (MODELS / "qaa_status.json").write_text(json.dumps(status, indent=1, default=str))
     print(f"L1: {info['algorithm']} on {info['n']:,} account-months -> {len(prof)} clusters, QAA for {len(monthly)} months")
     return status

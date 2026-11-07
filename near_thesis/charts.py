@@ -110,10 +110,10 @@ def build() -> dict:
             "line", [{"name": "active accounts (BigQuery)" if bq1 else "active accounts (NearBlocks)", "points": _pts(q["active_accounts_bq"], round_to=0)},
                      {"name": "QAA", "points": _pts(q["qaa"], round_to=0)}],
             unit="accounts", y_log=True, source=("BigQuery crypto_near_mainnet_us (sql/l1_*.sql)" if qaa_status.get("source") == "bigquery" else "FastNear neardata sampled blocks (data/blocks/tx_sampled.csv, near_thesis/blocks.py)") + "; clustering in near_thesis/qaa.py",
-            query=("sql/l1_account_month_features.sql + sql/l1_account_month_actions.sql; " if qaa_status.get("source") == "bigquery" else "per (month, signer) features inside sampled windows; QAA = human-like share x NearBlocks active accounts; ") + qaa_status.get("algorithm", "")))
-        labels = [c for c in q.columns if c in {"noise", "automation", "miniapp_farming", "heavy_unlabeled", "human_light", "human_multi_app", "intents_participant"}]
-        specs.append(_spec("qaa_shares", "3. Quality-adjusted", "Account-months by behavioral cluster",
-            "Account-months in each behavioral cluster; mini-app farming dominates the 2024 mini-app era." + (" Sampled windows only." if not bq1 else ""),
+            query=("sql/l1_account_month_features.sql + sql/l1_account_month_actions.sql; " if qaa_status.get("source") == "bigquery" else "per (month, signer) features inside sampled windows; QAA = share outside the mini-app and high-frequency patterns x NearBlocks mean daily active accounts; ") + qaa_status.get("algorithm", "")))
+        labels = [c for c in q.columns if c in {"noise", "high_frequency_regular", "miniapp_pattern", "heavy_unclassified", "light_general", "multi_app", "intents_participant"}]
+        specs.append(_spec("qaa_shares", "3. Quality-adjusted", "Account-months by behavioral group",
+            "Account-months in each behavioral group; the mini-app name pattern dominates the 2024 era. Group names describe observed behavior, not verified identity." + (" Sampled windows only." if not bq1 else ""),
             "stacked", [{"name": c.replace("_", " "), "points": _pts(q[c], round_to=0)} for c in labels[:6]],
             unit="account-months", source=("BigQuery crypto_near_mainnet_us" if bq1 else "FastNear neardata sampled blocks (data/blocks/tx_sampled.csv)") + " + near_thesis/qaa.py", query="cluster label counts per month"))
     else:
@@ -198,11 +198,89 @@ def build() -> dict:
                 ("buyback-labelled revenue", "intents_holders_revenue_usd")]],
             unit="USD", source="DefiLlama summary/fees/near-intents: dailyFees, dailyRevenue, dailyHoldersRevenue (Dune/wallet receipts)",
             query="monthly sums of matched-cutoff raw snapshots; methodology included in each response"))
+    specs += reconciliation_specs()
+    specs += bridge_specs(m)
+    specs += oos_specs()
     kpis = narrative.story_kpis(d, m, intents_status)
     story = narrative.build(d, m, qaa_status, intents_status, ic, vg)
     manifest = raw_manifest()
     return {"built_at": max(r["fetched_at"] for r in manifest), "data_through": str(d.index.max().date()),
             "kpis": kpis, "charts": specs, "raw_manifest": manifest, **story}
+
+
+def _optional(name: str) -> dict:
+    f = MODELS / name
+    return json.loads(f.read_text()) if f.exists() else {}
+
+
+def reconciliation_specs() -> list[dict]:
+    rec = _optional("intents_reconciliation.json")
+    if not rec.get("computed"):
+        return []
+    t = pd.read_csv(MODELS / "intents_reconciliation_daily.csv", parse_dates=["date"]).set_index("date")
+    t = t[t["reference_usd"] > 0]
+    pooled = rec.get("pooled_ratio_all_days") or {}
+    hold = (rec.get("holdout") or {}).get("validation") or {}
+    out = [_spec("intents_recon_daily", "3. Quality-adjusted", "Per-day reconciliation: on-chain estimate divided by the DefiLlama reference",
+        ("Each sampled day with a reference value. A ratio of 1 would mean the expanded sample reproduces the reference; " +
+         (f"the pooled ratio is {pooled.get('ratio', 0):.2f} and the pre-declared validation days give {hold['ratio']:.2f} [{hold['ci_lo']:.2f}, {hold['ci_hi']:.2f}], outside the declared x0.8 to x1.25 band. " if "ratio" in hold else "") +
+         "The table view carries observed volume, expansion factor, reference, difference and the per-day components (coverage, unpriced legs, window split)."),
+        "column", [{"name": "estimate / reference", "points": [[str(i.date()), round(float(v), 3)] for i, v in t["ratio"].items()]}],
+        unit="ratio", source="near_thesis/reconcile.py from data/blocks/intents_events_sampled.csv and data/derived/daily.csv (DefiLlama reference)",
+        query="intents_reconciliation_daily.csv: volume_expanded_usd / reference_usd per sampled day; holdout_role marks calibration and validation days",
+        note=("economic unit: " + rec["economic_unit"]["our_measure"]))]
+    intra = rec.get("intraday") or {}
+    days = [x for x in intra.get("days", []) if x.get("hour_share_of_sampled")]
+    if days:
+        series = [{"name": x["day"], "points": [[f"{h}h", round(float(v or 0) * 100, 1)] for h, v in sorted(x["hour_share_of_sampled"].items())]} for x in days]
+        bias = intra.get("fixed_window_bias_factor_mean")
+        out.append(_spec("intents_intraday", "3. Quality-adjusted", "Intraday profile on the pre-declared reconciliation days: share of sampled volume by hour",
+            (f"Twenty-four 50-block windows per day. The fixed 03:00 and 15:00 UTC windows of the main sample under-represent the hourly mean by a factor of {bias:.2f} on these days; " if bias else "") +
+            "a flat profile would put about 4.2% in every hour. " + (intra.get("selection_rule") or ""),
+            "diverging", series, unit="% of day's sampled volume", y_domain=[0, max(5.0, max(p[1] for sr in series for p in sr["points"]) * 1.1)],
+            source="make blocks-intraday: FastNear neardata hourly windows (data/blocks/intraday_events.csv, intraday_manifest.json)",
+            query="near_thesis/reconcile.py intraday(): half gross notional per hourly window / day total"))
+    return out
+
+
+def bridge_specs(m: pd.DataFrame) -> list[dict]:
+    b = _optional("value_bridge.json")
+    if not b.get("steps"):
+        return []
+    pts = [[f"{s['step']}. {s.get('short', s['name'])}", round(float(s["usd"]), 0)] for s in b["steps"] if s.get("usd") is not None]
+    out = [_spec("value_bridge", "2. Value-weighted activity", "Value bridge, trailing year: from settled volume to tokens received by the buyback wallet (USD)",
+        "Each bar is one step of the chain; the status of each step (observed, classified, inferred, unavailable) is in the table view and in THESIS.md. "
+        + (f"Issuance over the same year added {b['dilution']['net_new_total_near']:,.0f} NEAR ({b['dilution']['annual_total_supply_growth']:.1%} of total supply), "
+           f"worth {b['dilution']['net_new_usd_at_average_price'] / 1e6:,.0f}M USD at the average price, more than any buyback step." if b.get("dilution", {}).get("net_new_total_near") else ""),
+        "ranked", [{"name": "USD, trailing year", "points": pts}], unit="USD",
+        source="DefiLlama dexs/fees adapters for steps 1-4; NearBlocks receipts of buybacks.multisignature.near for steps 5-6 (data/raw/nearblocks_buybacks_*.json); near_thesis/bridge.py",
+        query="value_bridge.json steps[]; share_of_previous gives the funnel ratios; dilution from NearBlocks total supply",
+        note="statuses: " + "; ".join(f"{s['step']}: {s['status']}" for s in b["steps"]))]
+    f = MODELS / "value_bridge_monthly.csv"
+    if f.exists():
+        vm = pd.read_csv(f, parse_dates=["month"]).set_index("month")
+        if "buyback_wallet_usd_in" in vm and vm["buyback_wallet_usd_in"].notna().any():
+            out.append(_spec("buybacks_vs_label", "2. Value-weighted activity", "Buyback-labelled revenue (adapter) vs NEAR actually received by the buyback wallet, per month",
+                "The adapter labels all captured revenue after 2026-02-23 as buyback revenue; the wallet series shows what arrived at buybacks.multisignature.near, valued at the daily NEAR price. Differences are timing, routing through other treasury wallets and the wallet's creation date.",
+                "line", [{"name": "buyback-labelled revenue (USD)", "points": _pts(vm["buyback_labelled_revenue_usd"], round_to=0)},
+                         {"name": "received by buyback wallet (USD at daily price)", "points": _pts(vm["buyback_wallet_usd_in"], round_to=0)}],
+                unit="USD", source="DefiLlama dailyHoldersRevenue; NearBlocks account txns (TRANSFER receipts) for buybacks.multisignature.near", query="value_bridge_monthly.csv"))
+    return out
+
+
+def oos_specs() -> list[dict]:
+    o = _optional("signal_oos.json")
+    if not o.get("tests"):
+        return []
+    rows = [r for r in o["tests"] if r.get("horizon_weeks") == 12 and r.get("benchmark") == "btc" and "ic_evaluation_signed" in r]
+    if not rows:
+        return []
+    return [_spec("oos", "4. Price and usage", "Pre-registered out-of-sample test: evaluation-period IC with the sign frozen in calibration (12 weeks vs BTC)",
+        f"Calibration through {o['protocol']['calibration_end']}, evaluation purged by the horizon. {o['summary']['conclusion']}. "
+        "Two naive predictors (NEAR momentum, BTC trend) are evaluated the same way as references; Intents volume and QAA are not evaluable for lack of calibration weeks.",
+        "ranked", [{"name": "evaluation IC (signed)", "points": [[_label(r["predictor"]) if r["kind"] == "usage" else r["predictor"].replace("_", " "), round(r["ic_evaluation_signed"], 2)] for r in rows]}],
+        unit="Spearman IC", y_domain=[-1, 1], source="data/derived/daily.csv; near_thesis/signal.py oos_table", query="signal_oos.json tests[] where horizon_weeks=12 and benchmark=btc",
+        note="95% block-bootstrap intervals: " + json.dumps({(_label(r["predictor"]) if r["kind"] == "usage" else r["predictor"]): [round(x, 2) for x in r["ci95_block_bootstrap"]] for r in rows}))]
 
 
 def _indexed(m: pd.DataFrame) -> list[tuple[str, list]]:

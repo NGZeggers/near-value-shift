@@ -1,0 +1,796 @@
+{
+ "protocol": {
+  "hypothesis": "a four-week rise in usage is associated with the subsequent h-week NEAR log return in excess of the benchmark, with the sign fixed in calibration",
+  "signal_transform": "weekly means of the daily series; log of the trailing four-week mean, differenced by four weeks; QAA only from the frozen past-only model, available on the first day of the following month",
+  "target": "forward h-week log return of NEAR minus the same return of the benchmark (BTC or ETH)",
+  "horizons_weeks": [
+   4,
+   12
+  ],
+  "benchmarks": [
+   "btc",
+   "eth"
+  ],
+  "calibration_end": "2025-06-29",
+  "purge": "evaluation starts h weeks after the calibration end so that no calibration target overlaps an evaluation week",
+  "fixed_rule": "the sign of the calibration Spearman IC is frozen; success requires the evaluation IC under that sign to be positive with a circular block-bootstrap 95% interval above zero",
+  "walk_forward": "expanding window: each evaluation week re-estimates the sign on targets already realized at that week (purged by h) and predicts the direction of the next target; hit rate reported",
+  "family": "6 metrics x 2 horizons x 2 benchmarks = 24 declared tests; Bonferroni intervals reported",
+  "benchmark_predictors": {
+   "near_momentum": "trailing four-week NEAR excess log return (persistence)",
+   "btc_trend": "trailing four-week BTC log return (relation to the market benchmark)"
+  },
+  "minimum_rows": {
+   "calibration": 30,
+   "evaluation": 20
+  },
+  "limitations": [
+   "NearBlocks and DefiLlama series are current snapshots: historical revisions and publication lags are not reconstructed, except QAA availability dates",
+   "overlapping weekly targets; block bootstrap approximates dependence",
+   "descriptive association only: no costs, liquidity or execution rules, so no trading claim"
+  ]
+ },
+ "tests": [
+  {
+   "predictor": "active_accounts",
+   "kind": "usage",
+   "horizon_weeks": 4,
+   "benchmark": "btc",
+   "n_calibration": 228,
+   "n_evaluation": 62,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": 0.1120437146962013,
+   "frozen_sign": 1.0,
+   "evaluation_start": "2025-08-03",
+   "evaluation_end": "2026-10-04",
+   "ic_evaluation_signed": 0.18309788219888698,
+   "ci95_block_bootstrap": [
+    -0.08899823008531403,
+    0.48232317910999
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.26039261987518225,
+    0.6250661382503007
+   ],
+   "walk_forward_hit_rate": 0.6129032258064516,
+   "walk_forward_n": 62,
+   "sign_agrees": true,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "txns",
+   "kind": "usage",
+   "horizon_weeks": 4,
+   "benchmark": "btc",
+   "n_calibration": 228,
+   "n_evaluation": 62,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": -0.032947005954375774,
+   "frozen_sign": -1.0,
+   "evaluation_start": "2025-08-03",
+   "evaluation_end": "2026-10-04",
+   "ic_evaluation_signed": -0.05874946488378534,
+   "ci95_block_bootstrap": [
+    -0.5023812015035105,
+    0.44418803404263385
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.5996765378557282,
+    0.6831608033434265
+   ],
+   "walk_forward_hit_rate": 0.43548387096774194,
+   "walk_forward_n": 62,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "tx_fee_near",
+   "kind": "usage",
+   "horizon_weeks": 4,
+   "benchmark": "btc",
+   "n_calibration": 228,
+   "n_evaluation": 62,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": -0.0811500115928588,
+   "frozen_sign": -1.0,
+   "evaluation_start": "2025-08-03",
+   "evaluation_end": "2026-10-04",
+   "ic_evaluation_signed": -0.16975145425700688,
+   "ci95_block_bootstrap": [
+    -0.6514529083226472,
+    0.40221841226512306
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.7957238190139906,
+    0.6214380998919026
+   ],
+   "walk_forward_hit_rate": 0.41935483870967744,
+   "walk_forward_n": 62,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "tx_volume_usd",
+   "kind": "usage",
+   "horizon_weeks": 4,
+   "benchmark": "btc",
+   "n_calibration": 228,
+   "n_evaluation": 62,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": -0.06461019138848025,
+   "frozen_sign": -1.0,
+   "evaluation_start": "2025-08-03",
+   "evaluation_end": "2026-10-04",
+   "ic_evaluation_signed": -0.211301654453426,
+   "ci95_block_bootstrap": [
+    -0.5204596598438963,
+    0.15480570440844552
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.6883496327124619,
+    0.40941890355620547
+   ],
+   "walk_forward_hit_rate": 0.43548387096774194,
+   "walk_forward_n": 62,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "intents_volume_usd",
+   "kind": "usage",
+   "horizon_weeks": 4,
+   "benchmark": "btc",
+   "n_calibration": 22,
+   "n_evaluation": 62,
+   "status": "not evaluable: too few calibration or evaluation weeks"
+  },
+  {
+   "predictor": "qaa",
+   "kind": "usage",
+   "horizon_weeks": 4,
+   "benchmark": "btc",
+   "n_calibration": 0,
+   "n_evaluation": 62,
+   "status": "not evaluable: too few calibration or evaluation weeks"
+  },
+  {
+   "predictor": "near_momentum",
+   "kind": "naive_benchmark",
+   "horizon_weeks": 4,
+   "benchmark": "btc",
+   "n_calibration": 231,
+   "n_evaluation": 62,
+   "calibration_start": "2021-01-31",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": 0.01369380244942464,
+   "frozen_sign": 1.0,
+   "evaluation_start": "2025-08-03",
+   "evaluation_end": "2026-10-04",
+   "ic_evaluation_signed": -0.2471103724408854,
+   "ci95_block_bootstrap": [
+    -0.5985917031805754,
+    0.029135355318557352
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.8023828859341678,
+    0.193999172115027
+   ],
+   "walk_forward_hit_rate": 0.5,
+   "walk_forward_n": 62,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "btc_trend",
+   "kind": "naive_benchmark",
+   "horizon_weeks": 4,
+   "benchmark": "btc",
+   "n_calibration": 231,
+   "n_evaluation": 62,
+   "calibration_start": "2021-01-31",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": 0.26899959111353416,
+   "frozen_sign": 1.0,
+   "evaluation_start": "2025-08-03",
+   "evaluation_end": "2026-10-04",
+   "ic_evaluation_signed": 0.2708317594621138,
+   "ci95_block_bootstrap": [
+    -0.32555389334774876,
+    0.7027773556643031
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.7217875560501568,
+    0.8402553924078295
+   ],
+   "walk_forward_hit_rate": 0.5,
+   "walk_forward_n": 62,
+   "sign_agrees": true,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "active_accounts",
+   "kind": "usage",
+   "horizon_weeks": 4,
+   "benchmark": "eth",
+   "n_calibration": 228,
+   "n_evaluation": 62,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": 0.05071496045772049,
+   "frozen_sign": 1.0,
+   "evaluation_start": "2025-08-03",
+   "evaluation_end": "2026-10-04",
+   "ic_evaluation_signed": 0.03240915615320693,
+   "ci95_block_bootstrap": [
+    -0.2715414837708871,
+    0.3592629773913817
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.4508776015832338,
+    0.5197069718113299
+   ],
+   "walk_forward_hit_rate": 0.5,
+   "walk_forward_n": 62,
+   "sign_agrees": true,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "txns",
+   "kind": "usage",
+   "horizon_weeks": 4,
+   "benchmark": "eth",
+   "n_calibration": 228,
+   "n_evaluation": 62,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": -0.02645500502694707,
+   "frozen_sign": -1.0,
+   "evaluation_start": "2025-08-03",
+   "evaluation_end": "2026-10-04",
+   "ic_evaluation_signed": 0.0765782780589761,
+   "ci95_block_bootstrap": [
+    -0.35757560391428017,
+    0.5538261819243614
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.4868567427085921,
+    0.7476431618166033
+   ],
+   "walk_forward_hit_rate": 0.532258064516129,
+   "walk_forward_n": 62,
+   "sign_agrees": true,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "tx_fee_near",
+   "kind": "usage",
+   "horizon_weeks": 4,
+   "benchmark": "eth",
+   "n_calibration": 228,
+   "n_evaluation": 62,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": -0.10619463650565925,
+   "frozen_sign": -1.0,
+   "evaluation_start": "2025-08-03",
+   "evaluation_end": "2026-10-04",
+   "ic_evaluation_signed": -0.047115408828787994,
+   "ci95_block_bootstrap": [
+    -0.5730122009893654,
+    0.5090583331042223
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.7603875702302875,
+    0.6927133491261094
+   ],
+   "walk_forward_hit_rate": 0.5,
+   "walk_forward_n": 62,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "tx_volume_usd",
+   "kind": "usage",
+   "horizon_weeks": 4,
+   "benchmark": "eth",
+   "n_calibration": 228,
+   "n_evaluation": 62,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": -0.04316897123249808,
+   "frozen_sign": -1.0,
+   "evaluation_start": "2025-08-03",
+   "evaluation_end": "2026-10-04",
+   "ic_evaluation_signed": -0.12689179320591273,
+   "ci95_block_bootstrap": [
+    -0.46127002026837144,
+    0.22990954222856738
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.6524357744501825,
+    0.4044792960205204
+   ],
+   "walk_forward_hit_rate": 0.5161290322580645,
+   "walk_forward_n": 62,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "intents_volume_usd",
+   "kind": "usage",
+   "horizon_weeks": 4,
+   "benchmark": "eth",
+   "n_calibration": 22,
+   "n_evaluation": 62,
+   "status": "not evaluable: too few calibration or evaluation weeks"
+  },
+  {
+   "predictor": "qaa",
+   "kind": "usage",
+   "horizon_weeks": 4,
+   "benchmark": "eth",
+   "n_calibration": 0,
+   "n_evaluation": 62,
+   "status": "not evaluable: too few calibration or evaluation weeks"
+  },
+  {
+   "predictor": "near_momentum",
+   "kind": "naive_benchmark",
+   "horizon_weeks": 4,
+   "benchmark": "eth",
+   "n_calibration": 231,
+   "n_evaluation": 62,
+   "calibration_start": "2021-01-31",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": 0.049315601939290105,
+   "frozen_sign": 1.0,
+   "evaluation_start": "2025-08-03",
+   "evaluation_end": "2026-10-04",
+   "ic_evaluation_signed": -0.0773841001233915,
+   "ci95_block_bootstrap": [
+    -0.4821806699630998,
+    0.23438561152864015
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.7213690143708631,
+    0.36410273039077135
+   ],
+   "walk_forward_hit_rate": 0.4032258064516129,
+   "walk_forward_n": 62,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "btc_trend",
+   "kind": "naive_benchmark",
+   "horizon_weeks": 4,
+   "benchmark": "eth",
+   "n_calibration": 231,
+   "n_evaluation": 62,
+   "calibration_start": "2021-01-31",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": 0.16424579917833293,
+   "frozen_sign": 1.0,
+   "evaluation_start": "2025-08-03",
+   "evaluation_end": "2026-10-04",
+   "ic_evaluation_signed": 0.31107249880385784,
+   "ci95_block_bootstrap": [
+    -0.2370943286386259,
+    0.6914215839350021
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.6382062339694076,
+    0.8328105057555355
+   ],
+   "walk_forward_hit_rate": 0.5161290322580645,
+   "walk_forward_n": 62,
+   "sign_agrees": true,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "active_accounts",
+   "kind": "usage",
+   "horizon_weeks": 12,
+   "benchmark": "btc",
+   "n_calibration": 228,
+   "n_evaluation": 46,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": 0.040491982702847186,
+   "frozen_sign": 1.0,
+   "evaluation_start": "2025-09-28",
+   "evaluation_end": "2026-08-09",
+   "ic_evaluation_signed": -0.25945112550107924,
+   "ci95_block_bootstrap": [
+    -0.6603474794018128,
+    0.2150246160617608
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.8275257503264174,
+    0.4621080260991603
+   ],
+   "walk_forward_hit_rate": 0.45652173913043476,
+   "walk_forward_n": 46,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "txns",
+   "kind": "usage",
+   "horizon_weeks": 12,
+   "benchmark": "btc",
+   "n_calibration": 228,
+   "n_evaluation": 46,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": 0.05960450633152336,
+   "frozen_sign": 1.0,
+   "evaluation_start": "2025-09-28",
+   "evaluation_end": "2026-08-09",
+   "ic_evaluation_signed": -0.3227258711069997,
+   "ci95_block_bootstrap": [
+    -0.6314468675582529,
+    0.27699409420866633
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.7649095849957551,
+    0.6225578924104208
+   ],
+   "walk_forward_hit_rate": 0.3695652173913043,
+   "walk_forward_n": 46,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "tx_fee_near",
+   "kind": "usage",
+   "horizon_weeks": 12,
+   "benchmark": "btc",
+   "n_calibration": 228,
+   "n_evaluation": 46,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": 0.07836266309734863,
+   "frozen_sign": 1.0,
+   "evaluation_start": "2025-09-28",
+   "evaluation_end": "2026-08-09",
+   "ic_evaluation_signed": -0.38686401480111005,
+   "ci95_block_bootstrap": [
+    -0.6935179343851687,
+    0.25287970437264384
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.8229393822594474,
+    0.5999628736375824
+   ],
+   "walk_forward_hit_rate": 0.32608695652173914,
+   "walk_forward_n": 46,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "tx_volume_usd",
+   "kind": "usage",
+   "horizon_weeks": 12,
+   "benchmark": "btc",
+   "n_calibration": 228,
+   "n_evaluation": 46,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": -0.101826811801834,
+   "frozen_sign": -1.0,
+   "evaluation_start": "2025-09-28",
+   "evaluation_end": "2026-08-09",
+   "ic_evaluation_signed": 0.5124267653407338,
+   "ci95_block_bootstrap": [
+    -0.31589964837130197,
+    0.7941866758568463
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.7467921413391176,
+    0.9480331715549587
+   ],
+   "walk_forward_hit_rate": 0.7391304347826086,
+   "walk_forward_n": 46,
+   "sign_agrees": true,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "intents_volume_usd",
+   "kind": "usage",
+   "horizon_weeks": 12,
+   "benchmark": "btc",
+   "n_calibration": 22,
+   "n_evaluation": 46,
+   "status": "not evaluable: too few calibration or evaluation weeks"
+  },
+  {
+   "predictor": "qaa",
+   "kind": "usage",
+   "horizon_weeks": 12,
+   "benchmark": "btc",
+   "n_calibration": 0,
+   "n_evaluation": 46,
+   "status": "not evaluable: too few calibration or evaluation weeks"
+  },
+  {
+   "predictor": "near_momentum",
+   "kind": "naive_benchmark",
+   "horizon_weeks": 12,
+   "benchmark": "btc",
+   "n_calibration": 231,
+   "n_evaluation": 46,
+   "calibration_start": "2021-01-31",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": -0.0318133141221597,
+   "frozen_sign": -1.0,
+   "evaluation_start": "2025-09-28",
+   "evaluation_end": "2026-08-09",
+   "ic_evaluation_signed": 0.26105457909343205,
+   "ci95_block_bootstrap": [
+    -0.3575450728574957,
+    0.729293560726811
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.653909342713755,
+    0.925113369033616
+   ],
+   "walk_forward_hit_rate": 0.5217391304347826,
+   "walk_forward_n": 46,
+   "sign_agrees": true,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "btc_trend",
+   "kind": "naive_benchmark",
+   "horizon_weeks": 12,
+   "benchmark": "btc",
+   "n_calibration": 231,
+   "n_evaluation": 46,
+   "calibration_start": "2021-01-31",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": 0.0234759243754746,
+   "frozen_sign": 1.0,
+   "evaluation_start": "2025-09-28",
+   "evaluation_end": "2026-08-09",
+   "ic_evaluation_signed": 0.4038852913968547,
+   "ci95_block_bootstrap": [
+    0.002957240844420157,
+    0.6728264718023051
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.2954887074743469,
+    0.8070240969291268
+   ],
+   "walk_forward_hit_rate": 0.6521739130434783,
+   "walk_forward_n": 46,
+   "sign_agrees": true,
+   "passes_declared_criterion": true,
+   "status": "association persists out of sample"
+  },
+  {
+   "predictor": "active_accounts",
+   "kind": "usage",
+   "horizon_weeks": 12,
+   "benchmark": "eth",
+   "n_calibration": 228,
+   "n_evaluation": 46,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": 0.03667292039806536,
+   "frozen_sign": 1.0,
+   "evaluation_start": "2025-09-28",
+   "evaluation_end": "2026-08-09",
+   "ic_evaluation_signed": -0.3716928769657724,
+   "ci95_block_bootstrap": [
+    -0.7748987959676785,
+    0.1420643810990794
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.9158706761760786,
+    0.4194126777881164
+   ],
+   "walk_forward_hit_rate": 0.45652173913043476,
+   "walk_forward_n": 46,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "txns",
+   "kind": "usage",
+   "horizon_weeks": 12,
+   "benchmark": "eth",
+   "n_calibration": 228,
+   "n_evaluation": 46,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": 0.11537071329999586,
+   "frozen_sign": 1.0,
+   "evaluation_start": "2025-09-28",
+   "evaluation_end": "2026-08-09",
+   "ic_evaluation_signed": -0.3623188405797102,
+   "ci95_block_bootstrap": [
+    -0.7441979255967281,
+    0.24975145668528217
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.8518123237907508,
+    0.5478097889309027
+   ],
+   "walk_forward_hit_rate": 0.30434782608695654,
+   "walk_forward_n": 46,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "tx_fee_near",
+   "kind": "usage",
+   "horizon_weeks": 12,
+   "benchmark": "eth",
+   "n_calibration": 228,
+   "n_evaluation": 46,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": 0.10342753754516912,
+   "frozen_sign": 1.0,
+   "evaluation_start": "2025-09-28",
+   "evaluation_end": "2026-08-09",
+   "ic_evaluation_signed": -0.4419981498612396,
+   "ci95_block_bootstrap": [
+    -0.8094906863081575,
+    0.19838252256517713
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.8823078407390695,
+    0.4648789780578979
+   ],
+   "walk_forward_hit_rate": 0.2826086956521739,
+   "walk_forward_n": 46,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "tx_volume_usd",
+   "kind": "usage",
+   "horizon_weeks": 12,
+   "benchmark": "eth",
+   "n_calibration": 228,
+   "n_evaluation": 46,
+   "calibration_start": "2021-02-21",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": -0.14046697452709744,
+   "frozen_sign": -1.0,
+   "evaluation_start": "2025-09-28",
+   "evaluation_end": "2026-08-09",
+   "ic_evaluation_signed": 0.5401788467468392,
+   "ci95_block_bootstrap": [
+    -0.2544865509042814,
+    0.8459558755778649
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.6982874200188991,
+    0.9255354728801745
+   ],
+   "walk_forward_hit_rate": 0.8260869565217391,
+   "walk_forward_n": 46,
+   "sign_agrees": true,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "intents_volume_usd",
+   "kind": "usage",
+   "horizon_weeks": 12,
+   "benchmark": "eth",
+   "n_calibration": 22,
+   "n_evaluation": 46,
+   "status": "not evaluable: too few calibration or evaluation weeks"
+  },
+  {
+   "predictor": "qaa",
+   "kind": "usage",
+   "horizon_weeks": 12,
+   "benchmark": "eth",
+   "n_calibration": 0,
+   "n_evaluation": 46,
+   "status": "not evaluable: too few calibration or evaluation weeks"
+  },
+  {
+   "predictor": "near_momentum",
+   "kind": "naive_benchmark",
+   "horizon_weeks": 12,
+   "benchmark": "eth",
+   "n_calibration": 231,
+   "n_evaluation": 46,
+   "calibration_start": "2021-01-31",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": -0.056270566015693455,
+   "frozen_sign": -1.0,
+   "evaluation_start": "2025-09-28",
+   "evaluation_end": "2026-08-09",
+   "ic_evaluation_signed": 0.429663891458526,
+   "ci95_block_bootstrap": [
+    -0.22031882016667434,
+    0.8733385316442743
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.48448502193129245,
+    0.9384736094139207
+   ],
+   "walk_forward_hit_rate": 0.6086956521739131,
+   "walk_forward_n": 46,
+   "sign_agrees": true,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  },
+  {
+   "predictor": "btc_trend",
+   "kind": "naive_benchmark",
+   "horizon_weeks": 12,
+   "benchmark": "eth",
+   "n_calibration": 231,
+   "n_evaluation": 46,
+   "calibration_start": "2021-01-31",
+   "calibration_end": "2025-06-29",
+   "ic_calibration": -0.05136198134698885,
+   "frozen_sign": -1.0,
+   "evaluation_start": "2025-09-28",
+   "evaluation_end": "2026-08-09",
+   "ic_evaluation_signed": -0.4551958063521431,
+   "ci95_block_bootstrap": [
+    -0.6986370704328246,
+    -0.07160364215752942
+   ],
+   "ci95_familywise_bonferroni": [
+    -0.7833818868647872,
+    0.19913345761747364
+   ],
+   "walk_forward_hit_rate": 0.34782608695652173,
+   "walk_forward_n": 46,
+   "sign_agrees": false,
+   "passes_declared_criterion": false,
+   "status": "no out-of-sample association established"
+  }
+ ],
+ "summary": {
+  "usage_tests": 24,
+  "evaluable": 16,
+  "passing": 0,
+  "not_evaluable": [
+   "intents_volume_usd h=4 vs btc",
+   "qaa h=4 vs btc",
+   "intents_volume_usd h=4 vs eth",
+   "qaa h=4 vs eth",
+   "intents_volume_usd h=12 vs btc",
+   "qaa h=12 vs btc",
+   "intents_volume_usd h=12 vs eth",
+   "qaa h=12 vs eth"
+  ],
+  "best_naive_benchmark_ic": 0.429663891458526,
+  "conclusion": "no usage metric passes the declared out-of-sample criterion"
+ }
+}

@@ -176,6 +176,26 @@ th:first-child, td:first-child { text-align: left; }
 .val text { fill: var(--text-secondary); font-size: 12px; }
 .empty { color: var(--muted); font-style: italic; padding: 12px 0; }
 
+/* evidence kinds, method links, sensitivity */
+.kind { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--axis); color: var(--text-secondary); background: var(--surface-2); line-height: 1.5; vertical-align: middle; margin-left: 6px; }
+.kind-observed { border-color: var(--good); color: var(--good); background: var(--good-soft); }
+.kind-estimate { border-color: var(--series-1); color: var(--series-1); background: var(--accent-soft); }
+.kind-assumption { border-color: var(--series-4); color: var(--series-4); }
+.kind-inconclusive { border-color: var(--axis); color: var(--text-secondary); }
+.method-links { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); }
+.method-links a { color: var(--text-secondary); }
+.steps .kind { margin-left: 8px; }
+.sensitivity { background: var(--surface-1); border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 28px 0; box-shadow: var(--shadow); scroll-margin-top: 20px; border-left: 4px solid var(--series-4); }
+.s-block { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--grid); }
+.s-block .c-head { display: flex; align-items: center; gap: 8px; }
+.s-block .c-label { font-weight: 600; }
+.s-table { width: auto; min-width: min(100%, 520px); margin-top: 6px; font-size: 13px; }
+.s-table td { text-align: left; padding: 3px 14px 3px 0; }
+.s-table td:last-child { font-variant-numeric: tabular-nums; }
+.s-effect { margin: 8px 0 0; font-size: 13.5px; color: var(--text-secondary); max-width: 90ch; }
+.kind-legend { margin: 16px 0 0; font-size: 12.5px; color: var(--muted); }
+.status-strip .chip.dates { font-variant-numeric: tabular-nums; }
+
 /* evidence against, reproduce, footer */
 .against { margin-top: 36px; border-left: 4px solid var(--bad); }
 .against ul { margin: 10px 0 0; padding-left: 20px; }
@@ -212,6 +232,6 @@ footer { color: var(--muted); font-size: 13px; margin-top: 40px; }
   .steps .s-chart { display: block; margin-top: 10px; position: relative; }
   .sec-head .num { font-size: 36px; }
   .hero .value { font-size: 42px; }
-  .verdict, .against, .repro { padding: 16px; }
+  .verdict, .against, .repro, .sensitivity { padding: 16px; }
   .repro-steps li { grid-template-columns: 1fr; gap: 2px; }
 }

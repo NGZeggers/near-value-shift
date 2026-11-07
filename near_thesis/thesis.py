@@ -33,6 +33,15 @@ def _json(name):
     return json.loads((MODELS / name).read_text())
 
 
+def _opt(name):
+    f = MODELS / name
+    return json.loads(f.read_text()) if f.exists() else {}
+
+
+def _kind(label: str) -> str:
+    return f"[{label}]"
+
+
 def build() -> str:
     d = pd.read_csv(DERIVED / "daily.csv", parse_dates=["date"]).set_index("date")
     m = pd.read_csv(DERIVED / "monthly.csv", parse_dates=["month"]).set_index("month")
@@ -95,12 +104,13 @@ def build() -> str:
                 f"Silhouette on at most 3,000 observations: {num(qs.get('silhouette_sample'),2)}. Separation is not human/bot accuracy.\n",
                 f"Latest sensitivity: strict multi-app share {q.iloc[-1].quality_share_strict:.1%}; default share {q.iloc[-1].qaa_share:.1%}; including ambiguous groups {q.iloc[-1].quality_share_including_ambiguous:.1%}. "
                 "Name-proxy profiles are in `qaa_anchor_profiles.csv`; monthly group counts permit composition checks. Verified human/bot anchor labels are not available. "
-                "In sampled mode, shares are rescaled by NearBlocks mean daily active accounts; unequal account inclusion probabilities are not corrected, so these are exploratory proxies with no guaranteed conservative bias.\n"]
+                "In sampled mode, shares are rescaled by NearBlocks mean daily active accounts; an inclusion-probability weighting is reported below as a sensitivity, and these remain exploratory proxies with no guaranteed conservative bias.\n"]
         causal = qs.get('causal', {})
         if causal.get('computed'):
             out.append(f"**Past-only QAA for predictive tests:** a separate GMM is calibrated through {causal['training_end']}, then its scaler, parameters and label mapping are frozen. "
                        f"Only later months are predicted; first availability is {causal['first_available_at']}. Each month becomes available on the first day of the following month. "
                        "The full-history descriptive clustering is never fed into signal or Granger tests. The model is frozen calibration, not monthly walk-forward retraining.\n")
+        out += qaa_scope_section(qs)
     else:
         out.append(f"Not computed: {qs.get('reason')}.\n")
     out += ["## Intents microstructure (L2)\n"]
@@ -118,6 +128,7 @@ def build() -> str:
                    "Full-day extracts would improve coverage but would not automatically validate this estimator. Role sensitivity is in `intents_solver_sensitivity.json`.\n")
     else:
         out.append('Not computed: ' + ins.get('reason', 'no verified extract') + '\n')
+    out += reconciliation_section()
     out += ["## Econometrics (L3)\n", narrative.granger_summary(vg) + "\n",
             "| Metric | Weeks | VAR status | Johansen rank | Johansen status |\n|---|---|---|---|---|"]
     jmap = {r['metric']: r for r in jo}
@@ -137,13 +148,18 @@ def build() -> str:
     out.append(f"\nDeclared family: {len(ic)} tests, two horizons and two benchmarks. Signal is the four-week change in a trailing four-week mean; target is forward excess log return. "
                "Circular block resampling addresses dependence approximately; the individual intervals are exploratory, and familywise Bonferroni intervals are reported separately. "
                "The half-sample split is a stability summary, not walk-forward portfolio evaluation. No returns after the analysis cutoff enter a target.\n")
+    out += oos_section()
     out += ["## Relative valuation and scenarios\n",
             "Cross-chain settlement/TVL and local-chain DEX/TVL have different scopes. Peer ranks are descriptive, not like-for-like proof of undervaluation. Gross app-fee/market-cap is not shareholder yield.\n",
             f"The scenario model draws {sc['n']:,} assumptions around observed gross take rate and net capture; future allocation is discretionary. "
             f"Median market-cap/illustrative retained-fees multiple {num(sc['price_to_fees']['p50'])}x, range p5–p95 {num(sc['price_to_fees']['p5'])}x–{num(sc['price_to_fees']['p95'])}x. "
             "The gas-fee term is a paid-fee proxy, not audited net burn; no net-deflation, fair-price or price-forecast claim is made.\n",
+            *bridge_section(),
             "## What changes the verdict\n",
             *["- " + change for change in narrative.verdict_changes(ins)], "",
+            "## Evidence status of the main claims\n",
+            "| Claim | Status | Where to verify |\n|---|---|---|",
+            *evidence_rows(ins), "",
             "## Gaps, provenance and reproduction\n",
             "Raw and extracted inputs and frozen model artifacts are hashed in `docs/REPRODUCIBILITY.md`. Revenue definitions are stored in the raw responses. "
             "BigQuery is optional: its runner checks freshness before L1/L2; actual queries and credentials were not needed for this block-sample build. "
@@ -151,7 +167,159 @@ def build() -> str:
             "the team has no partner JWT for Explorer. Setting INTENTS_EXPLORER_JWT alone does not enable a pull; "
             "an explicit request fails clearly. DefiLlama/Dune is the substitute reference for the FastNear on-chain sample cross-check, "
             "not an Explorer API result or a completed Explorer deliverable. On-chain publication is an optional dry-run-capable feature, not a claimed deployed result.\n",
-            "`uv sync --locked --all-extras && make build && make test && make check-generated`; open `site/index.html` and `site/walkthrough.html`. Sampling limits: `docs/SAMPLING.md`.\n"]
+            "`uv sync --locked --all-extras && make build && make test && make check-generated`; open `site/index.html` and `site/walkthrough.html`. Sampling limits: `docs/SAMPLING.md`; reconciliation method, unit and tolerance: `docs/RECONCILIATION.md`.\n"]
+    return '\n'.join(out)
+
+
+def qaa_scope_section(qs: dict) -> list[str]:
+    sens = _opt('qaa_sensitivity.json')
+    if not sens:
+        return []
+    scope, crit = sens['scope'], sens['criteria']
+    rows = [f"**Scope and sensitivity of the behavioral groups ({sens['latest_month']}).** Groups are named after observed behavior ({', '.join(f'`{k}`: {v}' for k, v in qs.get('group_definitions', {}).items())}). "
+            f"Criteria: strict {crit['strict']:.1%} ({sens['criteria']['groups_counted']['strict'][0]} only), default {crit['default']:.1%}, including ambiguous groups {crit['including_ambiguous']:.1%}. {crit['why_strict_is_low']}.",
+            f"A name-only split (accounts without a `.tg`/`.sweat` name) gives {sens['name_only_baseline']['latest_month']:.1%}; its mean absolute difference from the default share over all months is {sens['name_only_baseline']['mean_abs_difference_vs_default']:.1%} "
+            f"(correlation {sens['name_only_baseline']['correlation_with_default']:.2f}), so in these sparse windows the clustering adds little beyond the name class. "
+            f"Inclusion-probability weighting (accounts active in fewer windows are under-observed) moves the latest share from {sens['inclusion_probability_weighting']['latest_month_unweighted']:.1%} to {sens['inclusion_probability_weighting']['latest_month_weighted']:.1%}; "
+            "never-observed accounts stay outside the index, so the QAA count is an illustrative rescaling and the share is the measured quantity."]
+    if sens.get('by_window_hour'):
+        bh = sens['by_window_hour']
+        rows.append("By observation hour the latest share is " + ", ".join(f"{h}:00 UTC {v:.1%}" for h, v in bh['latest_month'].items()) + f"; mean absolute difference between hours {bh['mean_abs_difference_between_hours']:.1%}.")
+    if sens.get('model_agreement'):
+        ma = sens['model_agreement']
+        rows.append(f"The frozen past-only model labels the same latest month at {ma['latest']['frozen']:.1%} against {ma['latest']['descriptive']:.1%} for the retrospective clustering (mean absolute difference {ma['mean_abs_difference']:.1%}, correlation {ma['correlation']:.2f} over {ma['months']} months): the level depends on the model, the trend less so.")
+    rows.append("Label-threshold variants of the default share: " + "; ".join(f"{k}: {v:.1%}" for k, v in sens['label_threshold_variants_default_share'].items())
+                + f". Noise excluded/included: {sens['noise_bounds_default_share']['noise_excluded']:.1%}/{sens['noise_bounds_default_share']['noise_included']:.1%}. "
+                "Typical and least-typical account-months per group are in `qaa_examples.json`. Not done: " + "; ".join(sens['not_done']) + ".\n")
+    return rows
+
+
+def reconciliation_section() -> list[str]:
+    rec = _opt('intents_reconciliation.json')
+    if not rec.get('computed'):
+        return ["## Reconciliation of the on-chain estimate\n", "Not computed: " + rec.get('reason', 'the block-sample L2 layer is unavailable') + "\n"]
+    eu, comp, hold = rec['economic_unit'], rec['components'], rec['holdout']
+    cov, val, rt, res = comp['temporal_coverage'], comp['valuation'], comp['route_reconstruction'], comp['residual']
+    pooled = rec['pooled_ratio_all_days']
+    out = ["## Reconciliation of the on-chain estimate\n",
+           f"**Economic unit.** {eu['unit']}. Our measure: {eu['our_measure']} Scope: {eu['scope']}. Prices: {eu['prices']}. Reference: {eu['reference']} {eu['shared_origin']}\n",
+           f"**Pooled result.** Estimate / reference {pooled['ratio']:.3f}, conditional day-bootstrap interval [{pooled['ci_lo']:.3f}, {pooled['ci_hi']:.3f}] over {pooled['days']} matched days. "
+           f"The per-day table (`intents_reconciliation_daily.csv`) lists observed sampled volume, expansion factor, expanded estimate, reference, difference, window split, unpriced legs and unvalued account-intents for each of the {cov['days_sampled']} sampled days.\n",
+           f"**Temporal coverage.** Two 50-block windows observe {cov['block_coverage_share_mean']:.2%} of a day's blocks. "
+           + (f"On days where both windows carry volume the 15:00 UTC window has {cov['between_window_ratio_15_over_03']['median']:.1f}x the 03:00 volume (median over {cov['between_window_ratio_15_over_03']['days_both_positive']} days); "
+              if cov.get('between_window_ratio_15_over_03', {}).get('median') else "")
+           + f"one window carries over 80% of the day's sampled volume on {cov['share_of_days_one_window_carries_over_80pct']:.0%} of days.\n"]
+    intra = rec.get('intraday') or {}
+    if intra.get('days'):
+        out.append(f"**Intraday expansion error (measured).** Selection rule, declared before fetching: {intra['selection_rule']}. Hourly windows of {intra['blocks_per_window']} blocks, fetched {intra['fetched_at']}.\n")
+        out.append("| Day | Hourly windows | Fixed-hours share of sampled volume | Estimate from 24 hours / reference | Estimate from fixed hours / reference | Bias factor |\n|---|---|---|---|---|---|")
+        for dday in intra['days']:
+            if dday.get('hours_usable'):
+                out.append(f"| {dday['day']} | {dday['hours_usable']} | {num(100 * dday['fixed_hours_share_of_sampled'], 1) if dday.get('fixed_hours_share_of_sampled') is not None else 'n/a'}% | "
+                           f"{num(dday.get('ratio_all_hours_to_reference'), 3)} | {num(dday.get('ratio_fixed_hours_to_reference'), 3)} | {num(dday.get('fixed_window_bias_factor'), 2)} |")
+            else:
+                out.append(f"| {dday['day']} | 0 | n/a | n/a | n/a | n/a |")
+        out.append(f"\nMean bias factor {num(intra.get('fixed_window_bias_factor_mean'), 2)}: {intra['reading']}.\n")
+    else:
+        out.append("**Intraday expansion error.** Not measured yet: `make blocks-intraday` fetches 24 hourly windows for three pre-declared days (highest reference volume, 2026 median day, 2025 median day).\n")
+    chk = val['two_sided_pricing_check']
+    out.append(f"**Valuation.** {val['legs_unpriced']} of {val['legs_total']} legs ({val['legs_unpriced_share']:.1%}) are unpriced, but an account-intent is valued by whichever side is priced: only {val['account_intents_without_any_priced_side']} of {val['account_intents']} account-intents in {val['batches_with_unvalued_account_intent']} batches lose value entirely. "
+               f"For the {chk['account_intents_two_sided']} account-intents with both sides priced, inflow/outflow has median {chk['in_over_out']['p50']:.3f} and 5th-95th percentiles {chk['in_over_out']['p5']:.3f}-{chk['in_over_out']['p95']:.3f}: daily prices and decimals are consistent across legs. "
+               "Unpriced assets and the reason for each: " + "; ".join(f"{a['symbol'] or a['asset_id'][:28]} ({a['legs']} legs: {a['reason']})" for a in val['unpriced_assets_top'][:6]) + ".\n")
+    alt = rt['alternative_definitions_total_usd']
+    out.append(f"**Route reconstruction.** {rt['batches_with_more_than_two_accounts_share']:.0%} of batches have more than two accounts; per-token diffs within a receipt balance to rounding dust (99th percentile of |net|/gross {rt['per_token_net_relative_to_gross']['p99']:.1e}). "
+               f"Sampled totals under alternative definitions: half gross participant notional {usd(alt['half_gross_participant_notional'])}, full gross {usd(alt['full_gross_participant_notional'])}, user-side notional with heuristic roles {usd(alt['user_side_notional_heuristic_roles'])}. "
+               f"If the reference counted both sides of each swap our ratio would be {res['if_reference_were_two_sided_notional']:.2f}; this is a definitional bound, not evidence about the reference.\n")
+    out.append(f"**Residual.** " + (f"After the intraday bias factor the ratio would be {res['after_intraday_bias_correction']:.2f}, and {res['after_both']:.2f} with the two-sided reading as well; a" if res.get('after_both') else "A")
+               + f" factor of {res['unexplained_factor_to_parity']:.1f}x to parity remains unexplained and is reported as such, not attributed to missing large trades.\n")
+    cal, valid = hold['calibration'], hold['validation']
+    tol = hold['tolerance']
+    out.append(f"**Pre-declared tolerance and holdout.** Tolerance ({tol['declared']}): point ratio within [{tol['point_ratio_min']}, {tol['point_ratio_max']}] and interval covering {tol['interval_must_include']}; {tol['justification']}. Split: {hold['rule']}. "
+               f"Calibration days ({cal.get('days', 0)}): {num(cal.get('ratio'), 3)} [{num(cal.get('ci_lo'), 3)}, {num(cal.get('ci_hi'), 3)}]. Validation days ({valid.get('days', 0)}): {num(valid.get('ratio'), 3)} [{num(valid.get('ci_lo'), 3)}, {num(valid.get('ci_hi'), 3)}]. "
+               f"Verdict: {hold['verdict']}.\n")
+    out.append("Traceable examples from receipt and log to priced legs and batch volume (`intents_trace_examples.json`): " + ", ".join(rec['trace_examples']) + ". Not possible here: " + "; ".join(rec['not_possible_here']) + ".\n")
+    return out
+
+
+def oos_section() -> list[str]:
+    o = _opt('signal_oos.json')
+    if not o.get('tests'):
+        return []
+    p, sm = o['protocol'], o['summary']
+    out = ["## Out-of-sample evaluation (pre-registered)\n",
+           f"Protocol declared before scoring: {p['hypothesis']}. Signal: {p['signal_transform']}. Target: {p['target']}. Calibration ends {p['calibration_end']}; {p['purge']}. Rule: {p['fixed_rule']}. Walk-forward: {p['walk_forward']}. Family: {p['family']}. "
+           f"Benchmark predictors: {p['benchmark_predictors']['near_momentum']}; {p['benchmark_predictors']['btc_trend']}.\n",
+           f"**Result: {sm['conclusion']}** ({sm['passing']} of {sm['evaluable']} evaluable usage tests; not evaluable: {', '.join(sm['not_evaluable']) or 'none'}). Best naive-benchmark evaluation IC {num(sm.get('best_naive_benchmark_ic'), 2)}.\n",
+           "| Predictor | h | vs | Calibration IC (n) | Evaluation IC, signed (n) | 95% block interval | Walk-forward hit rate | Status |\n|---|---|---|---|---|---|---|---|"]
+    for r in o['tests']:
+        if 'ic_evaluation_signed' in r:
+            lo, hi = r['ci95_block_bootstrap']
+            out.append(f"| {r['predictor']} | {r['horizon_weeks']} | {r['benchmark']} | {r['ic_calibration']:+.2f} ({r['n_calibration']}) | {r['ic_evaluation_signed']:+.2f} ({r['n_evaluation']}) | {lo:+.2f} to {hi:+.2f} | "
+                       f"{num(100 * r['walk_forward_hit_rate'], 0) if r.get('walk_forward_hit_rate') is not None else 'n/a'}% ({r['walk_forward_n']}) | {r['status']} |")
+        else:
+            out.append(f"| {r['predictor']} | {r['horizon_weeks']} | {r['benchmark']} | n={r['n_calibration']} | n={r['n_evaluation']} | | | {r['status']} |")
+    out.append("\nLimitations: " + "; ".join(p['limitations']) + ". A negative or inconclusive result is a valid outcome and is carried into the verdict; no trading strategy is proposed.\n")
+    return out
+
+
+def bridge_section() -> list[str]:
+    b = _opt('value_bridge.json')
+    if not b.get('steps'):
+        return []
+    out = ["## Value bridge: from settlement to the token\n",
+           f"Trailing year to {b['as_of']}. Each step states whether it is observed, classified, inferred or unavailable ({'; '.join(f'{k}: {v}' for k, v in b['status_legend'].items())}).\n",
+           "| Step | USD | Share of previous | Status | Source |\n|---|---|---|---|---|"]
+    for st in b['steps']:
+        value = usd(st.get('usd')) if st.get('usd') is not None else (f"{st['near']:,.0f} NEAR" if st.get('near') else 'n/a')
+        share = f"{st['share_of_previous']:.1%}" if st.get('share_of_previous') is not None else ''
+        out.append(f"| {st['step']}. {st['name']} | {value} | {share} | {st['status']} | {st['source']} |")
+    out.append("")
+    out += [f"- Step {st['step']}: {st['note'].rstrip('.')}." for st in b['steps'] if st.get('note')]
+    out.append("")
+    dl = b['dilution']
+    out.append(f"**Issuance and dilution ({dl['status']}).** {dl['measure'][0].upper() + dl['measure'][1:]}. Total supply {dl['total_supply_start_near']:,.0f} to {dl['total_supply_end_near']:,.0f} NEAR: {dl['net_new_total_near']:,.0f} new NEAR ({dl['annual_total_supply_growth']:.2%}), "
+               f"{usd(dl['net_new_usd_at_average_price'])} at the average price. " + (f"Executed buybacks received {dl['buyback_near_received_12m']:,.0f} NEAR, {dl['buyback_to_issuance_ratio']:.1%} of issuance. " if dl.get('buyback_to_issuance_ratio') else "")
+               + f"The NearBlocks circulating-supply field is constant since {dl['circulating_supply_field']['last_change']} and is not used. {dl['note'][0].upper() + dl['note'][1:]}.\n")
+    out.append("| Scenario | Volume | Take rate | Capture | Allocation to buybacks | New supply | Buyback accrual | Issuance | Net yield on market cap |\n|---|---|---|---|---|---|---|---|---|")
+    for name, sc in b['scenarios'].items():
+        a = sc['assumptions']
+        out.append(f"| {name} | {usd(a['volume_usd'])} | {a['take_rate_bps']:.1f} bps | {a['capture_share']:.1%} | {a['allocation_to_buybacks']:.0%} | {a['net_new_supply_near']:,.0f} NEAR | {usd(sc['buyback_accrual_usd'])} | {usd(sc['issuance_usd'])} | {sc['net_yield_on_mcap']:+.2%} |")
+    da = b['dominant_assumption']
+    out.append(f"\nDominant assumption ({da['method']}): **{da['dominant']}**; ranking by effect: " + ", ".join(f"{r['assumption']} ({r['change_vs_base']:+.2%})" for r in da['ranking']) + f". What weakens the thesis: {b['what_weakens_the_thesis']} Scenarios are illustrative, not forecasts; every multiplier is in `value_bridge.json`.\n")
+    return out
+
+
+def evidence_rows(ins: dict) -> list[str]:
+    rec, b, o, qsens = _opt('intents_reconciliation.json'), _opt('value_bridge.json'), _opt('signal_oos.json'), _opt('qaa_sensitivity.json')
+    rows = [("Activity counts fell while value per transaction and reported settlement rose", "observed (third-party series)", "Observed activity table; `docs/METRICS.md`"),
+            ("Intents captures net revenue and buys NEAR", "observed (adapter receipts; wallet receipts)" if b.get('receipts', {}).get('purchase_transfers') else "observed (adapter) / purchases unavailable", "Value bridge; `value_bridge.json`"),
+            ("Purchased NEAR is held, not burned", "observed balance" if b.get('receipts', {}).get('balance_near_at_fetch') else "unavailable", "Value bridge step 6"),
+            ("Issuance exceeds buyback accrual", "observed issuance vs scenario accrual", "Value bridge scenarios"),
+            ("The on-chain sample reproduces the reference level", "estimate: failing (outside declared tolerance)" if rec.get('holdout', {}).get('validation', {}).get('within_tolerance') is False else "estimate", "Reconciliation; `docs/RECONCILIATION.md`"),
+            ("Departing accounts were bots", "not established: behavioral groups only; name-only split tracks the share" if qsens else "not established", "Quality-adjusted accounts (L1)"),
+            ("Usage predicts forward excess returns", "inconclusive out of sample" if o.get('summary') else "inconclusive", "Out-of-sample evaluation; Forward associations"),
+            ("Token undervaluation", "not claimed", "Relative valuation and scenarios")]
+    return [f"| {a} | {bb} | {c} |" for a, bb, c in rows]
+
+
+def reconciliation_doc() -> str:
+    rec = _opt('intents_reconciliation.json')
+    out = ['# Reconciliation of the on-chain Intents estimate (generated)\n',
+           'Generated by `make thesis` from `data/derived/models/intents_reconciliation.json`; numbers are never typed by hand. The method, the declared tolerance and the holdout rule live in `near_thesis/reconcile.py`.\n']
+    if not rec:
+        return '\n'.join(out + ['Not computed.\n'])
+    eu = rec['economic_unit']
+    out += ['## Economic unit of comparison\n'] + [f"- **{k.replace('_', ' ')}:** {v}" for k, v in eu.items()] + ['']
+    if rec.get('computed'):
+        out += [line for line in reconciliation_section()[2:]]
+        out += ['## How to extend the evidence\n',
+                '1. `make blocks-intraday` fetches 24 hourly windows for the three pre-declared days (several hours under the public rate limit) and `make build` recomputes the intraday bias factor.',
+                '2. `make blocks BLOCKS=100` doubles the blocks per fixed window; the per-day table and the holdout are recomputed by `make build`.',
+                '3. A complete-day extract needs BigQuery (`make bq`, credentials) or an archival node; the reconciliation code accepts any extract with the same schema.',
+                '4. A second reference independent of Dune needs an Intents Explorer JWT or a Dune API key; neither is available to this team.\n',
+                '## Per-day table\n', 'See `data/derived/models/intents_reconciliation_daily.csv` (columns: date, windows_usable, blocks_observed, blocks_in_day, block_coverage_share, batches_sampled, volume_sampled_usd, expansion_factor, volume_expanded_usd, reference_usd, difference_usd, ratio, window03_sampled_usd, window15_sampled_usd, fully_priced_batch_share, legs_unpriced, legs_total, account_intents_unvalued, batches_more_than_two_accounts_share, holdout_role).\n']
+    else:
+        out += ['Not computed: ' + rec.get('reason', '') + '\n']
     return '\n'.join(out)
 
 
@@ -172,6 +340,11 @@ def metrics_doc() -> str:
         ('hhi_solver / top1_solver_share', 'sampled token_diff events or BigQuery', 'within-observation heuristic solver concentration'),
         ('volume_priced_usd', 'same events', 'half sum of max priced inflow/outflow by account-intent; expanded only for additive flows'),
         ('users', 'same events', 'observed unique non-solver accounts, never expanded'),
+        ('intents_reconciliation_daily.*', 'reconcile.py', 'per sampled day: observed, expanded, reference, difference, coverage, pricing and routing components, holdout role'),
+        ('qaa_sensitivity.json', 'qaa.py', 'criteria, thresholds, name-only baseline, inclusion weighting, hour split, model agreement'),
+        ('signal_oos.json', 'signal.py', 'pre-registered out-of-sample evaluation with frozen sign, purge and walk-forward hit rate'),
+        ('value_bridge.json', 'bridge.py', 'volume -> fees -> captured revenue -> labelled buyback -> executed purchases -> held tokens; issuance from total supply; three scenarios'),
+        ('total_supply', 'NearBlocks', 'daily total supply; its yearly change is the issuance used for dilution (circulating_supply is stale in the source)'),
     ]
     return '# Metric definitions (generated)\n\n| Column | Source | Definition |\n|---|---|---|\n' + '\n'.join(f'| `{a}` | {b} | {c} |' for a,b,c in rows) + '\n'
 
@@ -196,4 +369,5 @@ def run() -> None:
     (ROOT / 'THESIS.md').write_text(build())
     (DOCS / 'METRICS.md').write_text(metrics_doc())
     (DOCS / 'REPRODUCIBILITY.md').write_text(repro_doc())
-    print('thesis: THESIS.md and provenance/metric docs regenerated')
+    (DOCS / 'RECONCILIATION.md').write_text(reconciliation_doc())
+    print('thesis: THESIS.md, reconciliation, provenance and metric docs regenerated')

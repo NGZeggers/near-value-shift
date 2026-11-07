@@ -46,6 +46,7 @@ def nearblocks_daily() -> pd.DataFrame:
         "near_price": _num(df["near_price"]).replace(0, np.nan),
         "market_cap_usd": _num(df["market_cap"]).replace(0, np.nan),
         "circulating_supply": _num(df["circulating_supply"]) / YOCTO,
+        "total_supply": _num(df.get("total_supply", pd.Series(np.nan, index=df.index))) / YOCTO,
     })
     return out.sort_values("date").reset_index(drop=True)
 
@@ -104,8 +105,8 @@ def build_monthly(daily: pd.DataFrame) -> pd.DataFrame:
     sums = ["txns", "new_accounts", "tx_fee_usd", "tx_volume_usd", "intents_volume_usd", "intents_fees_usd",
             "near_dex_volume_usd", "near_app_fees_usd", "tx_fee_near", "intents_revenue_usd", "intents_holders_revenue_usd"]
     means = ["active_accounts", "active_contracts", "near_price", "market_cap_usd", "tvl_usd", "stablecoins_usd",
-             "usd_per_txn", "price_near", "price_bitcoin", "price_ethereum"]
-    m = pd.concat([d.reindex(columns=sums).resample("MS").sum(min_count=1), d[means].resample("MS").mean()], axis=1)
+             "usd_per_txn", "price_near", "price_bitcoin", "price_ethereum", "circulating_supply", "total_supply"]
+    m = pd.concat([d.reindex(columns=sums).resample("MS").sum(min_count=1), d.reindex(columns=means).resample("MS").mean()], axis=1)
     m["days"] = d["txns"].resample("MS").count()
     m["fees_to_mcap_annualized"] = (m["tx_fee_usd"] * 12) / m["market_cap_usd"]
     m["app_fees_to_mcap_annualized"] = (m["near_app_fees_usd"] * 12) / m["market_cap_usd"]

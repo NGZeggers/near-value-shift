@@ -67,6 +67,35 @@ with sync_playwright() as p:
     hover = first.locator('svg rect[fill="transparent"]').first
     hover.hover()
     record('tooltip_on_hover', first.locator('.tooltip').is_visible())
+    # evidence tags correspond to the computed spec
+    for c in spec['verdict']['checks']:
+        row = page.locator('#verdict .check', has_text=c['label']).first
+        record('verdict_kind_'+c['label'].replace(' ', '_'), row.locator('.kind').inner_text().lower() == c['kind'] and row.locator('.pill').inner_text().lower() == {'pass':'supported','fail':'failing','open':'open'}[c['state']])
+    steps = page.locator('#argument .steps li')
+    record('argument_kinds_match_spec', [k.lower() for k in steps.locator('.kind').all_inner_texts()] == [s_['kind'] for s_ in spec['argument']])
+    record('argument_method_links_present', all(steps.nth(i).locator('.method-links a').count() == len(s_['links']) for i, s_ in enumerate(spec['argument'])))
+    record('against_kinds_match_spec', [k.lower() for k in page.locator('#against li .kind').all_inner_texts()] == [x['kind'] for x in spec['against']])
+    sens = page.locator('#sensitivity')
+    record('sensitivity_blocks_match_spec', sens.locator('.s-block').count() == len(spec['sensitivity']) and all(sens.locator('.s-block').nth(i).locator('tbody tr').count() == len(r['variants']) for i, r in enumerate(spec['sensitivity'])))
+    record('dates_chip_shows_cutoff_and_snapshot', spec['data_through'] in page.locator('#dates').inner_text() and spec['data_through'] in page.locator('#built').inner_text() and 'generated' in page.locator('#page-built').inner_text().lower())
+    record('internal_links_resolve', page.evaluate("[...document.querySelectorAll('a[href^=\"#\"]')].map(a=>a.getAttribute('href')).filter(h=>h.length>1 && !document.querySelector(h)).length") == 0,
+           page.evaluate("[...document.querySelectorAll('a[href^=\"#\"]')].map(a=>a.getAttribute('href')).filter(h=>h.length>1 && !document.querySelector(h))"))
+    # keyboard: skip link, focus order through the range buttons, Enter on a details summary
+    page.goto(base)
+    page.keyboard.press('Tab')
+    record('skip_link_receives_focus_first', page.evaluate('document.activeElement && document.activeElement.className') == 'skip')
+    page.keyboard.press('Enter')
+    record('skip_link_moves_to_main', page.evaluate("location.hash === '#main'"))
+    first_range = page.locator('#range button').first
+    first_range.focus(); page.keyboard.press('Tab')
+    record('range_buttons_are_tabbable', page.evaluate("document.activeElement.closest('#range') !== null and document.activeElement.textContent") in [b for b in ['Since 2023','Since 2024','Since Intents','Last 12 months','All']] if False else page.evaluate("document.activeElement.closest('#range') !== null"))
+    page.keyboard.press('Enter')
+    record('range_button_activates_by_keyboard', page.evaluate("document.activeElement.getAttribute('aria-pressed') === 'true'") and geometry() == 0)
+    summary = page.locator('#verdict details summary')
+    summary.focus(); page.keyboard.press('Enter')
+    record('details_toggle_by_keyboard', page.locator('#verdict details').evaluate('d => d.open'))
+    svg0 = page.locator('section.card svg').first
+    record('charts_are_focusable', svg0.get_attribute('tabindex') == '0' and svg0.get_attribute('role') == 'img' and bool(svg0.get_attribute('aria-label')))
     page.screenshot(path=str(OUT/'dashboard-desktop.png'), full_page=True)
     for width in [375, 768]:
         page.set_viewport_size({'width': width, 'height': 900})

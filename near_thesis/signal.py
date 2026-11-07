@@ -21,6 +21,25 @@ METRICS = ["active_accounts", "txns", "tx_fee_near", "tx_volume_usd", "intents_v
 HORIZONS = [4, 12]
 SEED = 20261114
 
+# Pre-registered out-of-sample protocol (declared 2026-11-06 before the evaluation period was scored).
+OOS_PROTOCOL = {
+    "hypothesis": "a four-week rise in usage is associated with the subsequent h-week NEAR log return in excess of the benchmark, with the sign fixed in calibration",
+    "signal_transform": "weekly means of the daily series; log of the trailing four-week mean, differenced by four weeks; QAA only from the frozen past-only model, available on the first day of the following month",
+    "target": "forward h-week log return of NEAR minus the same return of the benchmark (BTC or ETH)",
+    "horizons_weeks": HORIZONS, "benchmarks": ["btc", "eth"],
+    "calibration_end": "2025-06-29",
+    "purge": "evaluation starts h weeks after the calibration end so that no calibration target overlaps an evaluation week",
+    "fixed_rule": "the sign of the calibration Spearman IC is frozen; success requires the evaluation IC under that sign to be positive with a circular block-bootstrap 95% interval above zero",
+    "walk_forward": "expanding window: each evaluation week re-estimates the sign on targets already realized at that week (purged by h) and predicts the direction of the next target; hit rate reported",
+    "family": "6 metrics x 2 horizons x 2 benchmarks = 24 declared tests; Bonferroni intervals reported",
+    "benchmark_predictors": {"near_momentum": "trailing four-week NEAR excess log return (persistence)",
+                             "btc_trend": "trailing four-week BTC log return (relation to the market benchmark)"},
+    "minimum_rows": {"calibration": 30, "evaluation": 20},
+    "limitations": ["NearBlocks and DefiLlama series are current snapshots: historical revisions and publication lags are not reconstructed, except QAA availability dates",
+                    "overlapping weekly targets; block bootstrap approximates dependence",
+                    "descriptive association only: no costs, liquidity or execution rules, so no trading claim"],
+}
+
 
 def _weekly() -> pd.DataFrame:
     d = pd.read_csv(DERIVED / "daily.csv", parse_dates=["date"]).set_index("date")
@@ -90,6 +109,67 @@ def ic_table(w: pd.DataFrame) -> list[dict]:
     return out
 
 
+def _oos_one(sig: pd.Series, fwd: pd.Series, h: int, calibration_end: pd.Timestamp) -> dict:
+    df = pd.DataFrame({"sig": sig, "fwd": fwd}).replace([np.inf, -np.inf], np.nan).dropna()
+    cal = df[df.index <= calibration_end]
+    eva = df[df.index > calibration_end + pd.Timedelta(weeks=h)]
+    out = {"n_calibration": int(len(cal)), "n_evaluation": int(len(eva))}
+    if len(cal) < OOS_PROTOCOL["minimum_rows"]["calibration"] or len(eva) < OOS_PROTOCOL["minimum_rows"]["evaluation"]:
+        out["status"] = "not evaluable: too few calibration or evaluation weeks"
+        return out
+    rho_cal = stats.spearmanr(cal["sig"], cal["fwd"]).statistic
+    sign = 1.0 if rho_cal >= 0 else -1.0
+    rho_eval = stats.spearmanr(sign * eva["sig"], eva["fwd"]).statistic
+    draws = _bootstrap_rhos((sign * eva["sig"]).to_numpy(), eva["fwd"].to_numpy(), block=max(h, 8), n_boot=4000)
+    lo, hi = _interval(draws, 0.05)
+    flo, fhi = _interval(draws, 0.05 / 24)
+    # walk-forward: re-estimate the sign each evaluation week using only targets realized by then
+    hits, n_wf = 0, 0
+    for t in eva.index:
+        train = df[df.index <= t - pd.Timedelta(weeks=h)]
+        if len(train) < OOS_PROTOCOL["minimum_rows"]["calibration"]:
+            continue
+        s_t = 1.0 if stats.spearmanr(train["sig"], train["fwd"]).statistic >= 0 else -1.0
+        pred = s_t * (eva.loc[t, "sig"] - train["sig"].median())
+        if pred != 0 and eva.loc[t, "fwd"] != 0:
+            n_wf += 1
+            hits += int(np.sign(pred) == np.sign(eva.loc[t, "fwd"]))
+    out.update({"calibration_start": str(cal.index[0].date()), "calibration_end": str(cal.index[-1].date()), "ic_calibration": float(rho_cal), "frozen_sign": sign,
+                "evaluation_start": str(eva.index[0].date()), "evaluation_end": str(eva.index[-1].date()),
+                "ic_evaluation_signed": float(rho_eval), "ci95_block_bootstrap": [lo, hi], "ci95_familywise_bonferroni": [flo, fhi],
+                "walk_forward_hit_rate": (hits / n_wf) if n_wf else None, "walk_forward_n": n_wf,
+                "sign_agrees": bool(rho_eval > 0), "passes_declared_criterion": bool(np.isfinite(lo) and lo > 0),
+                "status": "association persists out of sample" if (np.isfinite(lo) and lo > 0) else "no out-of-sample association established"})
+    return out
+
+
+def oos_table(w: pd.DataFrame) -> dict:
+    """Pre-registered out-of-sample evaluation of the usage signals and of two naive benchmark predictors."""
+    lp = np.log(w["near_price"])
+    bench = {"btc": np.log(w["price_bitcoin"]), "eth": np.log(w["price_ethereum"])}
+    cal_end = pd.Timestamp(OOS_PROTOCOL["calibration_end"])
+    rows = []
+    predictors = {m: np.log(w[m].rolling(4, min_periods=4).mean()).diff(4) for m in METRICS if m in w.columns}
+    naive = {"near_momentum": lambda lb: (lp - lp.shift(4)) - (lb - lb.shift(4)), "btc_trend": lambda lb: bench["btc"] - bench["btc"].shift(4)}
+    for h in HORIZONS:
+        for bname, lb in bench.items():
+            fwd = (lp.shift(-h) - lp) - (lb.shift(-h) - lb)
+            for m, sig in predictors.items():
+                rows.append({"predictor": m, "kind": "usage", "horizon_weeks": h, "benchmark": bname, **_oos_one(sig, fwd, h, cal_end)})
+            for name, fn in naive.items():
+                rows.append({"predictor": name, "kind": "naive_benchmark", "horizon_weeks": h, "benchmark": bname, **_oos_one(fn(lb), fwd, h, cal_end)})
+    usage = [r for r in rows if r["kind"] == "usage"]
+    evaluable = [r for r in usage if "ic_evaluation_signed" in r]
+    passing = [r for r in evaluable if r["passes_declared_criterion"]]
+    best_naive = max((r["ic_evaluation_signed"] for r in rows if r["kind"] == "naive_benchmark" and "ic_evaluation_signed" in r), default=None)
+    conclusion = ("no usage metric passes the declared out-of-sample criterion" if evaluable and not passing
+                  else f"{len(passing)} of {len(evaluable)} evaluable usage tests pass the declared criterion" if evaluable
+                  else "no usage test is evaluable under the declared protocol")
+    return {"protocol": OOS_PROTOCOL, "tests": rows, "summary": {"usage_tests": len(usage), "evaluable": len(evaluable), "passing": len(passing),
+            "not_evaluable": [f"{r['predictor']} h={r['horizon_weeks']} vs {r['benchmark']}" for r in usage if "ic_evaluation_signed" not in r],
+            "best_naive_benchmark_ic": best_naive, "conclusion": conclusion}}
+
+
 def peer_valuation() -> dict:
     p = pd.read_csv(DERIVED / "peers.csv")
     def rank(col, ascending=False):
@@ -138,10 +218,12 @@ def run() -> dict:
     w = _weekly()
     ic = ic_table(w)
     (MODELS / "signal_ic.json").write_text(json.dumps(ic, indent=1))
+    oos = oos_table(w)
+    (MODELS / "signal_oos.json").write_text(json.dumps(oos, indent=1, default=str))
     pv = peer_valuation()
     (MODELS / "peer_valuation.json").write_text(json.dumps(pv, indent=1))
     sc = scenarios()
     (MODELS / "scenarios.json").write_text(json.dumps(sc, indent=1))
     sig = [r for r in ic if r.get("significant_bootstrap")]
-    print(f"L4: {len(ic)} IC tests, {len(sig)} significant by block bootstrap; peers ranked; scenarios drawn")
-    return {"ic": ic, "peers": pv, "scenarios": sc}
+    print(f"L4: {len(ic)} IC tests, {len(sig)} significant by block bootstrap; out of sample: {oos['summary']['conclusion']}; peers ranked; scenarios drawn")
+    return {"ic": ic, "oos": oos, "peers": pv, "scenarios": sc}

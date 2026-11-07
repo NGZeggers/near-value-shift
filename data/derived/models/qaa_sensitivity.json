@@ -1,0 +1,81 @@
+{
+ "latest_month": "2026-10",
+ "criteria": {
+  "strict": 0.0,
+  "default": 0.6195121951219512,
+  "including_ambiguous": 0.6829268292682926,
+  "groups_counted": {
+   "strict": [
+    "multi_app"
+   ],
+   "default": [
+    "intents_participant",
+    "light_general",
+    "multi_app"
+   ],
+   "including_ambiguous": [
+    "light_general",
+    "noise"
+   ]
+  },
+  "why_strict_is_low": "91% of account-months show exactly one transaction inside the sampled windows and 95% are active in a single window, so multi-contract behavior is rarely observable; no cluster reaches a median of two contracts"
+ },
+ "label_threshold_variants_default_share": {
+  "heavy_txns=100,multi_contracts=2": 0.6195121951219512,
+  "heavy_txns=200,multi_contracts=1": 0.9365853658536586,
+  "heavy_txns=400,multi_contracts=2": 0.6195121951219512,
+  "heavy_txns=200,multi_contracts=3": 0.6195121951219512
+ },
+ "noise_bounds_default_share": {
+  "noise_excluded": 0.6195121951219512,
+  "noise_included": 0.6829268292682927
+ },
+ "name_only_baseline": {
+  "latest_month": 0.6439024390243903,
+  "mean_abs_difference_vs_default": 0.01686578954373592,
+  "correlation_with_default": 0.9834500177687366,
+  "reading": "if the clustering share tracks the name-only share closely, the behavioral model adds little beyond the name class in these sparse windows"
+ },
+ "inclusion_probability_weighting": {
+  "latest_month_unweighted": 0.6195121951219512,
+  "latest_month_weighted": 0.6062052972545628,
+  "mean_abs_difference": 0.014157880147480683,
+  "direction": "weighted below unweighted",
+  "reading": "corrects visibility among observed accounts only; never-observed accounts remain outside the index"
+ },
+ "by_window_hour": {
+  "hours": [
+   3,
+   15
+  ],
+  "latest_month": {
+   "3": 0.5571428571428572,
+   "15": 0.6855345911949685
+  },
+  "mean_abs_difference_between_hours": 0.043394662338997435,
+  "months": 24,
+  "reading": "shares computed separately on accounts observed in each fixed window"
+ },
+ "model_agreement": {
+  "months": 18,
+  "latest": {
+   "descriptive": 0.6195121951219512,
+   "frozen": 0.2
+  },
+  "mean_abs_difference": 0.14948816128053533,
+  "correlation": 0.7683966193052888,
+  "reading": "the two models label the same months differently; the level of the share depends on the model, its trend less so"
+ },
+ "scope": {
+  "observed_unit": "accounts signing at least one transaction inside the sampled windows",
+  "account_months": 32173,
+  "share_with_one_transaction": 0.9101109626083983,
+  "share_active_in_one_window": 0.9508283343175955,
+  "population_extrapolation": "the QAA count multiplies the sampled share by NearBlocks mean daily active accounts; inclusion probability rises with activity, so the count is an illustrative rescaling and the share is the measured quantity",
+  "identity": "no verified human or bot labels exist; groups are behavioral patterns"
+ },
+ "not_done": [
+  "refits with other clustering hyper-parameters (platform-dependent HDBSCAN assignments would break the exact regression check; the committed assignment is reused)",
+  "external human/bot labels (none available)"
+ ]
+}

@@ -1,0 +1,683 @@
+[
+ {
+  "kind": "simple_two_party_fully_priced",
+  "receipt_id": "3HnoCvnvhBWjKaa1JS47ZGyrpNniB7BxdheW8Kcojyo4",
+  "block_height": 145665096,
+  "block_timestamp_ns": "1746284446960275581",
+  "window": "2025-05-03 15:00 UTC",
+  "caller": "intents.near",
+  "execution_status": "SUCCESS_VALUE",
+  "block_url": "https://mainnet.neardata.xyz/v0/block/145665096",
+  "token_diff_logs": [
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.2.1\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"29rksNvQhLyJwqfiNaUPFk17vsbvjxhEoCdViSLRnR7h\",\"account_id\":\"solver-priv-liq.near\",\"diff\":{\"nep141:btc.omft.near\":\"-102\",\"nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near\":\"99999\"},\"fees_collected\":{\"nep141:btc.omft.near\":\"1\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.2.1\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"FiHDaaJiz38P8rqHGAHrQgN4PSJqhYV7PJ19My6mdHw8\",\"account_id\":\"ca02819aca0af8432c07fe9d304ce6ac29a655809643f0215e76bf625a588482\",\"diff\":{\"nep141:btc.omft.near\":\"101\",\"nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near\":\"-100000\"},\"referral\":\"one_click_sdk_rs-e2e\",\"fees_collected\":{\"nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near\":\"1\"}}]}"
+  ],
+  "legs": [
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "29rksNvQhLyJwqfiNaUPFk17vsbvjxhEoCdViSLRnR7h",
+    "asset_id": "nep141:btc.omft.near",
+    "symbol": "btc",
+    "decimals": 8,
+    "raw_amount": "-102",
+    "units": -1.02e-06,
+    "usd": 0.09887472
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "29rksNvQhLyJwqfiNaUPFk17vsbvjxhEoCdViSLRnR7h",
+    "asset_id": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near",
+    "symbol": "usdc",
+    "decimals": 6,
+    "raw_amount": "99999",
+    "units": 0.099999,
+    "usd": 0.099999
+   },
+   {
+    "account": "ca02819aca0af8432c07fe9d304ce6ac29a655809643f0215e76bf625a588482",
+    "intent_hash": "FiHDaaJiz38P8rqHGAHrQgN4PSJqhYV7PJ19My6mdHw8",
+    "asset_id": "nep141:btc.omft.near",
+    "symbol": "btc",
+    "decimals": 8,
+    "raw_amount": "101",
+    "units": 1.01e-06,
+    "usd": 0.09790536000000001
+   },
+   {
+    "account": "ca02819aca0af8432c07fe9d304ce6ac29a655809643f0215e76bf625a588482",
+    "intent_hash": "FiHDaaJiz38P8rqHGAHrQgN4PSJqhYV7PJ19My6mdHw8",
+    "asset_id": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near",
+    "symbol": "usdc",
+    "decimals": 6,
+    "raw_amount": "-100000",
+    "units": -0.1,
+    "usd": 0.1
+   }
+  ],
+  "account_intents": [
+   {
+    "account": "ca02819aca0af8432c07fe9d304ce6ac29a655809643f0215e76bf625a588482",
+    "intent": "FiHDaaJiz38P8rqHGAHrQgN4PSJqhYV7PJ19My6mdHw8",
+    "priced_in_usd": 0.09790536000000001,
+    "priced_out_usd": 0.1,
+    "larger_side_usd": 0.1
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent": "29rksNvQhLyJwqfiNaUPFk17vsbvjxhEoCdViSLRnR7h",
+    "priced_in_usd": 0.099999,
+    "priced_out_usd": 0.09887472,
+    "larger_side_usd": 0.099999
+   }
+  ],
+  "batch_volume_usd": 0.0999995,
+  "half_gross_rule": "sum of larger priced side per account-intent, divided by two",
+  "expansion_factor_for_day": 785.63,
+  "contribution_to_day_estimate_usd": 78.562607185
+ },
+ {
+  "kind": "multi_participant_batch",
+  "receipt_id": "5cFhUEcMKJc279oLzAxPLTxWZFWR4yVQgXSUywB6CBK5",
+  "block_height": 159893986,
+  "block_timestamp_ns": "1755356490890029073",
+  "window": "2025-08-16 15:00 UTC",
+  "caller": "intents.near",
+  "execution_status": "SUCCESS_VALUE",
+  "block_url": "https://mainnet.neardata.xyz/v0/block/159893986",
+  "token_diff_logs": [
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.3.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"C8wozPufd5v5AwTX3whujJxWcK2PgFb4HmESJJmn6GNz\",\"account_id\":\"solver-multichain-asset.near\",\"diff\":{\"nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1\":\"322254\",\"nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near\":\"-322254\"},\"fees_collected\":{\"nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near\":\"1\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.3.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"C1cA5C5v1QksaLkijc9yMpNgsmSQtoGQBXRpdwNHpTny\",\"account_id\":\"peanut-trade.near\",\"diff\":{\"nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near\":\"322253\",\"nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near\":\"-322027\"},\"fees_collected\":{\"nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near\":\"1\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.3.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"CynFwb28E2oDgQ2VVnEi2ako64a6jMBzUnBJyWDNd1gq\",\"account_id\":\"solver-priv-liq.near\",\"diff\":{\"nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near\":\"322026\",\"nep245:v2_1.omni.hot.tg:56_11111111111111111111\":\"-385297292053415\"},\"fees_collected\":{\"nep245:v2_1.omni.hot.tg:56_11111111111111111111\":\"385297293\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.3.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"GiKtjSM8XYmoaDtZRmA9KbzxxKwXPuhXyfXkF5oonZ7X\",\"account_id\":\"raisul_70.tg\",\"diff\":{\"nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1\":\"-322255\",\"nep245:v2_1.omni.hot.tg:56_11111111111111111111\":\"382964118443724\"},\"referral\":\"intents.tg\",\"fees_collected\":{\"nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1\":\"1\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.3.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"GFjn7ZuYWeC7fpK8QVbbXNibbuscRwodvGriLzg75Di8\",\"account_id\":\"intents.tg\",\"diff\":{\"nep245:v2_1.omni.hot.tg:56_11111111111111111111\":\"385296906756\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.3.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"8wwdhWFhfE97YS7HKLnS4PKWDsYkTMEDGA9xFdqrPYTA\",\"account_id\":\"defuse-relay.near\",\"diff\":{\"nep245:v2_1.omni.hot.tg:56_11111111111111111111\":\"1947491405642\"}}]}"
+  ],
+  "legs": [
+   {
+    "account": "solver-multichain-asset.near",
+    "intent_hash": "C8wozPufd5v5AwTX3whujJxWcK2PgFb4HmESJJmn6GNz",
+    "asset_id": "nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1",
+    "symbol": "usdc",
+    "decimals": 6,
+    "raw_amount": "322254",
+    "units": 0.322254,
+    "usd": 0.322254
+   },
+   {
+    "account": "solver-multichain-asset.near",
+    "intent_hash": "C8wozPufd5v5AwTX3whujJxWcK2PgFb4HmESJJmn6GNz",
+    "asset_id": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near",
+    "symbol": "usdc",
+    "decimals": 6,
+    "raw_amount": "-322254",
+    "units": -0.322254,
+    "usd": 0.322254
+   },
+   {
+    "account": "peanut-trade.near",
+    "intent_hash": "C1cA5C5v1QksaLkijc9yMpNgsmSQtoGQBXRpdwNHpTny",
+    "asset_id": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near",
+    "symbol": "usdc",
+    "decimals": 6,
+    "raw_amount": "322253",
+    "units": 0.322253,
+    "usd": 0.322253
+   },
+   {
+    "account": "peanut-trade.near",
+    "intent_hash": "C1cA5C5v1QksaLkijc9yMpNgsmSQtoGQBXRpdwNHpTny",
+    "asset_id": "nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near",
+    "symbol": "usdt",
+    "decimals": 6,
+    "raw_amount": "-322027",
+    "units": -0.322027,
+    "usd": 0.322027
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "CynFwb28E2oDgQ2VVnEi2ako64a6jMBzUnBJyWDNd1gq",
+    "asset_id": "nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near",
+    "symbol": "usdt",
+    "decimals": 6,
+    "raw_amount": "322026",
+    "units": 0.322026,
+    "usd": 0.322026
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "CynFwb28E2oDgQ2VVnEi2ako64a6jMBzUnBJyWDNd1gq",
+    "asset_id": "nep245:v2_1.omni.hot.tg:56_11111111111111111111",
+    "symbol": "bnb",
+    "decimals": 18,
+    "raw_amount": "-385297292053415",
+    "units": -0.000385297292053415,
+    "usd": 0.31889515674092944
+   },
+   {
+    "account": "raisul_70.tg",
+    "intent_hash": "GiKtjSM8XYmoaDtZRmA9KbzxxKwXPuhXyfXkF5oonZ7X",
+    "asset_id": "nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1",
+    "symbol": "usdc",
+    "decimals": 6,
+    "raw_amount": "-322255",
+    "units": -0.322255,
+    "usd": 0.322255
+   },
+   {
+    "account": "raisul_70.tg",
+    "intent_hash": "GiKtjSM8XYmoaDtZRmA9KbzxxKwXPuhXyfXkF5oonZ7X",
+    "asset_id": "nep245:v2_1.omni.hot.tg:56_11111111111111111111",
+    "symbol": "bnb",
+    "decimals": 18,
+    "raw_amount": "382964118443724",
+    "units": 0.000382964118443724,
+    "usd": 0.3169640822711326
+   },
+   {
+    "account": "intents.tg",
+    "intent_hash": "GFjn7ZuYWeC7fpK8QVbbXNibbuscRwodvGriLzg75Di8",
+    "asset_id": "nep245:v2_1.omni.hot.tg:56_11111111111111111111",
+    "symbol": "bnb",
+    "decimals": 18,
+    "raw_amount": "385296906756",
+    "units": 3.85296906756e-07,
+    "usd": 0.00031889483784567095
+   },
+   {
+    "account": "defuse-relay.near",
+    "intent_hash": "8wwdhWFhfE97YS7HKLnS4PKWDsYkTMEDGA9xFdqrPYTA",
+    "asset_id": "nep245:v2_1.omni.hot.tg:56_11111111111111111111",
+    "symbol": "bnb",
+    "decimals": 18,
+    "raw_amount": "1947491405642",
+    "units": 1.947491405642e-06,
+    "usd": 0.0016118607367936579
+   }
+  ],
+  "account_intents": [
+   {
+    "account": "defuse-relay.near",
+    "intent": "8wwdhWFhfE97YS7HKLnS4PKWDsYkTMEDGA9xFdqrPYTA",
+    "priced_in_usd": 0.0016118607367936579,
+    "priced_out_usd": 0.0,
+    "larger_side_usd": 0.0016118607367936579
+   },
+   {
+    "account": "intents.tg",
+    "intent": "GFjn7ZuYWeC7fpK8QVbbXNibbuscRwodvGriLzg75Di8",
+    "priced_in_usd": 0.00031889483784567095,
+    "priced_out_usd": 0.0,
+    "larger_side_usd": 0.00031889483784567095
+   },
+   {
+    "account": "peanut-trade.near",
+    "intent": "C1cA5C5v1QksaLkijc9yMpNgsmSQtoGQBXRpdwNHpTny",
+    "priced_in_usd": 0.322253,
+    "priced_out_usd": 0.322027,
+    "larger_side_usd": 0.322253
+   },
+   {
+    "account": "raisul_70.tg",
+    "intent": "GiKtjSM8XYmoaDtZRmA9KbzxxKwXPuhXyfXkF5oonZ7X",
+    "priced_in_usd": 0.3169640822711326,
+    "priced_out_usd": 0.322255,
+    "larger_side_usd": 0.322255
+   },
+   {
+    "account": "solver-multichain-asset.near",
+    "intent": "C8wozPufd5v5AwTX3whujJxWcK2PgFb4HmESJJmn6GNz",
+    "priced_in_usd": 0.322254,
+    "priced_out_usd": 0.322254,
+    "larger_side_usd": 0.322254
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent": "CynFwb28E2oDgQ2VVnEi2ako64a6jMBzUnBJyWDNd1gq",
+    "priced_in_usd": 0.322026,
+    "priced_out_usd": 0.31889515674092944,
+    "larger_side_usd": 0.322026
+   }
+  ],
+  "batch_volume_usd": 0.6453593777873197,
+  "half_gross_rule": "sum of larger priced side per account-intent, divided by two",
+  "expansion_factor_for_day": 1451.28,
+  "contribution_to_day_estimate_usd": 936.5971577951813
+ },
+ {
+  "kind": "unpriced_leg_valued_by_other_side",
+  "receipt_id": "CGSkmFYm2zJwgJrh931xkxzc7rfunAZr3gVn3BLULomZ",
+  "block_height": 137651048,
+  "block_timestamp_ns": "1737212491005229070",
+  "window": "2025-01-18 15:00 UTC",
+  "caller": "intents.near",
+  "execution_status": "SUCCESS_VALUE",
+  "block_url": "https://mainnet.neardata.xyz/v0/block/137651048",
+  "token_diff_logs": [
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.2.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"FnV6qqbHumZJamfjNeJA3XQRiezraJMhxyY1VY8y16ir\",\"account_id\":\"solver-priv-liq.near\",\"diff\":{\"nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near\":\"3286372\",\"nep141:sol-c58e6539c2f2e097c251f8edf11f9c03e581f8d4.omft.near\":\"-107217\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.2.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"6V73kA2aFYcLc1TBM6YGMNwY8S627rs9P62ujA6HWpoN\",\"account_id\":\"solver-multichain-asset.near\",\"diff\":{\"nep141:base.omft.near\":\"1000000000000000\",\"nep141:eth.omft.near\":\"-1000000000000000\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.2.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"AWJbq6ML96i99XfFx2nEHrDNqEYZVkdHfvQTjtzrC1bA\",\"account_id\":\"solver-priv-liq.near\",\"diff\":{\"nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near\":\"-3289072\",\"nep141:eth.omft.near\":\"1000000000000000\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.2.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"AmGRcuKbBWEJTt65KHMwSrH2AoUs92GJuEYot2ZmXZcM\",\"account_id\":\"solver-priv-liq.near\",\"diff\":{\"nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near\":\"3289072\",\"nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near\":\"-3286372\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.2.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"HTuSu8nCU3sBNGEaFvY9weYDMZ9JxdyWDhTNbZDEpvs4\",\"account_id\":\"0xee70df91ea80b970524f6de989a4a9fd4dd006ea\",\"diff\":{\"nep141:base.omft.near\":\"-1000000000000000\",\"nep141:sol-c58e6539c2f2e097c251f8edf11f9c03e581f8d4.omft.near\":\"107217\"}}]}"
+  ],
+  "legs": [
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "FnV6qqbHumZJamfjNeJA3XQRiezraJMhxyY1VY8y16ir",
+    "asset_id": "nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near",
+    "symbol": "usdt",
+    "decimals": 6,
+    "raw_amount": "3286372",
+    "units": 3.286372,
+    "usd": 3.286372
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "FnV6qqbHumZJamfjNeJA3XQRiezraJMhxyY1VY8y16ir",
+    "asset_id": "nep141:sol-c58e6539c2f2e097c251f8edf11f9c03e581f8d4.omft.near",
+    "symbol": "trump",
+    "decimals": 6,
+    "raw_amount": "-107217",
+    "units": -0.107217,
+    "usd": null
+   },
+   {
+    "account": "solver-multichain-asset.near",
+    "intent_hash": "6V73kA2aFYcLc1TBM6YGMNwY8S627rs9P62ujA6HWpoN",
+    "asset_id": "nep141:base.omft.near",
+    "symbol": "eth",
+    "decimals": 18,
+    "raw_amount": "1000000000000000",
+    "units": 0.001,
+    "usd": 3.47512
+   },
+   {
+    "account": "solver-multichain-asset.near",
+    "intent_hash": "6V73kA2aFYcLc1TBM6YGMNwY8S627rs9P62ujA6HWpoN",
+    "asset_id": "nep141:eth.omft.near",
+    "symbol": "eth",
+    "decimals": 18,
+    "raw_amount": "-1000000000000000",
+    "units": -0.001,
+    "usd": 3.47512
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "AWJbq6ML96i99XfFx2nEHrDNqEYZVkdHfvQTjtzrC1bA",
+    "asset_id": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near",
+    "symbol": "usdc",
+    "decimals": 6,
+    "raw_amount": "-3289072",
+    "units": -3.289072,
+    "usd": 3.289072
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "AWJbq6ML96i99XfFx2nEHrDNqEYZVkdHfvQTjtzrC1bA",
+    "asset_id": "nep141:eth.omft.near",
+    "symbol": "eth",
+    "decimals": 18,
+    "raw_amount": "1000000000000000",
+    "units": 0.001,
+    "usd": 3.47512
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "AmGRcuKbBWEJTt65KHMwSrH2AoUs92GJuEYot2ZmXZcM",
+    "asset_id": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near",
+    "symbol": "usdc",
+    "decimals": 6,
+    "raw_amount": "3289072",
+    "units": 3.289072,
+    "usd": 3.289072
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "AmGRcuKbBWEJTt65KHMwSrH2AoUs92GJuEYot2ZmXZcM",
+    "asset_id": "nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near",
+    "symbol": "usdt",
+    "decimals": 6,
+    "raw_amount": "-3286372",
+    "units": -3.286372,
+    "usd": 3.286372
+   },
+   {
+    "account": "0xee70df91ea80b970524f6de989a4a9fd4dd006ea",
+    "intent_hash": "HTuSu8nCU3sBNGEaFvY9weYDMZ9JxdyWDhTNbZDEpvs4",
+    "asset_id": "nep141:base.omft.near",
+    "symbol": "eth",
+    "decimals": 18,
+    "raw_amount": "-1000000000000000",
+    "units": -0.001,
+    "usd": 3.47512
+   },
+   {
+    "account": "0xee70df91ea80b970524f6de989a4a9fd4dd006ea",
+    "intent_hash": "HTuSu8nCU3sBNGEaFvY9weYDMZ9JxdyWDhTNbZDEpvs4",
+    "asset_id": "nep141:sol-c58e6539c2f2e097c251f8edf11f9c03e581f8d4.omft.near",
+    "symbol": "trump",
+    "decimals": 6,
+    "raw_amount": "107217",
+    "units": 0.107217,
+    "usd": null
+   }
+  ],
+  "account_intents": [
+   {
+    "account": "0xee70df91ea80b970524f6de989a4a9fd4dd006ea",
+    "intent": "HTuSu8nCU3sBNGEaFvY9weYDMZ9JxdyWDhTNbZDEpvs4",
+    "priced_in_usd": 0.0,
+    "priced_out_usd": 3.47512,
+    "larger_side_usd": 3.47512
+   },
+   {
+    "account": "solver-multichain-asset.near",
+    "intent": "6V73kA2aFYcLc1TBM6YGMNwY8S627rs9P62ujA6HWpoN",
+    "priced_in_usd": 3.47512,
+    "priced_out_usd": 3.47512,
+    "larger_side_usd": 3.47512
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent": "AWJbq6ML96i99XfFx2nEHrDNqEYZVkdHfvQTjtzrC1bA",
+    "priced_in_usd": 3.47512,
+    "priced_out_usd": 3.289072,
+    "larger_side_usd": 3.47512
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent": "AmGRcuKbBWEJTt65KHMwSrH2AoUs92GJuEYot2ZmXZcM",
+    "priced_in_usd": 3.289072,
+    "priced_out_usd": 3.286372,
+    "larger_side_usd": 3.289072
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent": "FnV6qqbHumZJamfjNeJA3XQRiezraJMhxyY1VY8y16ir",
+    "priced_in_usd": 3.286372,
+    "priced_out_usd": 0.0,
+    "larger_side_usd": 3.286372
+   }
+  ],
+  "batch_volume_usd": 8.500402,
+  "half_gross_rule": "sum of larger priced side per account-intent, divided by two",
+  "expansion_factor_for_day": 779.66,
+  "contribution_to_day_estimate_usd": 6627.4234233199995
+ },
+ {
+  "kind": "account_intent_without_any_price",
+  "receipt_id": "4gKeBJwYLEXhkdtsfgZBTnW7By9dD1XKJgN9kCanskW8",
+  "block_height": 151509816,
+  "block_timestamp_ns": "1750172416689573448",
+  "window": "2025-06-17 15:00 UTC",
+  "caller": "intents.near",
+  "execution_status": "SUCCESS_VALUE",
+  "block_url": "https://mainnet.neardata.xyz/v0/block/151509816",
+  "token_diff_logs": [
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.3.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"EEoTk4HHJ8w3zdHBdPPYoJu688ZiJ8N7jLYE35TYRr3W\",\"account_id\":\"solver-multichain-asset.near\",\"diff\":{\"nep141:aaaaaa20d9e0e2461697782ef11675f668207961.factory.bridge.near\":\"254424938678064999716\",\"nep141:eth-0xaaaaaa20d9e0e2461697782ef11675f668207961.omft.near\":\"-254424938678064999716\"},\"fees_collected\":{\"nep141:eth-0xaaaaaa20d9e0e2461697782ef11675f668207961.omft.near\":\"254424938678065\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.3.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"EYc4G9XnCgY2kN8dzbwApkawydMtkQMD7yBr2Ug6xHKE\",\"account_id\":\"solver-priv-liq.near\",\"diff\":{\"nep141:eth-0xaaaaaa20d9e0e2461697782ef11675f668207961.omft.near\":\"254424684253126321651\",\"nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near\":\"-18640948\"},\"fees_collected\":{\"nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near\":\"19\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.3.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"BJMwRggaUbzu1XYRc9UVZfBogcdGxQJnRGVQsHDy5NjA\",\"account_id\":\"peanut-trade.near\",\"diff\":{\"nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near\":\"18640929\",\"nep141:wrap.near\":\"-8522298464135407136322049\"},\"fees_collected\":{\"nep141:wrap.near\":\"8522298464135407137\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.3.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"A4g3DD7c8meqdfEk94qKA6YEAJknPvFqhiQfVeJin76y\",\"account_id\":\"hideon.near\",\"diff\":{\"nep141:aaaaaa20d9e0e2461697782ef11675f668207961.factory.bridge.near\":\"-254425193103258102975\",\"nep141:wrap.near\":\"8522289941836943000914912\"},\"fees_collected\":{\"nep141:aaaaaa20d9e0e2461697782ef11675f668207961.factory.bridge.near\":\"254425193103259\"}}]}"
+  ],
+  "legs": [
+   {
+    "account": "solver-multichain-asset.near",
+    "intent_hash": "EEoTk4HHJ8w3zdHBdPPYoJu688ZiJ8N7jLYE35TYRr3W",
+    "asset_id": "nep141:aaaaaa20d9e0e2461697782ef11675f668207961.factory.bridge.near",
+    "symbol": "aurora",
+    "decimals": 18,
+    "raw_amount": "254424938678064999716",
+    "units": 254.42493867806502,
+    "usd": null
+   },
+   {
+    "account": "solver-multichain-asset.near",
+    "intent_hash": "EEoTk4HHJ8w3zdHBdPPYoJu688ZiJ8N7jLYE35TYRr3W",
+    "asset_id": "nep141:eth-0xaaaaaa20d9e0e2461697782ef11675f668207961.omft.near",
+    "symbol": "aurora",
+    "decimals": 18,
+    "raw_amount": "-254424938678064999716",
+    "units": -254.42493867806502,
+    "usd": null
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "EYc4G9XnCgY2kN8dzbwApkawydMtkQMD7yBr2Ug6xHKE",
+    "asset_id": "nep141:eth-0xaaaaaa20d9e0e2461697782ef11675f668207961.omft.near",
+    "symbol": "aurora",
+    "decimals": 18,
+    "raw_amount": "254424684253126321651",
+    "units": 254.42468425312632,
+    "usd": null
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "EYc4G9XnCgY2kN8dzbwApkawydMtkQMD7yBr2Ug6xHKE",
+    "asset_id": "nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near",
+    "symbol": "usdt",
+    "decimals": 6,
+    "raw_amount": "-18640948",
+    "units": -18.640948,
+    "usd": 18.640948
+   },
+   {
+    "account": "peanut-trade.near",
+    "intent_hash": "BJMwRggaUbzu1XYRc9UVZfBogcdGxQJnRGVQsHDy5NjA",
+    "asset_id": "nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near",
+    "symbol": "usdt",
+    "decimals": 6,
+    "raw_amount": "18640929",
+    "units": 18.640929,
+    "usd": 18.640929
+   },
+   {
+    "account": "peanut-trade.near",
+    "intent_hash": "BJMwRggaUbzu1XYRc9UVZfBogcdGxQJnRGVQsHDy5NjA",
+    "asset_id": "nep141:wrap.near",
+    "symbol": "wnear",
+    "decimals": 24,
+    "raw_amount": "-8522298464135407136322049",
+    "units": -8.522298464135408,
+    "usd": 19.260394528946016
+   },
+   {
+    "account": "hideon.near",
+    "intent_hash": "A4g3DD7c8meqdfEk94qKA6YEAJknPvFqhiQfVeJin76y",
+    "asset_id": "nep141:aaaaaa20d9e0e2461697782ef11675f668207961.factory.bridge.near",
+    "symbol": "aurora",
+    "decimals": 18,
+    "raw_amount": "-254425193103258102975",
+    "units": -254.4251931032581,
+    "usd": null
+   },
+   {
+    "account": "hideon.near",
+    "intent_hash": "A4g3DD7c8meqdfEk94qKA6YEAJknPvFqhiQfVeJin76y",
+    "asset_id": "nep141:wrap.near",
+    "symbol": "wnear",
+    "decimals": 24,
+    "raw_amount": "8522289941836943000914912",
+    "units": 8.522289941836943,
+    "usd": 19.26037526855149
+   }
+  ],
+  "account_intents": [
+   {
+    "account": "hideon.near",
+    "intent": "A4g3DD7c8meqdfEk94qKA6YEAJknPvFqhiQfVeJin76y",
+    "priced_in_usd": 19.26037526855149,
+    "priced_out_usd": 0.0,
+    "larger_side_usd": 19.26037526855149
+   },
+   {
+    "account": "peanut-trade.near",
+    "intent": "BJMwRggaUbzu1XYRc9UVZfBogcdGxQJnRGVQsHDy5NjA",
+    "priced_in_usd": 18.640929,
+    "priced_out_usd": 19.260394528946016,
+    "larger_side_usd": 19.260394528946016
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent": "EYc4G9XnCgY2kN8dzbwApkawydMtkQMD7yBr2Ug6xHKE",
+    "priced_in_usd": 0.0,
+    "priced_out_usd": 18.640948,
+    "larger_side_usd": 18.640948
+   }
+  ],
+  "batch_volume_usd": 28.58085889874875,
+  "half_gross_rule": "sum of larger priced side per account-intent, divided by two",
+  "expansion_factor_for_day": 1417.1,
+  "contribution_to_day_estimate_usd": 40501.93514541685
+ },
+ {
+  "kind": "largest_sampled_batch",
+  "receipt_id": "CESwPnkJRLyVNxfNKEpyYJ21SiipmUyb9FQxsMrTx1Ap",
+  "block_height": 172614034,
+  "block_timestamp_ns": "1763132337721688023",
+  "window": "2025-11-14 15:00 UTC",
+  "caller": "intents.near",
+  "execution_status": "SUCCESS_VALUE",
+  "block_url": "https://mainnet.neardata.xyz/v0/block/172614034",
+  "token_diff_logs": [
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.3.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"8uQ8tEeMN8DDqi2QowCdssJeGzEk3uP5QDa9iXa3XqT8\",\"account_id\":\"solver-priv-liq.near\",\"diff\":{\"nep141:btc.omft.near\":\"-32405876\",\"nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near\":\"31279468720\"},\"fees_collected\":{\"nep141:btc.omft.near\":\"33\"}}]}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.3.0\",\"event\":\"token_diff\",\"data\":[{\"intent_hash\":\"D5PxH8fn9raBQnixSEFTGD6ujsHFyFLv4Pw7sXp5WsTB\",\"account_id\":\"6e18d17396fca56fb60bf287d552dd562a5fe9045a5f61fd0357c4cc303dd0db\",\"diff\":{\"nep141:btc.omft.near\":\"32405843\",\"nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near\":\"-31279500000\"},\"referral\":\"1click-rango\",\"fees_collected\":{\"nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near\":\"31280\"}}]}"
+  ],
+  "legs": [
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "8uQ8tEeMN8DDqi2QowCdssJeGzEk3uP5QDa9iXa3XqT8",
+    "asset_id": "nep141:btc.omft.near",
+    "symbol": "btc",
+    "decimals": 8,
+    "raw_amount": "-32405876",
+    "units": -0.32405876,
+    "usd": 32209.08169507456
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent_hash": "8uQ8tEeMN8DDqi2QowCdssJeGzEk3uP5QDa9iXa3XqT8",
+    "asset_id": "nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near",
+    "symbol": "usdt",
+    "decimals": 6,
+    "raw_amount": "31279468720",
+    "units": 31279.46872,
+    "usd": 31279.46872
+   },
+   {
+    "account": "6e18d17396fca56fb60bf287d552dd562a5fe9045a5f61fd0357c4cc303dd0db",
+    "intent_hash": "D5PxH8fn9raBQnixSEFTGD6ujsHFyFLv4Pw7sXp5WsTB",
+    "asset_id": "nep141:btc.omft.near",
+    "symbol": "btc",
+    "decimals": 8,
+    "raw_amount": "32405843",
+    "units": 0.32405843,
+    "usd": 32209.048895476863
+   },
+   {
+    "account": "6e18d17396fca56fb60bf287d552dd562a5fe9045a5f61fd0357c4cc303dd0db",
+    "intent_hash": "D5PxH8fn9raBQnixSEFTGD6ujsHFyFLv4Pw7sXp5WsTB",
+    "asset_id": "nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near",
+    "symbol": "usdt",
+    "decimals": 6,
+    "raw_amount": "-31279500000",
+    "units": -31279.5,
+    "usd": 31279.5
+   }
+  ],
+  "account_intents": [
+   {
+    "account": "6e18d17396fca56fb60bf287d552dd562a5fe9045a5f61fd0357c4cc303dd0db",
+    "intent": "D5PxH8fn9raBQnixSEFTGD6ujsHFyFLv4Pw7sXp5WsTB",
+    "priced_in_usd": 32209.048895476863,
+    "priced_out_usd": 31279.5,
+    "larger_side_usd": 32209.048895476863
+   },
+   {
+    "account": "solver-priv-liq.near",
+    "intent": "8uQ8tEeMN8DDqi2QowCdssJeGzEk3uP5QDa9iXa3XqT8",
+    "priced_in_usd": 31279.46872,
+    "priced_out_usd": 32209.08169507456,
+    "larger_side_usd": 32209.08169507456
+   }
+  ],
+  "batch_volume_usd": 32209.065295275712,
+  "half_gross_rule": "sum of larger priced side per account-intent, divided by two",
+  "expansion_factor_for_day": 1395.13,
+  "contribution_to_day_estimate_usd": 44935833.26539801
+ },
+ {
+  "kind": "legacy_single_object_event_2024",
+  "receipt_id": "62Vv9b7eEbtwKQpZ7g79aHVSFeNqRjSWYkxkoLPSiG7V",
+  "block_height": 134214731,
+  "block_timestamp_ns": "1733324423380636680",
+  "window": "2024-12-04 15:00 UTC",
+  "caller": "intents.near",
+  "execution_status": "SUCCESS_VALUE",
+  "block_url": "https://mainnet.neardata.xyz/v0/block/134214731",
+  "token_diff_logs": [
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.1.0\",\"event\":\"token_diff\",\"data\":{\"account_id\":\"solver-eth.near\",\"diff\":{\"nep141:eth-0x514910771af9ca656af840dff83e8264ecf986ca.omft.near\":\"-283748077215639939\",\"nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near\":\"7000000\"}}}",
+   "EVENT_JSON:{\"standard\":\"dip4\",\"version\":\"0.1.0\",\"event\":\"token_diff\",\"data\":{\"account_id\":\"king04.near\",\"diff\":{\"nep141:eth-0x514910771af9ca656af840dff83e8264ecf986ca.omft.near\":\"283748077215639939\",\"nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near\":\"-7000000\"}}}"
+  ],
+  "legs": [
+   {
+    "account": "solver-eth.near",
+    "intent_hash": NaN,
+    "asset_id": "nep141:eth-0x514910771af9ca656af840dff83e8264ecf986ca.omft.near",
+    "symbol": "link",
+    "decimals": 18,
+    "raw_amount": "-283748077215639939",
+    "units": -0.28374807721563994,
+    "usd": 6.824141257036141
+   },
+   {
+    "account": "solver-eth.near",
+    "intent_hash": NaN,
+    "asset_id": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near",
+    "symbol": "usdc",
+    "decimals": 6,
+    "raw_amount": "7000000",
+    "units": 7.0,
+    "usd": 7.0
+   },
+   {
+    "account": "king04.near",
+    "intent_hash": NaN,
+    "asset_id": "nep141:eth-0x514910771af9ca656af840dff83e8264ecf986ca.omft.near",
+    "symbol": "link",
+    "decimals": 18,
+    "raw_amount": "283748077215639939",
+    "units": 0.28374807721563994,
+    "usd": 6.824141257036141
+   },
+   {
+    "account": "king04.near",
+    "intent_hash": NaN,
+    "asset_id": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near",
+    "symbol": "usdc",
+    "decimals": 6,
+    "raw_amount": "-7000000",
+    "units": -7.0,
+    "usd": 7.0
+   }
+  ],
+  "account_intents": [
+   {
+    "account": "king04.near",
+    "intent": "legacy",
+    "priced_in_usd": 6.824141257036141,
+    "priced_out_usd": 7.0,
+    "larger_side_usd": 7.0
+   },
+   {
+    "account": "solver-eth.near",
+    "intent": "legacy",
+    "priced_in_usd": 7.0,
+    "priced_out_usd": 6.824141257036141,
+    "larger_side_usd": 7.0
+   }
+  ],
+  "batch_volume_usd": 7.0,
+  "half_gross_rule": "sum of larger priced side per account-intent, divided by two",
+  "expansion_factor_for_day": 761.64,
+  "contribution_to_day_estimate_usd": 5331.48
+ }
+]

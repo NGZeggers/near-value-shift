@@ -45,6 +45,8 @@ The build reads committed snapshots. Full SHA-256 hashes cover raw files, block 
 | llama_tvl_polygon.json | 2026-11-02T04:30:29+00:00 | 80736 | `4d31675ce86c6775ac3dcf195aa074941e9618c2b3778a7c63d3fd5a63406d0b` |
 | llama_tvl_solana.json | 2026-11-02T04:30:20+00:00 | 75810 | `d656354ec7c56e4b5e71d33ad17cd4fd6ca81c4d93eb0d596ab77bd1189863f2` |
 | llama_tvl_sui.json | 2026-11-02T04:30:35+00:00 | 46332 | `402a3b5021a7ba2cf8f3a25d7181dc23770a10a23165abac3f6938d2dbb5f208` |
+| nearblocks_buybacks_account.json | 2026-11-06T23:58:13+00:00 | 577 | `a7d218222691404b7988796fa33bb4bd6cccf8e0b9d1828fa2f0eb062e01f891` |
+| nearblocks_buybacks_txns.json | 2026-11-07T00:13:36+00:00 | 3672992 | `75605a3ed5b2d2905ec2174fab2f8940c1078f69abe177c7883c896a3766b333` |
 | nearblocks_charts.json | 2026-11-02T04:30:13+00:00 | 1536710 | `92860b12c39b4c9413f0d4984c43631fdd080006114e5bcae4c127e8051c1385` |
 | nearblocks_stats.json | 2026-11-02T04:30:14+00:00 | 575 | `f43d11b5b6387a80cd47be63f33a3ed324272960e7c83c7c3e68b5ad640578a3` |
 | price_aptos.json | 2026-11-03T01:01:05+00:00 | 142 | `beaa9daedada83cd74c3980cb73024df5548808d4713d76983986e01f6ef0bc8` |
@@ -76,11 +78,12 @@ The build reads committed snapshots. Full SHA-256 hashes cover raw files, block 
 |---|---|---|
 | data/blocks/event_verification.json | 334 | `22a626709daebc13b1ec3eb2664eb91c4932d276b299bbebb599df83f13c1ece` |
 | data/blocks/intents_events_sampled.csv | 4383281 | `c9aeb3830f15e2e597b431d67a7314c82be01dd0a4e89f851b06baa7614bb111` |
+| data/blocks/intraday_plan.json | 5948 | `29af1a11f27a9f6088eee37a40a70429796ef3e00bde7627c476cd97366754bc` |
 | data/blocks/sample_manifest.json | 12580 | `444e3843e6290d33e115270aab918b23a5896fe6a419afa281c1e832a1716642` |
 | data/blocks/sample_plan.json | 8185 | `d46b1ffc11cc483d0a2838e50b1256584c59a5f4b8ee9b6c975d9372dfb63d78` |
 | data/blocks/tx_sampled.csv | 22653523 | `3a7de3ac562a89bb6e83d030262f67bbc30d8d44073e18e03eb6beca181f38e2` |
 | data/derived/models/qaa_assignments.csv | 7941854 | `b9b072a58ce46c78eb51cc52d69f26a0f24daebe7c4f7a613fee576be4cf852d` |
-| data/derived/models/qaa_causal_model.json | 4958 | `fbd00b69c5e52df45935e2d44122bb14087648de50b879cb012af0d715e205ed` |
+| data/derived/models/qaa_causal_model.json | 4950 | `5e4f03b366c5f749bb24f7bdec07e3a8e3f41f726356526a69286791350e3f44` |
 | sql/l1_account_month_actions.sql | 929 | `2d6af7cffda32de111da4ac9ffe7affc2587263503e03d070d54473a8ada37ef` |
 | sql/l1_account_month_features.sql | 2011 | `a237053b0e3d20adb1046bee96053111983c113995cb37fb00053fedc04de18f` |
 | sql/l2_intents_events.sql | 983 | `1544a88a7d4dd2743ae0b9551f49ed815d867102025a4170ccb25ca7e3dd16e4` |

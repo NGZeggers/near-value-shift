@@ -1,0 +1,211 @@
+{
+ "computed": true,
+ "economic_unit": {
+  "unit": "USD notional of settled swaps per UTC calendar day on intents.near",
+  "our_measure": "half gross participant notional: for each successful execute_intents receipt, for each (account, intent_hash) take the larger of priced inflow and priced outflow, sum over participants and divide by two. One two-party swap of 100 USDC against NEAR counts 100 USD once.",
+  "scope": "token_diff events emitted by intents.near in receipts with an explicit successful execution status; all chains and assets that appear in those events; no deposits, withdrawals or transfers",
+  "day_boundary": "UTC; a sampled window is attributed to the planned UTC day",
+  "prices": "DefiLlama coins daily USD prices (CoinGecko ids from the committed 1Click registry), stablecoins at par, at most seven-day forward fill; unknown or unpriced assets contribute zero",
+  "reference": "DefiLlama dexs/near-intents dailyVolume = SUM(volume_amount_usd) FROM dune.near.dataset_near_intents_metrics per date_at (adapter source: DefiLlama/dimension-adapters dexs/near-intents/index.ts). The dataset is a curated Dune table maintained for NEAR's metrics; whether volume_amount_usd is one-sided or two-sided notional is not published, so the two measures are compared, not assumed identical.",
+  "shared_origin": "DefiLlama does not compute this series itself; it queries Dune. A second reference independent of Dune was not accessible without credentials (Dune API key or Intents Explorer JWT)."
+ },
+ "pooled_ratio_all_days": {
+  "days": 46,
+  "ratio": 0.25253575034639153,
+  "ci_lo": 0.17779112325476906,
+  "ci_hi": 0.32746183577166066
+ },
+ "components": {
+  "temporal_coverage": {
+   "days_sampled": 49,
+   "days_with_reference": 46,
+   "block_coverage_share_mean": 0.000865397779368599,
+   "windows_per_day": 2,
+   "blocks_per_window": 50,
+   "between_window_ratio_15_over_03": {
+    "median": 4.797040485877782,
+    "days_both_positive": 30
+   },
+   "share_of_days_one_window_carries_over_80pct": 0.5869565217391305,
+   "reading": "two 50-block windows observe about 0.07% of a day's blocks; the 15:00 UTC window carries several times the 03:00 volume, so the day mean is sensitive to which hours are observed. The intraday block measures this directly where available"
+  },
+  "valuation": {
+   "legs_total": 3844,
+   "legs_unpriced": 222,
+   "legs_unpriced_share": 0.057752341311134235,
+   "account_intents": 1870,
+   "account_intents_without_any_priced_side": 20,
+   "batches_with_unvalued_account_intent": 16,
+   "unpriced_assets_top": [
+    {
+     "asset_id": "nep245:v2_1.omni.hot.tg:137_11111111111111111111",
+     "legs": 52,
+     "symbol": "pol",
+     "reason": "price snapshot polygon-ecosystem-token is empty (DefiLlama coins API returned no history)"
+    },
+    {
+     "asset_id": "nep141:token.sweat",
+     "legs": 24,
+     "symbol": "sweat",
+     "reason": "price snapshot sweatcoin is empty (DefiLlama coins API returned no history)"
+    },
+    {
+     "asset_id": "nep245:v2_1.omni.hot.tg:1100_111bzQBB5v7AhLyPMDwS8uJgQV24KaAPXtwyVWu2KXbbfQU6NXRCz",
+     "legs": 10,
+     "symbol": "xlm",
+     "reason": "no price snapshot for stellar"
+    },
+    {
+     "asset_id": "nep141:bera.omft.near",
+     "legs": 8,
+     "symbol": "bera",
+     "reason": "price snapshot berachain-bera is empty (DefiLlama coins API returned no history)"
+    },
+    {
+     "asset_id": "nep141:gnosis-0x9c58bacc331c9aa871afd802db6379a98e80cedb.omft.near",
+     "legs": 6,
+     "symbol": "gno",
+     "reason": "no price snapshot for gnosis"
+    },
+    {
+     "asset_id": "nep141:aaaaaa20d9e0e2461697782ef11675f668207961.factory.bridge.near",
+     "legs": 6,
+     "symbol": "aurora",
+     "reason": "no price snapshot for aurora-near"
+    },
+    {
+     "asset_id": "nep141:eth-0xaaaaaa20d9e0e2461697782ef11675f668207961.omft.near",
+     "legs": 6,
+     "symbol": "aurora",
+     "reason": "no price snapshot for aurora-near"
+    },
+    {
+     "asset_id": "nep245:v2_1.omni.hot.tg:42161_11111111111111111111",
+     "legs": 6,
+     "symbol": null,
+     "reason": "asset id not in the committed 1Click registry"
+    },
+    {
+     "asset_id": "nep141:npro.nearmobile.near",
+     "legs": 6,
+     "symbol": "npro",
+     "reason": "no price snapshot for npro"
+    },
+    {
+     "asset_id": "nep141:sol-c58e6539c2f2e097c251f8edf11f9c03e581f8d4.omft.near",
+     "legs": 4,
+     "symbol": "trump",
+     "reason": "no price snapshot for official-trump"
+    },
+    {
+     "asset_id": "nep141:arb-0x912ce59144191c1204e64559fe8253a0e49e6548.omft.near",
+     "legs": 4,
+     "symbol": "arb",
+     "reason": "price snapshot arbitrum is empty (DefiLlama coins API returned no history)"
+    },
+    {
+     "asset_id": "nep245:v2_1.omni.hot.tg:8453_11111111111111111111",
+     "legs": 4,
+     "symbol": null,
+     "reason": "asset id not in the committed 1Click registry"
+    }
+   ],
+   "two_sided_pricing_check": {
+    "account_intents_two_sided": 1577,
+    "in_over_out": {
+     "p5": 0.9701132488112266,
+     "p25": 0.9973193162774768,
+     "p50": 1.0,
+     "p75": 1.0015917518805229,
+     "p95": 1.0257700912598398
+    },
+    "within_3pct_share": 0.9150285351934052,
+    "reading": "near 1.0 means daily prices and decimals are consistent across the two legs of the same intent"
+   },
+   "reading": "an account-intent is valued by whichever side is priced, so unpriced legs lose value only when neither side is priced; the count above bounds that loss in account-intents, not in USD, which is unobservable without a price"
+  },
+  "route_reconstruction": {
+   "batches": 579,
+   "accounts_per_batch": {
+    "1": 1,
+    "2": 276,
+    "3": 220,
+    "4": 66,
+    "5": 12,
+    "6": 4
+   },
+   "intents_per_batch": {
+    "1": 3,
+    "2": 182,
+    "3": 215,
+    "4": 91,
+    "5": 45,
+    "6": 36,
+    "7": 6,
+    "8": 1
+   },
+   "batches_with_more_than_two_accounts_share": 0.5215889464594128,
+   "per_token_net_relative_to_gross": {
+    "p50": 5.016610903379927e-07,
+    "p99": 0.0008031484397896317,
+    "reading": "diffs within a receipt balance per token up to rounding dust; fees are not inside token_diff"
+   },
+   "alternative_definitions_total_usd": {
+    "half_gross_participant_notional": 407393.6323019824,
+    "full_gross_participant_notional": 814787.2646039648,
+    "user_side_notional_heuristic_roles": 395204.3117352623
+   },
+   "reading": "if the reference counted both sides of every swap, our ratio would double; if it counted only user legs, it would move by the user-side/half-gross factor. These bounds are definitional, not evidence about the reference"
+  },
+  "residual": {
+   "pooled_ratio": 0.25253575034639153,
+   "if_reference_were_two_sided_notional": 0.5050715006927831,
+   "after_intraday_bias_correction": null,
+   "after_both": null,
+   "unexplained_factor_to_parity": 3.9598353842113307,
+   "reading": "the identified components are definitional (one- versus two-sided) and intraday coverage; the remaining factor to reach parity is unexplained and is reported as such, not attributed to missing large trades"
+  }
+ },
+ "holdout": {
+  "rule": "sampled days with a positive reference value are sorted chronologically; even positions calibrate, odd positions validate; declared before evaluation",
+  "tolerance": {
+   "point_ratio_min": 0.8,
+   "point_ratio_max": 1.25,
+   "interval_must_include": 1.0,
+   "declared": "2026-11-06, before evaluating the holdout days",
+   "justification": "covers measured pricing dispersion (a few percent), not coverage or definitional gaps"
+  },
+  "calibration": {
+   "days": 23,
+   "ratio": 0.21048775227637342,
+   "ci_lo": 0.114064000233017,
+   "ci_hi": 0.30469053002190527,
+   "within_tolerance": false
+  },
+  "validation": {
+   "days": 23,
+   "ratio": 0.2973787079358753,
+   "ci_lo": 0.18626500322176417,
+   "ci_hi": 0.41562754073194585,
+   "within_tolerance": false
+  },
+  "verdict": "validation days outside the declared tolerance: the on-chain estimate does not reproduce the reference level"
+ },
+ "intraday": {
+  "available": false,
+  "how": "make blocks-intraday (network, several hours under the public rate limit)"
+ },
+ "trace_examples": [
+  "simple_two_party_fully_priced",
+  "multi_participant_batch",
+  "unpriced_leg_valued_by_other_side",
+  "account_intent_without_any_price",
+  "largest_sampled_batch",
+  "legacy_single_object_event_2024"
+ ],
+ "not_possible_here": [
+  "complete-day extracts (FastNear public rate limit ~0.35 blocks/s; a NEAR day has ~150,000 blocks)",
+  "a second reference independent of Dune (no Dune API key or Intents Explorer JWT)",
+  "the published definition of volume_amount_usd in dune.near.dataset_near_intents_metrics"
+ ]
+}

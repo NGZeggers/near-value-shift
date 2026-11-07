@@ -8,7 +8,7 @@ def main(argv: list[str] | None = None) -> None:
     sub = p.add_subparsers(dest="cmd", required=True)
 
     f = sub.add_parser("fetch", help="L0: pull public sources into data/raw/")
-    f.add_argument("--only", nargs="*", help="subset: nearblocks defillama rpc prices github intents")
+    f.add_argument("--only", nargs="*", help="subset: nearblocks defillama rpc prices tokens github buybacks intents")
 
     b = sub.add_parser("bq", help="run BigQuery SQL with a dry-run cost gate")
     b.add_argument("names", nargs="*", help="sql file stems to run (default: all)")
@@ -20,6 +20,12 @@ def main(argv: list[str] | None = None) -> None:
     bl.add_argument("--blocks", type=int, default=50, help="blocks per window")
     bl.add_argument("--offline", action="store_true", help="rebuild data/blocks/*.csv and the manifest from the cache only (no network)")
     bl.add_argument("--workers", type=int, default=2)
+
+    bi = sub.add_parser("blocks-intraday", help="fetch every hourly window of selected sampled days (reconciliation of the fixed-window expansion)")
+    bi.add_argument("--days", nargs="*", help="YYYY-MM-DD days; default: days already in data/blocks/intraday_plan.json")
+    bi.add_argument("--blocks", type=int, default=50, help="blocks per hourly window")
+    bi.add_argument("--workers", type=int, default=2)
+    bi.add_argument("--offline", action="store_true", help="rebuild the intraday extract from cached blocks only")
 
     ve = sub.add_parser("verify-events", help="revalidate saved event receipts against full blocks; resumable and atomic")
     ve.add_argument("--offline", action="store_true", help="use only full verification blocks already cached")
@@ -48,6 +54,9 @@ def main(argv: list[str] | None = None) -> None:
     elif a.cmd == "blocks":
         from . import blocks
         blocks.run(day_step=a.day_step, blocks_per_window=a.blocks, workers=a.workers, offline=a.offline)
+    elif a.cmd == "blocks-intraday":
+        from . import blocks
+        blocks.run_intraday(days=a.days or None, blocks_per_window=a.blocks, workers=a.workers, offline=a.offline)
     elif a.cmd == "verify-events":
         from . import blocks
         blocks.verify_events(offline=a.offline)

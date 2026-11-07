@@ -9,7 +9,7 @@ import json
 
 import pandas as pd
 
-from .config import MODELS
+from .config import MODELS, REPO_URL
 
 METRIC_NAMES = {
     "active_accounts": "active accounts", "txns": "transaction counts", "tx_fee_usd": "gas fees", "tx_volume_usd": "transfer volume",
@@ -113,7 +113,21 @@ def _usd(v: float | None) -> str:
     return f"${v:,.0f}"
 
 
+def _load(name: str) -> dict:
+    f = MODELS / name
+    return json.loads(f.read_text()) if f.exists() else {}
+
+
+KINDS = {"observed": "read from a public source or extract", "estimate": "computed from a sample with stated uncertainty",
+         "assumption": "a scenario or rule, not a measurement", "inconclusive": "a test that did not establish its result"}
+
+
+def _doc(path: str) -> str:
+    return f"{REPO_URL}/blob/main/{path}"
+
+
 def build(d: pd.DataFrame, m: pd.DataFrame, qs: dict, ins: dict, ic: list, vg: list) -> dict:
+    recon, qsens, oos, bridge = _load("intents_reconciliation.json"), _load("qaa_sensitivity.json"), _load("signal_oos.json"), _load("value_bridge.json")
     full = m[m.index + pd.offsets.MonthEnd(0) <= d.index.max()]
     last = full.iloc[-1]
     lm = str(last.name.date())[:7]
@@ -157,13 +171,23 @@ def build(d: pd.DataFrame, m: pd.DataFrame, qs: dict, ins: dict, ic: list, vg: l
         onchain_text = (f"Our own block-sample estimate recovers only {ratio['ratio']:.0%} of the DefiLlama series over {ratio['days']} matched days; "
                         f"the conditional interval [{ratio['ci_lo']:.2f}, {ratio['ci_hi']:.2f}] excludes parity, so the consistency criterion fails. "
                         "The sample shows the same trend, but it does not independently confirm the level.")
+    hold = (recon.get("holdout") or {}).get("validation") or {}
+    if "ratio" in hold:
+        onchain_text += (f" Declared tolerance x0.8 to x1.25: validation days give {hold['ratio']:.2f} "
+                         f"[{hold['ci_lo']:.2f}, {hold['ci_hi']:.2f}], {'inside' if hold.get('within_tolerance') else 'outside'} the band.")
+    oos_sum = (oos.get("summary") or {})
     checks = [
-        {"label": "Descriptive shift", "state": "pass",
+        {"label": "Descriptive shift", "state": "pass", "kind": "observed",
          "text": f"Third-party series agree: active accounts {_fmt_pct(acc_vs_peak)} from the {str(peak_m.date())[:7]} peak, "
-                 f"USD per transaction {usd_mult:.0f}x the 2024 mean, Intents settling {_usd(last['intents_volume_usd'])} in {lm}."},
-        {"label": "Independent on-chain check", "state": onchain_state, "text": onchain_text},
-        {"label": "Investment case", "state": "open",
-         "text": "Conditional. Net capture exists but its allocation is discretionary; no stable forward association between usage and returns is established."},
+                 f"USD per transaction {usd_mult:.0f}x the 2024 mean, Intents settling {_usd(last['intents_volume_usd'])} in {lm}.",
+         "links": [{"label": "Chart", "href": "#chart-indexed"}, {"label": "Metric definitions", "href": _doc("docs/METRICS.md")}]},
+        {"label": "Independent on-chain check", "state": onchain_state, "kind": "estimate", "text": onchain_text,
+         "links": [{"label": "Per-day table", "href": "#chart-intents_recon_daily"}, {"label": "Method, unit and tolerance", "href": _doc("docs/RECONCILIATION.md")},
+                   {"label": "Sampling limits", "href": _doc("docs/SAMPLING.md")}]},
+        {"label": "Investment case", "state": "open", "kind": "inconclusive",
+         "text": ("Conditional. Net capture exists but its allocation is discretionary; " + (oos_sum.get("conclusion", "no stable forward association is established") + ".")
+                  if oos_sum else "Conditional. Net capture exists but its allocation is discretionary; no stable forward association between usage and returns is established."),
+         "links": [{"label": "Value bridge", "href": "#chart-value_bridge"}, {"label": "Out-of-sample test", "href": "#chart-oos"}, {"label": "Scenarios", "href": _doc("THESIS.md#value-bridge-from-settlement-to-the-token")}]},
     ]
     changes = verdict_changes(ins)
     verdict = {
@@ -177,25 +201,33 @@ def build(d: pd.DataFrame, m: pd.DataFrame, qs: dict, ins: dict, ic: list, vg: l
 
     # ---- the argument in five steps, each anchored to the evidence
     steps = [
-        {"title": "Counts collapsed",
+        {"title": "Counts collapsed", "kind": "observed",
          "text": f"Daily active accounts are {_fmt_pct(acc_vs_peak)} from the {str(peak_m.date())[:7]} peak and transactions {_fmt_pct(txn_vs_peak)} from theirs. This is the decline everyone sees.",
-         "href": "#chart-active_accounts", "chart": "active_accounts"},
-        {"title": "Value per transaction rose",
+         "href": "#chart-active_accounts", "chart": "active_accounts",
+         "links": [{"label": "Source and table", "href": "#chart-active_accounts"}, {"label": "Definitions", "href": _doc("docs/METRICS.md")}]},
+        {"title": "Value per transaction rose", "kind": "observed",
          "text": f"The average transaction in {lm} moved {_usd(last['usd_per_txn'])}, about {usd_mult:.0f}x the 2024 mean. Count fell much faster than volume.",
-         "href": "#chart-usd_per_txn", "chart": "usd_per_txn"},
-        {"title": "Settlement moved to Intents",
+         "href": "#chart-usd_per_txn", "chart": "usd_per_txn",
+         "links": [{"label": "Source and table", "href": "#chart-usd_per_txn"}]},
+        {"title": "Settlement moved to Intents", "kind": "observed",
          "text": f"Reported cross-chain settlement reached {_usd(last['intents_volume_usd'])} in {lm}; application fees are {fee_mult:.0f}x the gas paid to the protocol. "
                  "Value that settles through NEAR does not stay on NEAR: TVL and stablecoins are flat.",
-         "href": "#sec-value", "chart": "indexed"},
-        {"title": "Part of the decline is a bot wash-out, and our own on-chain check "
-                  + ("holds" if cross_ok else "fails"),
-         "text": ((f"The quality-adjusted share of accounts rose from {qaa_first['qaa_share']:.0%} to {qaa_last['qaa_share']:.0%}. " if qaa_last is not None else "")
+         "href": "#sec-value", "chart": "indexed",
+         "links": [{"label": "Third-party series", "href": "#chart-intents_volume_monthly"}, {"label": "Fees and capture", "href": "#chart-intents_capture"}]},
+        {"title": "Part of the decline is a mini-app wash-out, and our own on-chain check "
+                  + ("holds" if cross_ok else "fails"), "kind": "estimate",
+         "text": ((f"The share of accounts outside the mini-app and high-frequency patterns rose from {qaa_first['qaa_share']:.0%} to {qaa_last['qaa_share']:.0%}" if qaa_last is not None else "")
+                  + (f" (a name-only split gives {qsens['name_only_baseline']['latest_month']:.0%}, so the clustering adds little beyond the name class). " if qsens.get("name_only_baseline") else ". ")
                   + (f"But our block sample recovers only {ratio['ratio']:.0%} of the DefiLlama level: the trend is confirmed, the level is not." if (computed and not cross_ok)
                      else "Our block sample is consistent with the DefiLlama level." if computed else "Independent validation is unavailable.")),
-         "href": "#chart-intents_xcheck", "chart": "intents_xcheck"},
-        {"title": "Price reflects none of it",
-         "text": "The price-usage correlation is unstable and often negative. " + granger_text + ic_text + "Decoupling is observed; a return signal is not.",
-         "href": "#sec-price", "chart": "rolling_corr"},
+         "href": "#chart-intents_xcheck", "chart": "intents_xcheck",
+         "links": [{"label": "Per-day reconciliation", "href": "#chart-intents_recon_daily"}, {"label": "QAA sensitivity", "href": "#sensitivity"},
+                   {"label": "Method and tolerance", "href": _doc("docs/RECONCILIATION.md")}, {"label": "Sampling limits", "href": _doc("docs/SAMPLING.md")}]},
+        {"title": "Price reflects none of it", "kind": "inconclusive",
+         "text": "The price-usage correlation is unstable and often negative. " + granger_text + ic_text
+                 + (f"Out of sample: {oos_sum['conclusion']}. " if oos_sum.get("conclusion") else "") + "Decoupling is observed; a return signal is not.",
+         "href": "#sec-price", "chart": "rolling_corr",
+         "links": [{"label": "Out-of-sample protocol", "href": "#chart-oos"}, {"label": "Granger diagnostics", "href": "#chart-granger"}, {"label": "Statistical results", "href": _doc("THESIS.md#econometrics-l3")}]},
     ]
     for i, s in enumerate(steps, 1):
         s["step"] = i
@@ -219,10 +251,10 @@ def build(d: pd.DataFrame, m: pd.DataFrame, qs: dict, ins: dict, ic: list, vg: l
         "3. Quality-adjusted": {
             "id": SECTION_IDS["3. Quality-adjusted"],
             "question": "Do our own on-chain extracts agree?",
-            "intro": ((f"Partly. Clustering account behavior shows the quality-adjusted share rising from {qaa_first['qaa_share']:.0%} to {qaa_last['qaa_share']:.0%}: much of the lost headcount was mini-app farming. " if qaa_last is not None else "")
+            "intro": ((f"Partly. Clustering account behavior shows the share outside the mini-app and high-frequency patterns rising from {qaa_first['qaa_share']:.0%} to {qaa_last['qaa_share']:.0%}: much of the lost headcount matched the mini-app pattern. " if qaa_last is not None else "")
                       + (f"But the block sample prices only {ratio['ratio']:.0%} of DefiLlama's volume (interval {ratio['ci_lo']:.2f} to {ratio['ci_hi']:.2f}); the largest sampled batch is {_usd(tail.get('max_batch_usd'))} and the top 10% of batches carry {tail.get('top10pct_share', 0):.0%} of sampled value, so thin windows miss the tail." if (computed and not cross_ok)
                          else "The block sample is consistent with DefiLlama." if computed else "Independent L2 validation is unavailable.")),
-            "limit": "QAA is a behavioral proxy, not verified humans. The cross-check is reported as failing, not explained away; it limits how much the level in section 2 can be trusted.",
+            "limit": "QAA groups describe behavior in sparse windows (most accounts are seen once), not verified humans; a name-only split tracks the share closely. The cross-check is reported as failing, not explained away; it limits how much the level in section 2 can be trusted.",
         },
         "4. Price and usage": {
             "id": SECTION_IDS["4. Price and usage"],
@@ -245,23 +277,107 @@ def build(d: pd.DataFrame, m: pd.DataFrame, qs: dict, ins: dict, ic: list, vg: l
     }
 
     against = [
-        {"text": onchain_text, "href": "#chart-intents_xcheck"},
+        {"text": onchain_text, "href": "#chart-intents_xcheck", "kind": "estimate"},
         {"text": "Greater settlement volume does not mechanically imply greater token returns. Gross fees are not holder yield; net capture, future allocation and issuance still matter.",
-         "href": "#chart-intents_capture"},
+         "href": "#chart-value_bridge" if bridge else "#chart-intents_capture", "kind": "observed"},
     ]
+    if bridge.get("scenarios"):
+        sc = bridge["scenarios"]
+        against.append({"text": (f"Net of issuance, buyback accrual is {sc['adverse']['net_yield_on_mcap']:+.2%} of market cap in the adverse scenario, "
+                                 f"{sc['base']['net_yield_on_mcap']:+.2%} in the base case and {sc['favorable']['net_yield_on_mcap']:+.2%} in the favorable one; "
+                                 f"the dominant assumption is {bridge['dominant_assumption']['dominant']}. Scenarios, not forecasts."),
+                        "href": "#chart-value_bridge", "kind": "assumption"})
+    if oos_sum.get("conclusion"):
+        against.append({"text": f"Pre-registered out-of-sample test (calibration through {oos['protocol']['calibration_end']}, frozen sign, purged evaluation): {oos_sum['conclusion']}; "
+                                f"{len(oos_sum.get('not_evaluable', []))} of {oos_sum.get('usage_tests', 0)} declared tests are not evaluable for lack of calibration weeks (Intents, QAA).",
+                        "href": "#chart-oos", "kind": "inconclusive"})
     if int_ic:
         lo, hi = int_ic["ci95_block_bootstrap"]
         against.append({"text": f"Intents growth versus twelve-week forward excess returns over BTC: IC {int_ic['spearman_ic']:+.2f}, exploratory block interval [{lo:+.2f}, {hi:+.2f}], n={int_ic['n']}; "
-                                f"first/second half {int_ic['ic_first_half']:+.2f}/{int_ic['ic_second_half']:+.2f}; not significant after familywise control. Not a signal.", "href": "#chart-ic"})
+                                f"first/second half {int_ic['ic_first_half']:+.2f}/{int_ic['ic_second_half']:+.2f}; not significant after familywise control. Not a signal.", "href": "#chart-ic", "kind": "inconclusive"})
     if granger_rev:
-        against.append({"text": f"Where Granger precedence is significant, the stronger direction runs from price to usage ({_names(granger_rev)}), the opposite of a usage-driven price story.", "href": "#chart-granger"})
-    against.append({"text": "Fixed intraday windows, sparse sampling, role assumptions, unpriced assets and routed batches can all affect the on-chain comparison; their separate contributions are not identified.",
-                    "href": "#chart-intents_users"})
+        against.append({"text": f"Where Granger precedence is significant, the stronger direction runs from price to usage ({_names(granger_rev)}), the opposite of a usage-driven price story.", "href": "#chart-granger", "kind": "estimate"})
+    comp = (recon.get("components") or {})
+    if comp:
+        res = comp.get("residual") or {}
+        cov = comp.get("temporal_coverage") or {}
+        intra = recon.get("intraday") or {}
+        bias = intra.get("fixed_window_bias_factor_mean")
+        against.append({"text": (f"Decomposition of the gap: two 50-block windows observe {cov.get('block_coverage_share_mean', 0):.2%} of a day's blocks and the 15:00 UTC window carries "
+                                 f"{cov['between_window_ratio_15_over_03']['median']:.1f}x the 03:00 volume; " if cov.get("between_window_ratio_15_over_03", {}).get("median") else "")
+                                + (f"24 hourly windows on {len(intra.get('days', []))} pre-declared days put the fixed-window bias factor at {bias:.2f}; " if bias else "the intraday extract is not yet available; ")
+                                + (f"valuation loses only {comp['valuation']['account_intents_without_any_priced_side']} of {comp['valuation']['account_intents']} account-intents; "
+                                   f"a two-sided reading of the reference would double the ratio to {res.get('if_reference_were_two_sided_notional', 0):.2f}. "
+                                   f"After the identified components a factor of {res.get('unexplained_factor_to_parity', 0):.1f}x to parity stays unexplained."),
+                        "href": "#chart-intents_recon_daily", "kind": "estimate"})
+    else:
+        against.append({"text": "Fixed intraday windows, sparse sampling, role assumptions, unpriced assets and routed batches can all affect the on-chain comparison; their separate contributions are not identified.",
+                        "href": "#chart-intents_users", "kind": "estimate"})
     if qaa_last is not None:
-        against.append({"text": f"QAA sensitivity: strict multi-app share {qaa_last['quality_share_strict']:.0%}, default {qaa_last['qaa_share']:.0%}, including ambiguous groups {qaa_last['quality_share_including_ambiguous']:.0%}. "
-                                "The behavioral reading depends on the clustering choice.", "href": "#chart-qaa_shares"})
+        extra = ""
+        if qsens.get("model_agreement"):
+            extra = f" The frozen past-only model gives {qsens['model_agreement']['latest']['frozen']:.0%} for the same month."
+        if qsens.get("by_window_hour"):
+            bh = qsens["by_window_hour"]["latest_month"]
+            extra += " By observation hour: " + ", ".join(f"{h}:00 UTC {v:.0%}" for h, v in bh.items()) + "."
+        against.append({"text": f"QAA sensitivity: strict multi-app share {qaa_last['quality_share_strict']:.0%}, default {qaa_last['qaa_share']:.0%}, including ambiguous groups {qaa_last['quality_share_including_ambiguous']:.0%}."
+                                + extra + " Group names describe behavior; no verified human or bot labels exist.", "href": "#chart-qaa_shares", "kind": "estimate"})
 
-    return {"verdict": verdict, "argument": steps, "sections": sections, "against": against}
+    sensitivity = sensitivity_table(ratio, cross_ok, qaa_last, qsens, recon, bridge)
+    dates = {"analysis_cutoff": str(d.index.max().date()),
+             "block_sample_fetched_at": _block_sample_date(),
+             "intraday_fetched_at": (recon.get("intraday") or {}).get("fetched_at"),
+             "buyback_receipts_fetched_at": ((bridge.get("receipts") or {}).get("fetched_at")),
+             "note": "the analysis cutoff is the last day with data in every daily series; acquisition dates say when each snapshot was taken; the page footer shows when this page was generated"}
+    return {"verdict": verdict, "argument": steps, "sections": sections, "against": against, "sensitivity": sensitivity, "dates": dates, "kinds": KINDS}
+
+
+def _block_sample_date() -> str | None:
+    f = MODELS.parents[1] / "blocks" / "sample_manifest.json"
+    return json.loads(f.read_text()).get("fetched_at") if f.exists() else None
+
+
+def sensitivity_table(ratio: dict, cross_ok: bool, qaa_last, qsens: dict, recon: dict, bridge: dict) -> list[dict]:
+    """How much each headline moves under the relevant alternative assumptions, and whether the verdict changes."""
+    rows = []
+    if ratio:
+        variants = [{"label": "pooled ratio, all matched days", "value": f"{ratio['ratio']:.2f}"}]
+        res = (recon.get("components") or {}).get("residual") or {}
+        hold = (recon.get("holdout") or {})
+        if res.get("if_reference_were_two_sided_notional"):
+            variants.append({"label": "if the reference counted both sides", "value": f"{res['if_reference_were_two_sided_notional']:.2f}"})
+        if res.get("after_intraday_bias_correction"):
+            variants.append({"label": "after the measured intraday bias", "value": f"{res['after_intraday_bias_correction']:.2f}"})
+        if res.get("after_both"):
+            variants.append({"label": "both corrections", "value": f"{res['after_both']:.2f}"})
+        for role in ("calibration", "validation"):
+            r = hold.get(role) or {}
+            if "ratio" in r:
+                variants.append({"label": f"{role} days only", "value": f"{r['ratio']:.2f} [{r['ci_lo']:.2f}, {r['ci_hi']:.2f}]"})
+        rows.append({"headline": "On-chain estimate / DefiLlama reference", "kind": "estimate", "variants": variants,
+                     "effect": ("no variant reaches the declared tolerance (x0.8 to x1.25 with the interval covering 1.0); the check stays failing" if not cross_ok
+                                else "the check passes; variants show how fragile the pass is"), "href": "#chart-intents_recon_daily"})
+    if qaa_last is not None:
+        variants = [{"label": "strict (multi-app only)", "value": f"{qaa_last['quality_share_strict']:.0%}"},
+                    {"label": "default", "value": f"{qaa_last['qaa_share']:.0%}"},
+                    {"label": "including ambiguous groups", "value": f"{qaa_last['quality_share_including_ambiguous']:.0%}"}]
+        if qsens.get("name_only_baseline"):
+            variants.append({"label": "name-only split (no clustering)", "value": f"{qsens['name_only_baseline']['latest_month']:.0%}"})
+        if qsens.get("inclusion_probability_weighting"):
+            variants.append({"label": "inclusion-probability weighted", "value": f"{qsens['inclusion_probability_weighting']['latest_month_weighted']:.0%}"})
+        if qsens.get("by_window_hour"):
+            variants += [{"label": f"accounts seen at {h}:00 UTC", "value": f"{v:.0%}"} for h, v in qsens["by_window_hour"]["latest_month"].items()]
+        if qsens.get("model_agreement"):
+            variants.append({"label": "frozen past-only model", "value": f"{qsens['model_agreement']['latest']['frozen']:.0%}"})
+        rows.append({"headline": f"Share of accounts outside mini-app and high-frequency patterns, {qsens.get('latest_month', 'latest month')}", "kind": "estimate", "variants": variants,
+                     "effect": "the level depends on the model and criterion; the rising trend holds across variants. QAA is not one of the verdict's pass/fail checks, so the verdict does not move",
+                     "href": "#chart-qaa_shares"})
+    if bridge.get("scenarios"):
+        sc = bridge["scenarios"]
+        rows.append({"headline": "Buyback accrual net of issuance, share of market cap", "kind": "assumption",
+                     "variants": [{"label": k, "value": f"{v['net_yield_on_mcap']:+.2%}"} for k, v in sc.items()],
+                     "effect": f"dominant assumption: {bridge['dominant_assumption']['dominant']}; every scenario keeps the investment case conditional", "href": "#chart-value_bridge"})
+    return rows
 
 
 def story_kpis(d: pd.DataFrame, m: pd.DataFrame, ins: dict) -> list[dict]:
@@ -272,18 +388,18 @@ def story_kpis(d: pd.DataFrame, m: pd.DataFrame, ins: dict) -> list[dict]:
 
     def kpi(label, value, prior, unit, up_is_good=True, note=None):
         delta = (value - prior) / prior * 100 if prior else None
-        return {"label": label, "value": value, "unit": unit, "delta_pct_yoy": delta, "up_is_good": up_is_good, "month": month, "note": note}
+        return {"label": label, "value": value, "unit": unit, "delta_pct_yoy": delta, "up_is_good": up_is_good, "month": month, "note": note, "kind": "observed"}
 
     ratio = ins.get("ratio_to_defillama") or {}
     computed = bool(ins.get("computed"))
     cross_ok = bool(ins.get("cross_check_passed"))
     if computed and ratio:
         check = {"label": "On-chain sample vs DefiLlama", "value": float(ratio["ratio"]), "unit": "ratio", "delta_pct_yoy": None, "up_is_good": True, "month": month,
-                 "state": "pass" if cross_ok else "fail",
+                 "state": "pass" if cross_ok else "fail", "kind": "estimate",
                  "note": ("consistent with parity" if cross_ok else f"cross-check failing; interval {ratio['ci_lo']:.2f} to {ratio['ci_hi']:.2f}")}
     else:
         check = {"label": "On-chain sample vs DefiLlama", "value": None, "unit": "ratio", "delta_pct_yoy": None, "up_is_good": True, "month": month,
-                 "state": "open", "note": "not computed"}
+                 "state": "open", "note": "not computed", "kind": "estimate"}
     return [kpi("Intents volume, last full month", float(last["intents_volume_usd"]), float(prev["intents_volume_usd"]), "USD"),
             kpi("Daily active accounts, monthly mean", float(last["active_accounts"]), float(prev["active_accounts"]), "accounts"),
             kpi("USD moved per transaction", float(last["usd_per_txn"]), float(prev["usd_per_txn"]), "USD"),

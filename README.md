@@ -4,7 +4,7 @@ This is a reproducible investment thesis on NEAR, built for NEAR Hackathon 2026,
 
 **Question:** do falling account counts obscure a shift toward cross-chain settlement, and does the evidence support a token investment case? The project compares activity, behavioral proxies, Intents flows, net captured fees and forward associations. It reports failed cross-checks and inconclusive statistical tests. Settlement growth alone does not establish undervaluation.
 
-[Dashboard](https://ngzeggers.github.io/near-value-shift/) · [Generated argument](THESIS.md) · [Sampling and limits](docs/SAMPLING.md) · [Audit and corrections](docs/VALIDACION_HACKATHON.md)
+[Dashboard](https://ngzeggers.github.io/near-value-shift/) · [Generated argument](THESIS.md) · [Reconciliation method and tolerance](docs/RECONCILIATION.md) · [Sampling and limits](docs/SAMPLING.md) · [Audit and corrections](docs/VALIDACION_HACKATHON.md) · [Response to the 2026-11-06 product audit](docs/AUDIT_RESPONSE_2026-11-06.md)
 
 ## What is implemented
 
@@ -13,11 +13,13 @@ This is a reproducible investment thesis on NEAR, built for NEAR Hackathon 2026,
 | L0 | Hashed public snapshots, including gross Intents fees, net captured receipts and buyback-labelled revenue | `near_thesis/fetch.py`, `data/raw/` |
 | L1 | Retrospective HDBSCAN; separate frozen past-only GMM for predictive QAA, with next-month availability | `near_thesis/qaa.py` |
 | L2 | Successful-receipt token-diff parser, exact asset identifiers, zero-event days and heuristic roles; historical events revalidated against 1,189 FastNear blocks; failed receipts excluded | `near_thesis/intents.py`, `data/blocks/` |
+| L2 reconciliation | Written economic unit, per-day table against the DefiLlama/Dune reference, gap decomposition (coverage, valuation, routes, residual), pre-declared tolerance and holdout, receipt-level trace examples, intraday bias from hourly windows on pre-declared days | `near_thesis/reconcile.py`, `docs/RECONCILIATION.md` |
 | L3 | Breaks, correlations, stationarity-gated VAR, stability/residual checks, explicit Johansen ranks | `near_thesis/econ.py` |
-| L4 | Forward associations with block-bootstrap and familywise intervals; descriptive peer panel; capture-based scenarios | `near_thesis/signal.py` |
-| Output | Generated thesis; static dashboard with a computed verdict, a five-step argument beside a pinned chart, a sticky section index with scroll-spy, per-section conclusions and an explicit evidence-against block (no dependencies, opens from `file://`); executed notebook, complete input hashes, regression tests | `THESIS.md`, `near_thesis/narrative.py`, `near_thesis/web/`, `tests/` |
+| L4 | Forward associations with block-bootstrap and familywise intervals; pre-registered out-of-sample test with frozen sign, purge, walk-forward hit rate and naive benchmark predictors; descriptive peer panel; capture-based scenarios | `near_thesis/signal.py` |
+| Value bridge | Volume → gross fees → net captured revenue → buyback-labelled revenue → NEAR received by the buyback multisig → tokens held; issuance from total supply; adverse/base/favorable scenarios with the dominant assumption | `near_thesis/bridge.py`, `data/raw/nearblocks_buybacks_*.json` |
+| Output | Generated thesis; static dashboard with a computed verdict, a five-step argument beside a pinned chart, evidence tags (observed, estimate, assumption, inconclusive) on every main claim, method links, a sensitivity block, separate data-cutoff, acquisition and generation dates, a sticky section index and an explicit evidence-against block (no dependencies, opens from `file://`); executed notebook, complete input hashes, regression tests | `THESIS.md`, `near_thesis/narrative.py`, `near_thesis/web/`, `tests/` |
 
-QAA labels are behavioral assumptions, not verified human identities. The Intents sample is not a validated total or guaranteed lower bound. Buyback-labelled receipts are not proof of burning or holder dividends. The generated argument names the current consistency-test result or why it is unavailable, plus remaining limitations. The historical L2 extract was revalidated against FastNear on 2026-11-05: 53 failed-receipt logs were removed and 7,227 events retain explicit successful statuses. See [receipt revalidation](docs/REVALIDACION_L2_2026-11-05.md) for scope and evidence. Legacy extracts without execution status remain disabled by the pipeline.
+QAA groups are named after observed behavior (`light_general`, `miniapp_pattern`, ...), not verified human identities; a name-only split tracks the share closely in the sparse sampled windows, and the thesis says so. The Intents sample is not a validated total or guaranteed lower bound. Buyback-labelled receipts are not proof of burning or holder dividends. The generated argument names the current consistency-test result or why it is unavailable, plus remaining limitations. The historical L2 extract was revalidated against FastNear on 2026-11-05: 53 failed-receipt logs were removed and 7,227 events retain explicit successful statuses. See [receipt revalidation](docs/REVALIDACION_L2_2026-11-05.md) for scope and evidence. Legacy extracts without execution status remain disabled by the pipeline.
 
 ## Reproduce: do X, see Y
 
@@ -32,13 +34,13 @@ Requirements: [uv](https://docs.astral.sh/uv/); Python 3.12 is configured by CI.
 
 Generated text and source hashes are compared exactly. Numerical arrays allow only `rtol=1e-9`, `atol=1e-11` for machine precision; stale market caps and changed methods still fail the check.
 
-Optional browser checks: `uv run --with playwright python -m playwright install chromium`, then `uv run --with playwright python tests/browser_dashboard.py`. These exercise HTTP and local-file rendering, all six KPIs, verdict conditions, filters, themes, sources, tables, mobile layout and hostile/degenerate inputs. The script prints the temporary directory containing screenshots and JSON results.
+Optional browser checks: `uv run --with playwright python -m playwright install chromium`, then `uv run --with playwright python tests/browser_dashboard.py`. These exercise HTTP and local-file rendering, all six KPIs, verdict conditions, evidence tags against the computed spec, method links, the sensitivity block, the date line, keyboard navigation and focus, filters, themes, sources, tables, mobile layout and hostile/degenerate inputs. The script prints the temporary directory containing screenshots and JSON results.
 
 Build time varies by machine; price tables are loaded once and bootstrap correlations are batched. Retraining clustering costs more than a normal cached build. Snapshot acquisition is separate from build time.
 
 ## Refreshing data and optional integrations
 
-`make fetch` refreshes public APIs. `make blocks BLOCKS=100` tops up the cached FastNear block plan; acquiring thousands of public blocks can take hours under rate limits. Rebuild afterward. Snapshot acquisition timestamps and complete SHA-256 hashes are generated into `docs/REPRODUCIBILITY.md`.
+`make fetch` refreshes public APIs (`uv run near-thesis fetch --only buybacks` refreshes only the buyback multisig receipts from NearBlocks, slowly, within the key-less rate limit). `make blocks BLOCKS=100` tops up the cached FastNear block plan; acquiring thousands of public blocks can take hours under rate limits. `make blocks-intraday` fetches 24 hourly windows for the three pre-declared reconciliation days (several hours). Rebuild afterward. Snapshot acquisition timestamps and complete SHA-256 hashes are generated into `docs/REPRODUCIBILITY.md`; acquisition is always separate from the offline rebuild.
 
 `make verify-events` revalidates all event-bearing blocks against FastNear, resumes from status-aware block caches and replaces the extract only after full verification. The historical revalidation checked all 1,189 blocks from the original event extract; respect the public rate limit and allow substantial time. `uv run near-thesis verify-events --offline` only uses already verified caches. Rebuild after verification. New samples preserve explicit successful receipt status.
 

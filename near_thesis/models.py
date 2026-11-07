@@ -1,11 +1,13 @@
-"""Run every model layer in dependency order: L1 (QAA) -> L2 (Intents) -> L3 (econometrics) -> L4 (signal)."""
+"""Run every model layer in dependency order: L1 (QAA) -> L2 (Intents) -> L2 reconciliation -> L3 (econometrics) -> L4 (signal) -> value bridge."""
 from __future__ import annotations
 
-from . import econ, intents, qaa, signal
+from . import bridge, econ, intents, qaa, reconcile, signal
 
 
 def run() -> None:
     qaa.run()
     intents.run()
+    reconcile.run()
     econ.run()
     signal.run()
+    bridge.run()

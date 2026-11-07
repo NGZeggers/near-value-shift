@@ -1,0 +1,227 @@
+{
+ "as_of": "2026-11-01",
+ "window_days": 365,
+ "market_cap_usd": 5807002813.858446,
+ "average_near_price_usd": 2.0749916790136984,
+ "steps": [
+  {
+   "step": 1,
+   "name": "Settled volume through Intents",
+   "short": "Settled volume",
+   "usd": 32761177210.0,
+   "status": "observed (third-party series)",
+   "source": "DefiLlama dexs/near-intents dailyVolume, a pass-through of dune.near.dataset_near_intents_metrics",
+   "share_of_previous": null
+  },
+  {
+   "step": 2,
+   "name": "Gross swap fees",
+   "short": "Gross fees",
+   "usd": 54155218.0,
+   "status": "observed (third-party series)",
+   "source": "DefiLlama fees/near-intents dailyFees: protocol fee plus affiliate fees across integrators (Dune datasets)",
+   "share_of_previous": 0.0016530302819359524,
+   "note": "take rate 16.5 bps of volume"
+  },
+  {
+   "step": 3,
+   "name": "Net revenue captured by NEAR (NEAR/wNEAR swept into revenue wallets)",
+   "short": "Net captured revenue",
+   "usd": 9312904.05,
+   "status": "observed (adapter wallet receipts)",
+   "source": "DefiLlama dailyRevenue: TRANSFER and wrap.near inflows to fefundsadmin, 1csfundsadmin and buybacks wallets, internal hops excluded",
+   "share_of_previous": 0.17196688322813142,
+   "note": "sweeps are periodic, so a day's receipts can exceed that day's fees"
+  },
+  {
+   "step": 4,
+   "name": "Revenue labelled as buyback (dates on or after 2026-02-23)",
+   "short": "Labelled as buyback",
+   "usd": 7542709.05,
+   "status": "classified by an adapter date rule, not by transaction",
+   "source": "DefiLlama dailyHoldersRevenue = dailyRevenue on or after BUYBACK_START",
+   "share_of_previous": 0.8099201934760618
+  },
+  {
+   "step": 5,
+   "name": "Executed purchases: NEAR settled by intents.near into buybacks.multisignature.near",
+   "short": "NEAR received by buyback wallet",
+   "usd": 4482150.531897206,
+   "near": 1643862.0814239217,
+   "status": "observed (NearBlocks receipts, valued at the daily NEAR price)",
+   "source": "https://api.nearblocks.io/v1/account/buybacks.multisignature.near/txns?per_page=250 (paginated)",
+   "share_of_previous": 0.5942361692841919,
+   "note": "3081 swap-output transfers from 2026-03-18 to 2026-11-01; a further 510,068 NEAR arrived from the other revenue wallets (treasury moves, excluded here as the adapter excludes them) and 8,293 NEAR from other accounts. The wallet was created 2026-03-18, after the adapter's buyback start 2026-02-23, so labelled revenue before that date cannot be matched to this wallet"
+  },
+  {
+   "step": 6,
+   "name": "Destination of purchased tokens",
+   "short": "Held in the multisig",
+   "near": 2202267.809503736,
+   "usd": null,
+   "status": "observed balance (held in the multisig; no burn observed)",
+   "source": "NearBlocks account snapshot 2026-11-07T00:13:36+00:00",
+   "share_of_previous": 1.018520288756273,
+   "note": "balance at the snapshot divided by all inbound NEAR before the cutoff; outbound transfers before the cutoff: 12,025 NEAR. Holding is not supply destruction"
+  }
+ ],
+ "dilution": {
+  "window": [
+   "2025-11-02",
+   "2026-11-01"
+  ],
+  "status": "observed: NearBlocks daily total supply",
+  "measure": "total supply change: protocol issuance net of gas burn; unlocks of already-issued tokens are not dilution of supply",
+  "total_supply_start_near": 1278952620.798204,
+  "total_supply_end_near": 1310576026.3527384,
+  "net_new_total_near": 31623405.554534435,
+  "annual_total_supply_growth": 0.024726018024653573,
+  "circulating_supply_field": {
+   "start": 1249836992.159308,
+   "end": 1249836992.159308,
+   "stale_in_source": true,
+   "last_change": "2025-08-27",
+   "note": "constant in the NearBlocks snapshot over the window, so it is not used"
+  },
+  "net_new_usd_at_average_price": 65618303.387734525,
+  "buyback_near_received_12m": 1643862.0814239217,
+  "buyback_to_issuance_ratio": 0.05198244947366874,
+  "note": "buybacks are held, not burned, so they do not reduce supply and are not netted twice: issuance is counted once here and buybacks once above"
+ },
+ "receipts": {
+  "source": "https://api.nearblocks.io/v1/account/buybacks.multisignature.near/txns?per_page=250 (paginated)",
+  "fetched_at": "2026-11-07T00:13:36+00:00",
+  "transfers_in": 3110,
+  "transfers_out": 3,
+  "near_in_total": 2162222.8185488097,
+  "usd_in_total_at_daily_price": 5680599.332039204,
+  "near_in": 1643862.0814239217,
+  "usd_in_at_daily_price": 4482150.531897206,
+  "purchase_transfers": 3081,
+  "near_in_from_treasury_wallets": 510068.0,
+  "near_in_other": 8292.737124887979,
+  "near_out": 12025.0,
+  "first_inbound": "2026-03-18",
+  "last_inbound_before_cutoff": "2026-11-01",
+  "inbound_by_predecessor_near": {
+   "intents.near": 1643862.0814239217,
+   "1csfundsadmin.sputnik-dao.near": 510068.0,
+   "clingy.near": 3595.0,
+   "52435fe912307fb3a088b8b8f3882781762fc1f0a404e8579c7fb1a964362c8d": 2152.88045,
+   "9c484fa5d2d069569ba063fc555c34e621ccd88fdbb0295fc79bad232621c5c1": 782.28,
+   "5c33c6218d47e00ef229f60da78d0897e1ee9665312550b8afd5f9c7bc6957d2": 767.5600000000001
+  },
+  "share_from_intents_near": 0.7602648845076988,
+  "balance_near_at_fetch": 2202267.809503736,
+  "wallet_created": "2026-03-18",
+  "adapter_buyback_start": "2026-02-23"
+ },
+ "scenarios": {
+  "adverse": {
+   "assumptions": {
+    "volume_usd": 16380588605.0,
+    "take_rate_bps": 12.397727114519643,
+    "capture_share": 0.12897516242109858,
+    "allocation_to_buybacks": 0.5,
+    "net_new_supply_near": 39529256.943168044,
+    "near_price_usd": 2.0749916790136984
+   },
+   "buyback_accrual_usd": 1309627.1320312503,
+   "issuance_usd": 82022879.23466815,
+   "buyback_yield_on_mcap": 0.0002255254860400304,
+   "dilution_yield_on_mcap": 0.014124821678908106,
+   "net_yield_on_mcap": -0.013899296192868076
+  },
+  "base": {
+   "assumptions": {
+    "volume_usd": 32761177210.0,
+    "take_rate_bps": 16.530302819359523,
+    "capture_share": 0.17196688322813142,
+    "allocation_to_buybacks": 0.8099201934760618,
+    "net_new_supply_near": 31623405.554534435,
+    "near_price_usd": 2.0749916790136984
+   },
+   "buyback_accrual_usd": 7542709.049999999,
+   "issuance_usd": 65618303.387734525,
+   "buyback_yield_on_mcap": 0.0012988988109320836,
+   "dilution_yield_on_mcap": 0.011299857343126486,
+   "net_yield_on_mcap": -0.010000958532194402
+  },
+  "favorable": {
+   "assumptions": {
+    "volume_usd": 65522354420.0,
+    "take_rate_bps": 20.662878524199403,
+    "capture_share": 0.21495860403516426,
+    "allocation_to_buybacks": 1.0,
+    "net_new_supply_near": 23717554.165900826,
+    "near_price_usd": 2.0749916790136984
+   },
+   "buyback_accrual_usd": 29102825.156249993,
+   "issuance_usd": 49213727.54080089,
+   "buyback_yield_on_mcap": 0.005011677467556229,
+   "dilution_yield_on_mcap": 0.008474893007344863,
+   "net_yield_on_mcap": -0.0034632155397886348
+  }
+ },
+ "scenario_multipliers": {
+  "adverse": {
+   "volume": 0.5,
+   "take_rate": 0.75,
+   "capture": 0.75,
+   "allocation": 0.5,
+   "issuance": 1.25
+  },
+  "base": {
+   "volume": 1.0,
+   "take_rate": 1.0,
+   "capture": 1.0,
+   "allocation": null,
+   "issuance": 1.0
+  },
+  "favorable": {
+   "volume": 2.0,
+   "take_rate": 1.25,
+   "capture": 1.25,
+   "allocation": 1.0,
+   "issuance": 0.75
+  }
+ },
+ "dominant_assumption": {
+  "method": "one at a time: each input moved from its base to its adverse value, others held at base; ranked by the absolute change in net yield",
+  "ranking": [
+   {
+    "assumption": "issuance",
+    "net_yield_on_mcap": -0.012825922867976023,
+    "change_vs_base": -0.0028249643357816205
+   },
+   {
+    "assumption": "volume",
+    "net_yield_on_mcap": -0.010650407937660443,
+    "change_vs_base": -0.0006494494054660408
+   },
+   {
+    "assumption": "allocation",
+    "net_yield_on_mcap": -0.010497988948317489,
+    "change_vs_base": -0.0004970304161230864
+   },
+   {
+    "assumption": "take_rate",
+    "net_yield_on_mcap": -0.010325683234927422,
+    "change_vs_base": -0.00032472470273301954
+   },
+   {
+    "assumption": "capture",
+    "net_yield_on_mcap": -0.010325683234927422,
+    "change_vs_base": -0.00032472470273301954
+   }
+  ],
+  "dominant": "issuance"
+ },
+ "what_weakens_the_thesis": "issuance above buyback accrual in every scenario means settlement growth does not translate into net token accrual; a fall in volume or capture, or an allocation decision away from buybacks, removes the accrual entirely",
+ "status_legend": {
+  "observed": "read from a public source and reproducible from the committed snapshot",
+  "classified": "a rule applied by the data provider",
+  "inferred": "computed from observed items under a stated assumption",
+  "unavailable": "not obtainable without credentials or absent on-chain"
+ }
+}

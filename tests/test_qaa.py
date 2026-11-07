@@ -35,11 +35,35 @@ def test_featurize_and_cluster_recovers_groups():
     assert list(x.columns[: len(qaa.NUMERIC)]) == qaa.NUMERIC
     labels, info = qaa.fit_clusters(x, k_range=range(3, 5))
     prof = qaa.label_clusters(df, x, labels)
-    assert {"automation", "miniapp_farming"} <= set(prof["label"])
-    assert any(l.startswith("human") for l in prof["label"])
+    assert {"high_frequency_regular", "miniapp_pattern"} <= set(prof["label"])
+    assert set(prof["label"]) & {"light_general", "multi_app"}
     df2 = df.assign(cluster=labels).merge(prof[["cluster", "label"]], on="cluster")
-    human = df2[df2["account"].str.startswith("alice")]
-    assert (human["label"].str.startswith("human")).mean() > 0.9
+    diverse = df2[df2["account"].str.startswith("alice")]
+    assert diverse["label"].isin(qaa.QUALITY).mean() > 0.9
+    assert not any("human" in l or "bot" in l for l in prof["label"])  # names describe behavior, not identity
+
+
+def test_inclusion_weights_undo_visibility_differences():
+    w = qaa.inclusion_weights(pd.Series([1, 2, 4, 4]), pd.Series([4, 4, 4, 4]))
+    assert w.iloc[3] == 1.0                      # active in every window: always observed
+    assert w.iloc[0] > w.iloc[1] > w.iloc[2]    # rarely active accounts are under-observed and weigh more
+    assert abs(w.iloc[0] - 1 / (1 - 0.75 ** 4)) < 1e-12
+
+
+def test_legacy_identity_labels_are_migrated_in_frozen_model(tmp_path, monkeypatch):
+    import json
+    df = synthetic(n=800)
+    df['month'] = pd.date_range('2025-01-01', periods=8, freq='MS').repeat(100)
+    monkeypatch.setattr(qaa, 'MODELS', tmp_path)
+    qaa.causal_monthly(df, qaa.featurize(df), sampled=False)
+    path = tmp_path / 'qaa_causal_model.json'
+    saved = json.loads(path.read_text())
+    saved['labels'] = {k: {'light_general': 'human_light', 'multi_app': 'human_multi_app', 'miniapp_pattern': 'miniapp_farming'}.get(v, v) for k, v in saved['labels'].items()}
+    path.write_text(json.dumps(saved))
+    qaa.causal_monthly(df, qaa.featurize(df), sampled=False)
+    labels = set(json.loads(path.read_text())['labels'].values())
+    assert not labels & set(qaa.LEGACY_LABELS)
+    assert labels <= set(qaa.GROUP_DEFINITIONS)
 
 
 def test_assignment_hash_preserves_magnitude_schema_and_keys():

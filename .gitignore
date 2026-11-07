@@ -11,3 +11,4 @@ site/*.html
 .pytest_cache/
 data/derived/features_built_at.txt
 data/blocks/cache/
+data/blocks/*.tmp

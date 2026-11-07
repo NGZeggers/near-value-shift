@@ -130,9 +130,11 @@
     h('div', 'label', hv, `${hero.label} (${hero.month})`); h('div', 'value', hv, fmt(hero.value, hero.unit));
     const d = h('div', 'delta', hv, hero.delta_pct_yoy == null ? '' : `${hero.delta_pct_yoy >= 0 ? '+' : ''}${hero.delta_pct_yoy.toFixed(0)}% vs the same month a year earlier`);
     const row = document.getElementById('kpis');
-    DATA.kpis.slice(1).forEach(k => { const c = h('div', 'kpi' + (k.state ? ' state-' + k.state : ''), row); h('div', 'label', c, k.label); h('div', 'value', c, k.unit === 'ratio' ? (k.value == null ? 'n/a' : k.value.toFixed(2)) : fmt(k.value, k.unit)); if (k.delta_pct_yoy == null) { h('div', 'delta note', c, k.note || ''); return; } const up = k.delta_pct_yoy >= 0; const good = k.up_is_good ? up : !up; h('div', 'delta ' + (good ? 'up' : 'down'), c, `${up ? '▲' : '▼'} ${Math.abs(k.delta_pct_yoy).toFixed(0)}% YoY`); });
+    DATA.kpis.slice(1).forEach(k => { const c = h('div', 'kpi' + (k.state ? ' state-' + k.state : ''), row); const lb = h('div', 'label', c, k.label); kindBadge(k.kind, lb); h('div', 'value', c, k.unit === 'ratio' ? (k.value == null ? 'n/a' : k.value.toFixed(2)) : fmt(k.value, k.unit)); if (k.delta_pct_yoy == null) { h('div', 'delta note', c, k.note || ''); return; } const up = k.delta_pct_yoy >= 0; const good = k.up_is_good ? up : !up; h('div', 'delta ' + (good ? 'up' : 'down'), c, `${up ? '▲' : '▼'} ${Math.abs(k.delta_pct_yoy).toFixed(0)}% YoY`); });
   }
   const STATE_WORD = { pass: 'supported', fail: 'failing', open: 'open' };
+  const kindBadge = (kind, parent) => { if (!kind) return null; const b = h('span', 'kind kind-' + kind, parent, kind); b.title = (DATA.kinds || {})[kind] || ''; return b; };
+  const links = (list, parent) => { if (!list || !list.length) return; const p = h('p', 'method-links', parent); p.appendChild(document.createTextNode('Go to: ')); list.forEach((l, i) => { if (i) p.appendChild(document.createTextNode(' · ')); const a = h('a', null, p, l.label); a.href = l.href; if (/^https?:/.test(l.href)) { a.target = '_blank'; a.rel = 'noopener'; } }); };
   const byId = Object.fromEntries(DATA.charts.map(c => [c.id, c]));
   const secId = (sec) => { const meta = (DATA.sections || {})[sec]; return 'sec-' + (meta ? meta.id : sec.replace(/\W+/g, '-').toLowerCase()); };
   const secLabel = (sec) => sec.replace(/^\d+\.\s*/, '');
@@ -143,7 +145,7 @@
       const top = h('div', 'v-top', vh); h('h2', null, top, 'Claim and current verdict').id = 'verdict-h'; h('span', 'pill ' + (v.status === 'supported' ? 'pass' : 'open'), top, v.status === 'supported' ? 'Supported' : 'Unresolved');
       h('p', 'v-claim', vh, v.claim);
       const list = h('div', 'checks', vh);
-      (v.checks || []).forEach(c => { const row = h('div', 'check', list); const head = h('div', 'c-head', row); h('span', 'pill ' + c.state, head, STATE_WORD[c.state] || c.state); h('span', 'c-label', head, c.label); h('p', null, row, c.text); });
+      (v.checks || []).forEach(c => { const row = h('div', 'check', list); const head = h('div', 'c-head', row); h('span', 'pill ' + c.state, head, STATE_WORD[c.state] || c.state); h('span', 'c-label', head, c.label); kindBadge(c.kind, head); h('p', null, row, c.text); links(c.links, row); });
       h('p', 'v-statement', vh, v.statement);
       const det = h('details', null, vh); h('summary', null, det, 'What would change the verdict'); const ul = h('ul', null, det); (v.changes || []).forEach(t => h('li', null, ul, t));
     } else { vh.remove(); strip.remove(); }
@@ -153,7 +155,7 @@
       h('p', 'sec-q', ah, 'Scroll the steps; the chart on the right follows. Each step links to its evidence below.');
       const wrap = h('div', 'scrolly', ah); const ol = h('ol', 'steps', wrap);
       const pin = h('div', 'pinned', wrap); const pt = h('h3', null, pin); const ps = h('p', 'p-sentence', pin); const pc = h('div', 'schart', pin); const pl = h('p', 'p-link', pin); const plink = h('a', null, pl, 'Open the full chart');
-      const items = a.map(st => { const li = h('li', null, ol); li.dataset.step = st.step; const link = h('a', 's-title', li, st.title); link.href = st.href; h('p', null, li, st.text); const spec = byId[st.chart]; if (spec) { const mini = h('div', 's-chart', li); draw(spec, mini); } return li; });
+      const items = a.map(st => { const li = h('li', null, ol); li.dataset.step = st.step; const link = h('a', 's-title', li, st.title); link.href = st.href; kindBadge(st.kind, li); h('p', null, li, st.text); links(st.links, li); const spec = byId[st.chart]; if (spec) { const mini = h('div', 's-chart', li); draw(spec, mini); } return li; });
       let current = -1;
       const showStep = (i) => { if (i === current) return; current = i; items.forEach((li, j) => li.classList.toggle('active', j === i)); const spec = byId[a[i].chart]; if (!spec) return; pt.textContent = spec.title; ps.textContent = spec.sentence; plink.href = '#chart-' + spec.id; draw(spec, pc); };
       showStep(0);
@@ -164,14 +166,21 @@
       items.forEach((li, i) => { li.addEventListener('mouseenter', () => showStep(i)); li.addEventListener('focusin', () => showStep(i)); });
     } else ah.remove();
     const g = DATA.against; const gh = document.getElementById('against');
-    if (g && g.length) { h('h2', null, gh, 'Evidence against and unresolved tests').id = 'against-h'; h('p', 'sec-q', gh, 'What counts against the claim, in the open rather than in a footnote.'); const ul = h('ul', null, gh); g.forEach(x => { const li = h('li', null, ul); li.appendChild(document.createTextNode(x.text + ' ')); const link = h('a', 'see', li, 'See chart'); link.href = x.href; }); } else gh.remove();
+    if (g && g.length) { h('h2', null, gh, 'Evidence against and unresolved tests').id = 'against-h'; h('p', 'sec-q', gh, 'What counts against the claim, in the open rather than in a footnote.'); const ul = h('ul', null, gh); g.forEach(x => { const li = h('li', null, ul); kindBadge(x.kind, li); li.appendChild(document.createTextNode(' ' + x.text + ' ')); const link = h('a', 'see', li, 'See chart'); link.href = x.href; }); } else gh.remove();
+    const sn = DATA.sensitivity; const sh = document.getElementById('sensitivity');
+    if (sn && sn.length) {
+      h('h2', null, sh, 'How much the headlines move').id = 'sensitivity-h';
+      h('p', 'sec-q', sh, 'Each headline under its relevant alternative assumptions, and whether the verdict changes.');
+      sn.forEach(r => { const blk = h('div', 's-block', sh); const head = h('div', 'c-head', blk); h('span', 'c-label', head, r.headline); kindBadge(r.kind, head); const t = h('table', 's-table', blk); const tb = h('tbody', null, t); r.variants.forEach(v => { const tr = h('tr', null, tb); h('td', null, tr, v.label); h('td', null, tr, v.value); }); const eff = h('p', 's-effect', blk); eff.appendChild(document.createTextNode('Effect on the verdict: ' + r.effect + ' ')); const a = h('a', 'see', eff, 'See chart'); a.href = r.href; });
+      const lg = h('p', 'kind-legend', sh); lg.appendChild(document.createTextNode('Evidence tags: ')); Object.entries(DATA.kinds || {}).forEach(([k, v], i) => { if (i) lg.appendChild(document.createTextNode(' · ')); const b = h('span', 'kind kind-' + k, lg, k); b.title = v; lg.appendChild(document.createTextNode(' ' + v)); });
+    } else sh.remove();
   }
   function nav() {
     const toc = document.getElementById('toc'); const entries = [];
     const add = (id, label, n) => { const el = document.getElementById(id); if (!el) return; const link = h('a', null, toc); link.href = '#' + id; if (n !== undefined) h('span', 'n', link, String(n)); link.appendChild(document.createTextNode(label)); entries.push({ id, link, el }); };
     add('verdict', 'Verdict', '◆'); add('argument', 'Argument', '→');
     [...new Set(DATA.charts.map(s => s.section))].forEach((sec, i) => add(secId(sec), secLabel(sec), i + 1));
-    add('against', 'Evidence against', '!'); add('repro', 'Reproduce it', '$');
+    add('against', 'Evidence against', '!'); add('sensitivity', 'Sensitivity', '±'); add('repro', 'Reproduce it', '$');
     const setCurrent = (id) => entries.forEach(e => { if (e.id === id) e.link.setAttribute('aria-current', 'true'); else e.link.removeAttribute('aria-current'); });
     const spy = () => { const y = window.scrollY + Math.min(160, window.innerHeight * 0.25); let cur = entries[0] && entries[0].id; for (const e of entries) { if (e.el.offsetTop <= y) cur = e.id; } setCurrent(cur); };
     const bar = document.querySelector('#progress span'); const prog = document.getElementById('progress'); const totop = document.getElementById('totop');
@@ -188,6 +197,8 @@
     [['Auto', ''], ['Light', 'light'], ['Dark', 'dark']].forEach(([label, v], i) => { const b = h('button', null, th, label); b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false'); b.addEventListener('click', () => { if (v) document.documentElement.setAttribute('data-theme', v); else document.documentElement.removeAttribute('data-theme'); th.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', 'false')); b.setAttribute('aria-pressed', 'true'); try { localStorage.setItem('theme', v); } catch (e) {} }); });
     try { const qp = new URLSearchParams(location.search).get('theme'); if (qp) localStorage.setItem('theme', qp); const saved = localStorage.getItem('theme'); if (saved) { document.documentElement.setAttribute('data-theme', saved); th.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x.textContent.toLowerCase() === saved ? 'true' : 'false')); } } catch (e) {}
   }
-  document.getElementById('built').textContent = `Data through ${DATA.data_through}. Latest snapshot ${DATA.built_at}. ${DATA.raw_manifest.length} raw snapshots, hashes in docs/REPRODUCIBILITY.md.`;
+  const dt = DATA.dates || {};
+  document.getElementById('built').textContent = `Analysis cutoff (last day with data in every series): ${DATA.data_through}. Snapshots acquired: raw APIs up to ${DATA.built_at}` + (dt.block_sample_fetched_at ? `, block sample ${dt.block_sample_fetched_at}` : '') + (dt.intraday_fetched_at ? `, intraday windows ${dt.intraday_fetched_at}` : '') + (dt.buyback_receipts_fetched_at ? `, buyback receipts ${dt.buyback_receipts_fetched_at}` : '') + `. ${DATA.raw_manifest.length} raw snapshots, hashes in docs/REPRODUCIBILITY.md.`;
+  const dchip = document.getElementById('dates'); if (dchip) dchip.textContent = `Data through ${DATA.data_through} · snapshots to ${String(DATA.built_at).slice(0, 10)}`;
   toolbar(); story(); kpis(); render(); nav();
 })();

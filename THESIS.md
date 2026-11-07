@@ -44,9 +44,15 @@ On the analysis cutoff's trailing year: gross Intents fees $54.2M; net captured 
 
 Source: neardata block sample; 32,173 account-months, 24 months. Retrospective hdbscan with corrected self-call counts and window-normalized activity. At 2024-12 QAA was 233,963; at 2026-10 it was 44,634. The corresponding behavioral shares are 25.3% and 62.0%. Silhouette on at most 3,000 observations: 0.91. Separation is not human/bot accuracy.
 
-Latest sensitivity: strict multi-app share 0.0%; default share 62.0%; including ambiguous groups 68.3%. Name-proxy profiles are in `qaa_anchor_profiles.csv`; monthly group counts permit composition checks. Verified human/bot anchor labels are not available. In sampled mode, shares are rescaled by NearBlocks mean daily active accounts; unequal account inclusion probabilities are not corrected, so these are exploratory proxies with no guaranteed conservative bias.
+Latest sensitivity: strict multi-app share 0.0%; default share 62.0%; including ambiguous groups 68.3%. Name-proxy profiles are in `qaa_anchor_profiles.csv`; monthly group counts permit composition checks. Verified human/bot anchor labels are not available. In sampled mode, shares are rescaled by NearBlocks mean daily active accounts; an inclusion-probability weighting is reported below as a sensitivity, and these remain exploratory proxies with no guaranteed conservative bias.
 
 **Past-only QAA for predictive tests:** a separate GMM is calibrated through 2025-04-30, then its scaler, parameters and label mapping are frozen. Only later months are predicted; first availability is 2025-06-01. Each month becomes available on the first day of the following month. The full-history descriptive clustering is never fed into signal or Granger tests. The model is frozen calibration, not monthly walk-forward retraining.
+
+**Scope and sensitivity of the behavioral groups (2026-10).** Groups are named after observed behavior (`intents_participant`: median share of actions sent to intents.near above 20%, `high_frequency_regular`: median of at least 200 transactions per month with regular inter-arrival gaps (gap CV below 0.6), `miniapp_pattern`: at least half of the accounts carry a .tg or .sweat name and the median account touches fewer than two contracts, `heavy_unclassified`: median of at least 200 transactions per month without a regular gap pattern, `multi_app`: median account touches at least two contracts or two methods, `light_general`: none of the above: few actions, no mini-app name pattern, `noise`: HDBSCAN outliers, not assigned to any group). Criteria: strict 0.0% (multi_app only), default 62.0%, including ambiguous groups 68.3%. 91% of account-months show exactly one transaction inside the sampled windows and 95% are active in a single window, so multi-contract behavior is rarely observable; no cluster reaches a median of two contracts.
+A name-only split (accounts without a `.tg`/`.sweat` name) gives 64.4%; its mean absolute difference from the default share over all months is 1.7% (correlation 0.98), so in these sparse windows the clustering adds little beyond the name class. Inclusion-probability weighting (accounts active in fewer windows are under-observed) moves the latest share from 62.0% to 60.6%; never-observed accounts stay outside the index, so the QAA count is an illustrative rescaling and the share is the measured quantity.
+By observation hour the latest share is 3:00 UTC 55.7%, 15:00 UTC 68.6%; mean absolute difference between hours 4.3%.
+The frozen past-only model labels the same latest month at 20.0% against 62.0% for the retrospective clustering (mean absolute difference 14.9%, correlation 0.77 over 18 months): the level depends on the model, the trend less so.
+Label-threshold variants of the default share: heavy_txns=100,multi_contracts=2: 62.0%; heavy_txns=200,multi_contracts=1: 93.7%; heavy_txns=400,multi_contracts=2: 62.0%; heavy_txns=200,multi_contracts=3: 62.0%. Noise excluded/included: 62.0%/68.3%. Typical and least-typical account-months per group are in `qaa_examples.json`. Not done: refits with other clustering hyper-parameters (platform-dependent HDBSCAN assignments would break the exact regression check; the committed assignment is reused); external human/bot labels (none available).
 
 ## Intents microstructure (L2)
 
@@ -67,6 +73,26 @@ Valuation: half gross participant notional: sum max(priced inflow, priced outflo
 | 2026-10 | 2 | 0.402 |
 
 Intervals condition on the observed sampled days; they omit intraday, routing and pricing uncertainty. One-day strata have no estimable interval. The estimator now retains multiple account-intents in a receipt; it still does not identify every economic swap. The gap is unresolved, not a proven tail effect or a guaranteed lower bound. Full-day extracts would improve coverage but would not automatically validate this estimator. Role sensitivity is in `intents_solver_sensitivity.json`.
+
+## Reconciliation of the on-chain estimate
+
+**Economic unit.** USD notional of settled swaps per UTC calendar day on intents.near. Our measure: half gross participant notional: for each successful execute_intents receipt, for each (account, intent_hash) take the larger of priced inflow and priced outflow, sum over participants and divide by two. One two-party swap of 100 USDC against NEAR counts 100 USD once. Scope: token_diff events emitted by intents.near in receipts with an explicit successful execution status; all chains and assets that appear in those events; no deposits, withdrawals or transfers. Prices: DefiLlama coins daily USD prices (CoinGecko ids from the committed 1Click registry), stablecoins at par, at most seven-day forward fill; unknown or unpriced assets contribute zero. Reference: DefiLlama dexs/near-intents dailyVolume = SUM(volume_amount_usd) FROM dune.near.dataset_near_intents_metrics per date_at (adapter source: DefiLlama/dimension-adapters dexs/near-intents/index.ts). The dataset is a curated Dune table maintained for NEAR's metrics; whether volume_amount_usd is one-sided or two-sided notional is not published, so the two measures are compared, not assumed identical. DefiLlama does not compute this series itself; it queries Dune. A second reference independent of Dune was not accessible without credentials (Dune API key or Intents Explorer JWT).
+
+**Pooled result.** Estimate / reference 0.253, conditional day-bootstrap interval [0.178, 0.327] over 46 matched days. The per-day table (`intents_reconciliation_daily.csv`) lists observed sampled volume, expansion factor, expanded estimate, reference, difference, window split, unpriced legs and unvalued account-intents for each of the 49 sampled days.
+
+**Temporal coverage.** Two 50-block windows observe 0.09% of a day's blocks. On days where both windows carry volume the 15:00 UTC window has 4.8x the 03:00 volume (median over 30 days); one window carries over 80% of the day's sampled volume on 59% of days.
+
+**Intraday expansion error.** Not measured yet: `make blocks-intraday` fetches 24 hourly windows for three pre-declared days (highest reference volume, 2026 median day, 2025 median day).
+
+**Valuation.** 222 of 3844 legs (5.8%) are unpriced, but an account-intent is valued by whichever side is priced: only 20 of 1870 account-intents in 16 batches lose value entirely. For the 1577 account-intents with both sides priced, inflow/outflow has median 1.000 and 5th-95th percentiles 0.970-1.026: daily prices and decimals are consistent across legs. Unpriced assets and the reason for each: pol (52 legs: price snapshot polygon-ecosystem-token is empty (DefiLlama coins API returned no history)); sweat (24 legs: price snapshot sweatcoin is empty (DefiLlama coins API returned no history)); xlm (10 legs: no price snapshot for stellar); bera (8 legs: price snapshot berachain-bera is empty (DefiLlama coins API returned no history)); gno (6 legs: no price snapshot for gnosis); aurora (6 legs: no price snapshot for aurora-near).
+
+**Route reconstruction.** 52% of batches have more than two accounts; per-token diffs within a receipt balance to rounding dust (99th percentile of |net|/gross 8.0e-04). Sampled totals under alternative definitions: half gross participant notional $407.4K, full gross $814.8K, user-side notional with heuristic roles $395.2K. If the reference counted both sides of each swap our ratio would be 0.51; this is a definitional bound, not evidence about the reference.
+
+**Residual.** A factor of 4.0x to parity remains unexplained and is reported as such, not attributed to missing large trades.
+
+**Pre-declared tolerance and holdout.** Tolerance (2026-11-06, before evaluating the holdout days): point ratio within [0.8, 1.25] and interval covering 1.0; covers measured pricing dispersion (a few percent), not coverage or definitional gaps. Split: sampled days with a positive reference value are sorted chronologically; even positions calibrate, odd positions validate; declared before evaluation. Calibration days (23): 0.210 [0.114, 0.305]. Validation days (23): 0.297 [0.186, 0.416]. Verdict: validation days outside the declared tolerance: the on-chain estimate does not reproduce the reference level.
+
+Traceable examples from receipt and log to priced legs and batch volume (`intents_trace_examples.json`): simple_two_party_fully_priced, multi_participant_batch, unpriced_leg_valued_by_other_side, account_intent_without_any_price, largest_sampled_batch, legacy_single_object_event_2024. Not possible here: complete-day extracts (FastNear public rate limit ~0.35 blocks/s; a NEAR day has ~150,000 blocks); a second reference independent of Dune (no Dune API key or Intents Explorer JWT); the published definition of volume_amount_usd in dune.near.dataset_near_intents_metrics.
 
 ## Econometrics (L3)
 
@@ -97,11 +123,82 @@ VAR uses weekly log changes, AIC-selected lags and ADF checks on exactly the mod
 
 Declared family: 24 tests, two horizons and two benchmarks. Signal is the four-week change in a trailing four-week mean; target is forward excess log return. Circular block resampling addresses dependence approximately; the individual intervals are exploratory, and familywise Bonferroni intervals are reported separately. The half-sample split is a stability summary, not walk-forward portfolio evaluation. No returns after the analysis cutoff enter a target.
 
+## Out-of-sample evaluation (pre-registered)
+
+Protocol declared before scoring: a four-week rise in usage is associated with the subsequent h-week NEAR log return in excess of the benchmark, with the sign fixed in calibration. Signal: weekly means of the daily series; log of the trailing four-week mean, differenced by four weeks; QAA only from the frozen past-only model, available on the first day of the following month. Target: forward h-week log return of NEAR minus the same return of the benchmark (BTC or ETH). Calibration ends 2025-06-29; evaluation starts h weeks after the calibration end so that no calibration target overlaps an evaluation week. Rule: the sign of the calibration Spearman IC is frozen; success requires the evaluation IC under that sign to be positive with a circular block-bootstrap 95% interval above zero. Walk-forward: expanding window: each evaluation week re-estimates the sign on targets already realized at that week (purged by h) and predicts the direction of the next target; hit rate reported. Family: 6 metrics x 2 horizons x 2 benchmarks = 24 declared tests; Bonferroni intervals reported. Benchmark predictors: trailing four-week NEAR excess log return (persistence); trailing four-week BTC log return (relation to the market benchmark).
+
+**Result: no usage metric passes the declared out-of-sample criterion** (0 of 16 evaluable usage tests; not evaluable: intents_volume_usd h=4 vs btc, qaa h=4 vs btc, intents_volume_usd h=4 vs eth, qaa h=4 vs eth, intents_volume_usd h=12 vs btc, qaa h=12 vs btc, intents_volume_usd h=12 vs eth, qaa h=12 vs eth). Best naive-benchmark evaluation IC 0.43.
+
+| Predictor | h | vs | Calibration IC (n) | Evaluation IC, signed (n) | 95% block interval | Walk-forward hit rate | Status |
+|---|---|---|---|---|---|---|---|
+| active_accounts | 4 | btc | +0.11 (228) | +0.18 (62) | -0.09 to +0.48 | 61% (62) | no out-of-sample association established |
+| txns | 4 | btc | -0.03 (228) | -0.06 (62) | -0.50 to +0.44 | 44% (62) | no out-of-sample association established |
+| tx_fee_near | 4 | btc | -0.08 (228) | -0.17 (62) | -0.65 to +0.40 | 42% (62) | no out-of-sample association established |
+| tx_volume_usd | 4 | btc | -0.06 (228) | -0.21 (62) | -0.52 to +0.15 | 44% (62) | no out-of-sample association established |
+| intents_volume_usd | 4 | btc | n=22 | n=62 | | | not evaluable: too few calibration or evaluation weeks |
+| qaa | 4 | btc | n=0 | n=62 | | | not evaluable: too few calibration or evaluation weeks |
+| near_momentum | 4 | btc | +0.01 (231) | -0.25 (62) | -0.60 to +0.03 | 50% (62) | no out-of-sample association established |
+| btc_trend | 4 | btc | +0.27 (231) | +0.27 (62) | -0.33 to +0.70 | 50% (62) | no out-of-sample association established |
+| active_accounts | 4 | eth | +0.05 (228) | +0.03 (62) | -0.27 to +0.36 | 50% (62) | no out-of-sample association established |
+| txns | 4 | eth | -0.03 (228) | +0.08 (62) | -0.36 to +0.55 | 53% (62) | no out-of-sample association established |
+| tx_fee_near | 4 | eth | -0.11 (228) | -0.05 (62) | -0.57 to +0.51 | 50% (62) | no out-of-sample association established |
+| tx_volume_usd | 4 | eth | -0.04 (228) | -0.13 (62) | -0.46 to +0.23 | 52% (62) | no out-of-sample association established |
+| intents_volume_usd | 4 | eth | n=22 | n=62 | | | not evaluable: too few calibration or evaluation weeks |
+| qaa | 4 | eth | n=0 | n=62 | | | not evaluable: too few calibration or evaluation weeks |
+| near_momentum | 4 | eth | +0.05 (231) | -0.08 (62) | -0.48 to +0.23 | 40% (62) | no out-of-sample association established |
+| btc_trend | 4 | eth | +0.16 (231) | +0.31 (62) | -0.24 to +0.69 | 52% (62) | no out-of-sample association established |
+| active_accounts | 12 | btc | +0.04 (228) | -0.26 (46) | -0.66 to +0.22 | 46% (46) | no out-of-sample association established |
+| txns | 12 | btc | +0.06 (228) | -0.32 (46) | -0.63 to +0.28 | 37% (46) | no out-of-sample association established |
+| tx_fee_near | 12 | btc | +0.08 (228) | -0.39 (46) | -0.69 to +0.25 | 33% (46) | no out-of-sample association established |
+| tx_volume_usd | 12 | btc | -0.10 (228) | +0.51 (46) | -0.32 to +0.79 | 74% (46) | no out-of-sample association established |
+| intents_volume_usd | 12 | btc | n=22 | n=46 | | | not evaluable: too few calibration or evaluation weeks |
+| qaa | 12 | btc | n=0 | n=46 | | | not evaluable: too few calibration or evaluation weeks |
+| near_momentum | 12 | btc | -0.03 (231) | +0.26 (46) | -0.36 to +0.73 | 52% (46) | no out-of-sample association established |
+| btc_trend | 12 | btc | +0.02 (231) | +0.40 (46) | +0.00 to +0.67 | 65% (46) | association persists out of sample |
+| active_accounts | 12 | eth | +0.04 (228) | -0.37 (46) | -0.77 to +0.14 | 46% (46) | no out-of-sample association established |
+| txns | 12 | eth | +0.12 (228) | -0.36 (46) | -0.74 to +0.25 | 30% (46) | no out-of-sample association established |
+| tx_fee_near | 12 | eth | +0.10 (228) | -0.44 (46) | -0.81 to +0.20 | 28% (46) | no out-of-sample association established |
+| tx_volume_usd | 12 | eth | -0.14 (228) | +0.54 (46) | -0.25 to +0.85 | 83% (46) | no out-of-sample association established |
+| intents_volume_usd | 12 | eth | n=22 | n=46 | | | not evaluable: too few calibration or evaluation weeks |
+| qaa | 12 | eth | n=0 | n=46 | | | not evaluable: too few calibration or evaluation weeks |
+| near_momentum | 12 | eth | -0.06 (231) | +0.43 (46) | -0.22 to +0.87 | 61% (46) | no out-of-sample association established |
+| btc_trend | 12 | eth | -0.05 (231) | -0.46 (46) | -0.70 to -0.07 | 35% (46) | no out-of-sample association established |
+
+Limitations: NearBlocks and DefiLlama series are current snapshots: historical revisions and publication lags are not reconstructed, except QAA availability dates; overlapping weekly targets; block bootstrap approximates dependence; descriptive association only: no costs, liquidity or execution rules, so no trading claim. A negative or inconclusive result is a valid outcome and is carried into the verdict; no trading strategy is proposed.
+
 ## Relative valuation and scenarios
 
 Cross-chain settlement/TVL and local-chain DEX/TVL have different scopes. Peer ranks are descriptive, not like-for-like proof of undervaluation. Gross app-fee/market-cap is not shareholder yield.
 
 The scenario model draws 20,000 assumptions around observed gross take rate and net capture; future allocation is discretionary. Median market-cap/illustrative retained-fees multiple 598x, range p5–p95 197x–1,563x. The gas-fee term is a paid-fee proxy, not audited net burn; no net-deflation, fair-price or price-forecast claim is made.
+
+## Value bridge: from settlement to the token
+
+Trailing year to 2026-11-01. Each step states whether it is observed, classified, inferred or unavailable (observed: read from a public source and reproducible from the committed snapshot; classified: a rule applied by the data provider; inferred: computed from observed items under a stated assumption; unavailable: not obtainable without credentials or absent on-chain).
+
+| Step | USD | Share of previous | Status | Source |
+|---|---|---|---|---|
+| 1. Settled volume through Intents | $32.8B |  | observed (third-party series) | DefiLlama dexs/near-intents dailyVolume, a pass-through of dune.near.dataset_near_intents_metrics |
+| 2. Gross swap fees | $54.2M | 0.2% | observed (third-party series) | DefiLlama fees/near-intents dailyFees: protocol fee plus affiliate fees across integrators (Dune datasets) |
+| 3. Net revenue captured by NEAR (NEAR/wNEAR swept into revenue wallets) | $9.3M | 17.2% | observed (adapter wallet receipts) | DefiLlama dailyRevenue: TRANSFER and wrap.near inflows to fefundsadmin, 1csfundsadmin and buybacks wallets, internal hops excluded |
+| 4. Revenue labelled as buyback (dates on or after 2026-02-23) | $7.5M | 81.0% | classified by an adapter date rule, not by transaction | DefiLlama dailyHoldersRevenue = dailyRevenue on or after BUYBACK_START |
+| 5. Executed purchases: NEAR settled by intents.near into buybacks.multisignature.near | $4.5M | 59.4% | observed (NearBlocks receipts, valued at the daily NEAR price) | https://api.nearblocks.io/v1/account/buybacks.multisignature.near/txns?per_page=250 (paginated) |
+| 6. Destination of purchased tokens | 2,202,268 NEAR | 101.9% | observed balance (held in the multisig; no burn observed) | NearBlocks account snapshot 2026-11-07T00:13:36+00:00 |
+
+- Step 2: take rate 16.5 bps of volume.
+- Step 3: sweeps are periodic, so a day's receipts can exceed that day's fees.
+- Step 5: 3081 swap-output transfers from 2026-03-18 to 2026-11-01; a further 510,068 NEAR arrived from the other revenue wallets (treasury moves, excluded here as the adapter excludes them) and 8,293 NEAR from other accounts. The wallet was created 2026-03-18, after the adapter's buyback start 2026-02-23, so labelled revenue before that date cannot be matched to this wallet.
+- Step 6: balance at the snapshot divided by all inbound NEAR before the cutoff; outbound transfers before the cutoff: 12,025 NEAR. Holding is not supply destruction.
+
+**Issuance and dilution (observed: NearBlocks daily total supply).** Total supply change: protocol issuance net of gas burn; unlocks of already-issued tokens are not dilution of supply. Total supply 1,278,952,621 to 1,310,576,026 NEAR: 31,623,406 new NEAR (2.47%), $65.6M at the average price. Executed buybacks received 1,643,862 NEAR, 5.2% of issuance. The NearBlocks circulating-supply field is constant since 2025-08-27 and is not used. Buybacks are held, not burned, so they do not reduce supply and are not netted twice: issuance is counted once here and buybacks once above.
+
+| Scenario | Volume | Take rate | Capture | Allocation to buybacks | New supply | Buyback accrual | Issuance | Net yield on market cap |
+|---|---|---|---|---|---|---|---|---|
+| adverse | $16.4B | 12.4 bps | 12.9% | 50% | 39,529,257 NEAR | $1.3M | $82.0M | -1.39% |
+| base | $32.8B | 16.5 bps | 17.2% | 81% | 31,623,406 NEAR | $7.5M | $65.6M | -1.00% |
+| favorable | $65.5B | 20.7 bps | 21.5% | 100% | 23,717,554 NEAR | $29.1M | $49.2M | -0.35% |
+
+Dominant assumption (one at a time: each input moved from its base to its adverse value, others held at base; ranked by the absolute change in net yield): **issuance**; ranking by effect: issuance (-0.28%), volume (-0.06%), allocation (-0.05%), take_rate (-0.03%), capture (-0.03%). What weakens the thesis: issuance above buyback accrual in every scenario means settlement growth does not translate into net token accrual; a fall in volume or capture, or an allocation decision away from buybacks, removes the accrual entirely Scenarios are illustrative, not forecasts; every multiplier is in `value_bridge.json`.
 
 ## What changes the verdict
 
@@ -110,8 +207,21 @@ The scenario model draws 20,000 assumptions around observed gross take rate and 
 - Stable out-of-sample associations with past-only features, dependence-aware uncertainty and multiplicity control are needed before usage can be called a return signal.
 - Strong sensitivity to clustering, sampling hours or role thresholds weakens the behavioral interpretation. Verified anchors remain an external data need.
 
+## Evidence status of the main claims
+
+| Claim | Status | Where to verify |
+|---|---|---|
+| Activity counts fell while value per transaction and reported settlement rose | observed (third-party series) | Observed activity table; `docs/METRICS.md` |
+| Intents captures net revenue and buys NEAR | observed (adapter receipts; wallet receipts) | Value bridge; `value_bridge.json` |
+| Purchased NEAR is held, not burned | observed balance | Value bridge step 6 |
+| Issuance exceeds buyback accrual | observed issuance vs scenario accrual | Value bridge scenarios |
+| The on-chain sample reproduces the reference level | estimate: failing (outside declared tolerance) | Reconciliation; `docs/RECONCILIATION.md` |
+| Departing accounts were bots | not established: behavioral groups only; name-only split tracks the share | Quality-adjusted accounts (L1) |
+| Usage predicts forward excess returns | inconclusive out of sample | Out-of-sample evaluation; Forward associations |
+| Token undervaluation | not claimed | Relative valuation and scenarios |
+
 ## Gaps, provenance and reproduction
 
 Raw and extracted inputs and frozen model artifacts are hashed in `docs/REPRODUCIBILITY.md`. Revenue definitions are stored in the raw responses. BigQuery is optional: its runner checks freshness before L1/L2; actual queries and credentials were not needed for this block-sample build. The suggested track deliverable, a swap-volume pull from the Intents Explorer API, is not implemented: the team has no partner JWT for Explorer. Setting INTENTS_EXPLORER_JWT alone does not enable a pull; an explicit request fails clearly. DefiLlama/Dune is the substitute reference for the FastNear on-chain sample cross-check, not an Explorer API result or a completed Explorer deliverable. On-chain publication is an optional dry-run-capable feature, not a claimed deployed result.
 
-`uv sync --locked --all-extras && make build && make test && make check-generated`; open `site/index.html` and `site/walkthrough.html`. Sampling limits: `docs/SAMPLING.md`.
+`uv sync --locked --all-extras && make build && make test && make check-generated`; open `site/index.html` and `site/walkthrough.html`. Sampling limits: `docs/SAMPLING.md`; reconciliation method, unit and tolerance: `docs/RECONCILIATION.md`.

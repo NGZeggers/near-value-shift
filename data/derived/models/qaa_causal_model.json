@@ -274,12 +274,12 @@
   0.7775999999466823
  ],
  "labels": {
-  "0": "human_light",
-  "1": "human_light",
-  "2": "miniapp_farming",
-  "3": "human_multi_app",
-  "4": "human_multi_app",
-  "5": "miniapp_farming"
+  "0": "light_general",
+  "1": "light_general",
+  "2": "miniapp_pattern",
+  "3": "multi_app",
+  "4": "multi_app",
+  "5": "miniapp_pattern"
  },
  "k": 6
 }

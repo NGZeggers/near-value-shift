@@ -17,3 +17,8 @@
 | `hhi_solver / top1_solver_share` | sampled token_diff events or BigQuery | within-observation heuristic solver concentration |
 | `volume_priced_usd` | same events | half sum of max priced inflow/outflow by account-intent; expanded only for additive flows |
 | `users` | same events | observed unique non-solver accounts, never expanded |
+| `intents_reconciliation_daily.*` | reconcile.py | per sampled day: observed, expanded, reference, difference, coverage, pricing and routing components, holdout role |
+| `qaa_sensitivity.json` | qaa.py | criteria, thresholds, name-only baseline, inclusion weighting, hour split, model agreement |
+| `signal_oos.json` | signal.py | pre-registered out-of-sample evaluation with frozen sign, purge and walk-forward hit rate |
+| `value_bridge.json` | bridge.py | volume -> fees -> captured revenue -> labelled buyback -> executed purchases -> held tokens; issuance from total supply; three scenarios |
+| `total_supply` | NearBlocks | daily total supply; its yearly change is the issuance used for dilution (circulating_supply is stale in the source) |
