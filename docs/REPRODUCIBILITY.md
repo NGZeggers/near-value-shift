@@ -83,6 +83,7 @@ The build reads committed snapshots. Full SHA-256 hashes cover raw files, block 
 | data/blocks/intraday_events.csv | 4540589 | `a00304f64fe688ca145ce750a1ea34ea2eb4e0ca4073f4845caea4e57dbdcf8c` |
 | data/blocks/intraday_manifest.json | 9713 | `2e8300b85118d37940ab83445ec8316b3de7f43af87cc3daaab26b078556f504` |
 | data/blocks/intraday_plan.json | 5948 | `29af1a11f27a9f6088eee37a40a70429796ef3e00bde7627c476cd97366754bc` |
+| data/blocks/intraday_signer_days.csv | 678345 | `57fa90aa0acad4c7d518fdaa91f1d3c8cbd63f88a47780157d36a33f25a6d087` |
 | data/blocks/intraday_signers.csv | 1225349 | `6a21c85b413199f87a4a50e3a4ac28a24b608c46b7db1acd5ed06a8bc2a9c508` |
 | data/blocks/intraday_validation_events.csv | 6322194 | `73d13fc19bd936abe90e56b15dfb0bd2aeef2af5f993c97cb9302475f22f5938` |
 | data/blocks/intraday_validation_manifest.json | 10701 | `3ac616af3740c45ea1b81e872ccf3db8e1fd2d53987f3513d0e03cf8b0dcf46b` |

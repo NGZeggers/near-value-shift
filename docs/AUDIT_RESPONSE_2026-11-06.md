@@ -177,3 +177,18 @@ Resultado: ninguna métrica de uso supera el criterio declarado; el veredicto lo
 
 - `make build` completo; `make test`: 126 pruebas aprobadas (3 nuevas); comprobaciones de navegador: 47 de 47; `make check-generated`: coincidente tras el commit.
 - Traza extendida: 4 h 20 min bajo el límite público; integrada con un segundo `make build` y commit propio.
+
+---
+
+## Séptima pasada: respuesta a la sexta revisión (96/100, base `75096ba`)
+
+**English summary.** The sixth review found that the multi-receiver comparison summed hourly distinct-receiver counts, so a contract reached at 03:00 and again at 15:00 counted as two receivers. The extract now also records, per (day, signer), the union of receivers over the whole day, the metric uses that union, and the comparison was regenerated: 9.4% of fixed-window accounts against 3.3% under 24 windows (previously 21.1% against 7.6%). The direction and reading of the inclusion measurement are unchanged.
+
+| Punto | Estado | Qué se hizo y dónde verificarlo |
+| --- | --- | --- |
+| Métrica multirreceptor sumaba conteos entre horas | Hecho | `blocks.write_intraday_signers` escribe además `data/blocks/intraday_signer_days.csv` (19,148 filas cuenta-día) con `distinct_receivers_day`, la unión de receptores de la cuenta en todo el día, calculada desde los bloques cacheados. `qaa.inclusion_from_intraday` usa esa unión (`>= 2`) y publica la definición junto al valor; si el fichero diario falta, la comparación no se calcula en lugar de sumar. Valor regenerado: 9.4 % (ventanas fijas) frente a 3.3 % (24 ventanas). La prueba `test_inclusion_from_intraday_measures_fixed_window_coverage` incorpora el caso del auditor (mismo contrato a las 03:00 y 15:00 → un receptor) y una cuenta con dos contratos distintos → dos. |
+| Volumen, QAA mensual, atribución de recompras | Abiertos, declarados | Sin cambios respecto a la sexta pasada. |
+
+### Verificación de esta pasada
+
+- `make build` completo; `make test`: 126 pruebas aprobadas; comprobaciones de navegador: 47 de 47; `make check-generated`: coincidente tras el commit.

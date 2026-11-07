@@ -190,7 +190,9 @@ def qaa_scope_section(qs: dict) -> list[str]:
                     f"Inclusion by name class: " + ", ".join(f"{k} {v['inclusion']:.1%}" for k, v in pl['inclusion_by_name_class'].items() if v['accounts'] >= 100) + ". "
                     f"The composition shift is large: the name-only quality share is {nq['fixed_windows']:.1%} among accounts the fixed windows observe and {nq['all_24_windows']:.1%} among all accounts seen in 24 windows; the inclusion weighting applied to the fixed-window data moves it to {nq['fixed_windows_inclusion_weighted']:.1%}, "
                     f"in the right direction on {inc['weighting_check']['days_where_weighting_moves_toward_fuller_observation']} of {inc['weighting_check']['days_compared']} days but recovering only a small part of the gap. "
-                    f"Multi-receiver behavior is observable for {pl['multi_receiver_observable_share']['fixed_windows']:.1%} of fixed-window accounts against {pl['multi_receiver_observable_share']['all_24_windows']:.1%} under 24 windows. "
+                    + (f"Multi-receiver behavior (at least two distinct receivers over the whole day) is observable for {pl['multi_receiver_observable_share']['fixed_windows']:.1%} of fixed-window accounts against {pl['multi_receiver_observable_share']['all_24_windows']:.1%} under 24 windows. "
+                       if pl['multi_receiver_observable_share'].get('fixed_windows') is not None else "")
+                    + 
                     "Reading: within a day, the two-window design over-represents frequent and named accounts, so a share computed on it sits above the share among all accounts active that day, and the weighting sensitivity under-corrects. "
                     "This is an observed within-day quantity on six days chosen for the volume reconciliation; it does not identify the month-level bias of the QAA share, and 24 windows still observe under one percent of a day's blocks. The published QAA share is therefore an upper reading for the observed-account population, not a population estimate.")
     if sens.get('refits'):

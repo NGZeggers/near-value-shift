@@ -344,6 +344,7 @@ def sensitivity(df: pd.DataFrame, x: pd.DataFrame, labels: np.ndarray, monthly: 
 
 
 INTRADAY_SIGNERS = DATA / "blocks" / "intraday_signers.csv"
+INTRADAY_SIGNER_DAYS = DATA / "blocks" / "intraday_signer_days.csv"
 FIXED_HOURS = (3, 15)
 ACTIVITY_STRATA = [(1, 1, "1 window"), (2, 3, "2-3 windows"), (4, 8, "4-8 windows"), (9, 24, "9-24 windows")]
 
@@ -356,7 +357,7 @@ def _name_class(account: pd.Series) -> pd.Series:
     return out
 
 
-def inclusion_from_intraday(path=INTRADAY_SIGNERS) -> dict | None:
+def inclusion_from_intraday(path=INTRADAY_SIGNERS, day_path=INTRADAY_SIGNER_DAYS) -> dict | None:
     """Measure the fixed-window inclusion of accounts against 24 hourly windows of the same days (same 50-block design).
 
     Six days carry 24 windows (make blocks-intraday / -validation). Within each day, the accounts seen in the 03:00 and 15:00
@@ -371,10 +372,19 @@ def inclusion_from_intraday(path=INTRADAY_SIGNERS) -> dict | None:
     d["name_class"] = _name_class(d["signer"])
     d["fixed"] = d["window_hour"].isin(FIXED_HOURS)
     acc = d.groupby(["window_day", "signer"]).agg(windows_active=("window_hour", "nunique"), fixed_windows_active=("fixed", "sum"),
-                                                   txns=("txns", "sum"), receivers=("distinct_receivers", "sum"), name_class=("name_class", "first")).reset_index()
+                                                   txns=("txns", "sum"), name_class=("name_class", "first")).reset_index()
     acc["seen_fixed"] = acc["fixed_windows_active"] > 0
     acc["quality_name_only"] = ~acc["name_class"].isin(["tg", "sweat"])
-    acc["multi_receiver_observable"] = acc["receivers"] >= 2
+    # Distinct receivers must be the union over the day, not a sum of hourly cardinalities (the same contract in two hours is one receiver).
+    # The day-level file carries that union; without it the multi-receiver comparison is not computed.
+    if os.path.exists(day_path):
+        dd = pd.read_csv(day_path)[["window_day", "signer", "distinct_receivers_day"]]
+        acc = acc.merge(dd, on=["window_day", "signer"], how="left")
+        acc["multi_receiver_observable"] = acc["distinct_receivers_day"] >= 2
+        multi_ok = True
+    else:
+        acc["multi_receiver_observable"] = False
+        multi_ok = False
 
     def summarize(a: pd.DataFrame) -> dict:
         n24, nfix = int(len(a)), int(a["seen_fixed"].sum())
@@ -391,7 +401,9 @@ def inclusion_from_intraday(path=INTRADAY_SIGNERS) -> dict | None:
         return {"accounts_24_windows": n24, "accounts_fixed_windows": nfix, "inclusion_overall": (nfix / n24) if n24 else None,
                 "inclusion_by_activity": strata, "inclusion_by_name_class": by_name,
                 "share_active_in_one_window_of_24": float((a["windows_active"] == 1).mean()) if n24 else None,
-                "multi_receiver_observable_share": {"fixed_windows": float(fx["multi_receiver_observable"].mean()) if nfix else None, "all_24_windows": float(a["multi_receiver_observable"].mean()) if n24 else None},
+                "multi_receiver_observable_share": ({"fixed_windows": float(fx["multi_receiver_observable"].mean()) if nfix else None, "all_24_windows": float(a["multi_receiver_observable"].mean()) if n24 else None,
+                                                     "definition": "accounts with at least two distinct receivers over the whole day (union across windows)"} if multi_ok
+                                                    else {"fixed_windows": None, "all_24_windows": None, "definition": "not computed: day-level distinct receivers unavailable"}),
                 "name_only_quality_share": {"fixed_windows": share2, "fixed_windows_inclusion_weighted": weighted2, "all_24_windows": share24,
                                             "weighting_moves_toward_fuller_observation": (None if None in (share2, weighted2, share24) else bool(abs(weighted2 - share24) < abs(share2 - share24)))}}
 

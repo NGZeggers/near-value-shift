@@ -96,6 +96,12 @@ def test_inclusion_from_intraday_measures_fixed_window_coverage(tmp_path):
     """Accounts active in one window are seen by the two fixed windows with probability 2/24; heavy accounts are always seen."""
     rows = []
     rng = np.random.default_rng(0)
+    # the auditor's case: one contract at 03:00 and the same contract at 15:00 is one receiver, not two
+    for h in (3, 15):
+        rows.append(dict(window_day="2026-01-01", window_hour=h, signer="same.near", txns=1, distinct_receivers=1,
+                         distinct_methods=1, function_calls=1, transfers=0, self_txns=0, intents_actions=0, blocks_active=1))
+        rows.append(dict(window_day="2026-01-01", window_hour=h, signer="two.near", txns=1, distinct_receivers=1,
+                         distinct_methods=1, function_calls=1, transfers=0, self_txns=0, intents_actions=0, blocks_active=1))
     for i in range(240):                       # light .tg accounts: one random window each
         rows.append(dict(window_day="2026-01-01", window_hour=int(rng.integers(0, 24)), signer=f"u{i}.tg", txns=1, distinct_receivers=1,
                          distinct_methods=1, function_calls=1, transfers=0, self_txns=0, intents_actions=0, blocks_active=1))
@@ -105,9 +111,20 @@ def test_inclusion_from_intraday_measures_fixed_window_coverage(tmp_path):
                              distinct_methods=1, function_calls=20, transfers=0, self_txns=0, intents_actions=0, blocks_active=20))
     f = tmp_path / "signers.csv"
     pd.DataFrame(rows).to_csv(f, index=False)
-    out = qaa.inclusion_from_intraday(f)
+    day_rows = [dict(window_day="2026-01-01", signer="same.near", distinct_receivers_day=1, distinct_methods_day=1, windows_active=2),
+                dict(window_day="2026-01-01", signer="two.near", distinct_receivers_day=2, distinct_methods_day=1, windows_active=2)]
+    day_rows += [dict(window_day="2026-01-01", signer=f"u{i}.tg", distinct_receivers_day=1, distinct_methods_day=1, windows_active=1) for i in range(240)]
+    day_rows += [dict(window_day="2026-01-01", signer=f"bot{i}.near", distinct_receivers_day=2, distinct_methods_day=1, windows_active=24) for i in range(10)]
+    fd = tmp_path / "days.csv"
+    pd.DataFrame(day_rows).to_csv(fd, index=False)
+    out = qaa.inclusion_from_intraday(f, fd)
     p = out["pooled"]
-    assert p["accounts_24_windows"] == 250 and p["inclusion_by_activity"]["9-24 windows"]["inclusion"] == 1.0
+    assert p["accounts_24_windows"] == 252 and p["inclusion_by_activity"]["9-24 windows"]["inclusion"] == 1.0
+    # multi-receiver uses the day-level union: 10 bots + two.near, not same.near
+    assert p["multi_receiver_observable_share"]["all_24_windows"] == 11 / 252
+    assert p["multi_receiver_observable_share"]["fixed_windows"] == 11 / p["accounts_fixed_windows"]
+    without = qaa.inclusion_from_intraday(f, tmp_path / "no-days.csv")
+    assert without["pooled"]["multi_receiver_observable_share"]["fixed_windows"] is None
     assert 0.02 < p["inclusion_by_activity"]["1 window"]["inclusion"] < 0.2          # about 2/24 of the light accounts
     nq = p["name_only_quality_share"]
     assert nq["fixed_windows"] > nq["all_24_windows"]                                   # fixed windows over-represent the heavy named accounts

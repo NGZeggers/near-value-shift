@@ -689,6 +689,7 @@ def run_buyback_trace_extension(back: int = 40, offline: bool = False) -> dict:
 
 
 INTRADAY_SIGNERS = BLOCKS / "intraday_signers.csv"
+INTRADAY_SIGNER_DAYS = BLOCKS / "intraday_signer_days.csv"
 
 
 def write_intraday_signers(offline: bool = True) -> pd.DataFrame:
@@ -698,6 +699,7 @@ def write_intraday_signers(offline: bool = True) -> pd.DataFrame:
     windows), but 24 windows per day instead of the two fixed ones, so the fixed-window inclusion of accounts can be measured."""
     import pandas as pd
     rows = []
+    day_sets: dict[tuple[str, str], dict] = {}      # (day, signer) -> receivers and methods seen anywhere in the day (union, not a sum of hourly counts)
     for man_path in (INTRADAY_MANIFEST, INTRADAY_VALIDATION_MANIFEST):
         man = json.loads(man_path.read_text())
         for w in man["windows"]:
@@ -711,7 +713,9 @@ def write_intraday_signers(offline: bool = True) -> pd.DataFrame:
                 for signer, receiver, kind, method, deposit in b.get("txs", []):
                     a = agg.setdefault(signer, {"txns": 0, "receivers": set(), "methods": set(), "function_calls": 0, "transfers": 0, "self_txns": 0, "intents_actions": 0, "blocks": set()})
                     a["txns"] += 1; a["receivers"].add(receiver); a["blocks"].add(h)
-                    if method: a["methods"].add(method)
+                    ds = day_sets.setdefault((w["day"], signer), {"receivers": set(), "methods": set(), "hours": set()})
+                    ds["receivers"].add(receiver); ds["hours"].add(int(w["hour"]))
+                    if method: a["methods"].add(method); ds["methods"].add(method)
                     a["function_calls"] += kind == "FUNCTION_CALL"; a["transfers"] += kind == "TRANSFER"
                     a["self_txns"] += signer == receiver; a["intents_actions"] += receiver == "intents.near"
             for signer, a in agg.items():
@@ -720,5 +724,8 @@ def write_intraday_signers(offline: bool = True) -> pd.DataFrame:
                              "intents_actions": a["intents_actions"], "blocks_active": len(a["blocks"])})
     df = pd.DataFrame(rows).sort_values(["window_day", "window_hour", "signer"]).reset_index(drop=True)
     df.to_csv(INTRADAY_SIGNERS, index=False)
-    print(f"intraday signers: {len(df):,} (day, hour, signer) rows over {df['window_day'].nunique()} days -> {INTRADAY_SIGNERS}", flush=True)
+    days = pd.DataFrame([{"window_day": d, "signer": sg, "distinct_receivers_day": len(v["receivers"]), "distinct_methods_day": len(v["methods"]),
+                          "windows_active": len(v["hours"])} for (d, sg), v in day_sets.items()]).sort_values(["window_day", "signer"]).reset_index(drop=True)
+    days.to_csv(INTRADAY_SIGNER_DAYS, index=False)
+    print(f"intraday signers: {len(df):,} (day, hour, signer) rows and {len(days):,} (day, signer) rows with day-level distinct receivers over {df['window_day'].nunique()} days", flush=True)
     return df
