@@ -350,7 +350,11 @@ def sensitivity_table(ratio: dict, cross_ok: bool, qaa_last, qsens: dict, recon:
         if res.get("if_reference_were_two_sided_notional"):
             variants.append({"label": "if the reference counted both sides", "value": f"{res['if_reference_were_two_sided_notional']:.2f}"})
         if res.get("after_intraday_bias_correction"):
+            if res.get("after_confidential_intents_exclusion"):
+                variants.append({"label": "excluding the reference's confidential-intents share (estimate from a cumulative figure)", "value": f"{res['after_confidential_intents_exclusion']:.2f}"})
             variants.append({"label": "after the measured intraday bias (median factor)", "value": f"{res['after_intraday_bias_correction']:.2f}"})
+            if res.get("after_confidential_and_intraday"):
+                variants.append({"label": "confidential share and intraday bias together", "value": f"{res['after_confidential_and_intraday']:.2f}"})
             variants.append({"label": "after the measured intraday bias (mean factor)", "value": f"{res['after_intraday_bias_correction_mean_factor']:.2f}"})
         if res.get("after_both"):
             variants.append({"label": "two-sided reading and intraday correction together", "value": f"{res['after_both']:.2f}" + (" (exceeds parity)" if res.get("two_sided_and_intraday_overshoot") else "")})
@@ -369,12 +373,18 @@ def sensitivity_table(ratio: dict, cross_ok: bool, qaa_last, qsens: dict, recon:
             variants.append({"label": "name-only split (no clustering)", "value": f"{qsens['name_only_baseline']['latest_month']:.0%}"})
         if qsens.get("inclusion_probability_weighting"):
             variants.append({"label": "inclusion-probability weighted (sensitivity under assumptions)", "value": f"{qsens['inclusion_probability_weighting']['latest_month_weighted']:.0%}"})
+        if qsens.get("inclusion_from_intraday_days"):
+            nq = qsens["inclusion_from_intraday_days"]["pooled"]["name_only_quality_share"]
+            variants.append({"label": "name-only share within the day: fixed windows vs all 24 hourly windows (six days, observed)", "value": f"{nq['fixed_windows']:.0%} vs {nq['all_24_windows']:.0%}"})
+        if qsens.get("refits"):
+            lo, hi = qsens["refits"]["default_share_range"]
+            variants.append({"label": "refits with other hyper-parameters and a Gaussian mixture (range)", "value": f"{lo:.0%} to {hi:.0%}"})
         if qsens.get("by_window_hour"):
             variants += [{"label": f"accounts seen at {h}:00 UTC", "value": f"{v:.0%}"} for h, v in qsens["by_window_hour"]["latest_month"].items()]
         if qsens.get("model_agreement"):
             variants.append({"label": "frozen past-only model", "value": f"{qsens['model_agreement']['latest']['frozen']:.0%}"})
         rows.append({"headline": f"Share of accounts outside mini-app and high-frequency patterns, {qsens.get('latest_month', 'latest month')}", "kind": "estimate", "variants": variants,
-                     "effect": "the level depends on the model and criterion; the rising trend holds across variants. QAA is not one of the verdict's pass/fail checks, so the verdict does not move",
+                     "effect": "the level depends on the model and criterion, and the two-window design over-represents frequent and named accounts within a day, so the level is an upper reading for the observed-account population; the rising trend holds across variants. QAA is not one of the verdict's pass/fail checks, so the verdict does not move",
                      "href": "#chart-qaa_shares"})
     if bridge.get("scenarios"):
         sc = bridge["scenarios"]

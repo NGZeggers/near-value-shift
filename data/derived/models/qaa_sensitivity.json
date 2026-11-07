@@ -48,7 +48,390 @@
    "accounts never seen in any window have no weight: the index covers observed accounts only",
    "heterogeneity between accounts beyond activity frequency is ignored"
   ],
-  "validation": "not validated externally; a fuller observation of the same months would be needed to test it"
+  "validation": "checked within six days against 24 hourly windows of the same design (inclusion_from_intraday_days); the month-level bias of the share is still not identified"
+ },
+ "inclusion_from_intraday_days": {
+  "days": {
+   "2025-05-18": {
+    "accounts_24_windows": 6196,
+    "accounts_fixed_windows": 541,
+    "inclusion_overall": 0.08731439638476436,
+    "inclusion_by_activity": {
+     "1 window": {
+      "accounts": 5878,
+      "inclusion": 0.08046954746512419
+     },
+     "2-3 windows": {
+      "accounts": 221,
+      "inclusion": 0.06787330316742081
+     },
+     "4-8 windows": {
+      "accounts": 55,
+      "inclusion": 0.32727272727272727
+     },
+     "9-24 windows": {
+      "accounts": 42,
+      "inclusion": 0.8333333333333334
+     }
+    },
+    "inclusion_by_name_class": {
+     "implicit": {
+      "accounts": 280,
+      "inclusion": 0.15714285714285714
+     },
+     "named": {
+      "accounts": 353,
+      "inclusion": 0.1359773371104816
+     },
+     "sweat": {
+      "accounts": 1,
+      "inclusion": 1.0
+     },
+     "tg": {
+      "accounts": 5562,
+      "inclusion": 0.08054656598345919
+     }
+    },
+    "share_active_in_one_window_of_24": 0.9486765655261459,
+    "multi_receiver_observable_share": {
+     "fixed_windows": 0.1367837338262477,
+     "all_24_windows": 0.06020012911555842
+    },
+    "name_only_quality_share": {
+     "fixed_windows": 0.17005545286506468,
+     "fixed_windows_inclusion_weighted": 0.16338951310861424,
+     "all_24_windows": 0.10216268560361523,
+     "weighting_moves_toward_fuller_observation": true
+    }
+   },
+   "2025-08-31": {
+    "accounts_24_windows": 4560,
+    "accounts_fixed_windows": 422,
+    "inclusion_overall": 0.0925438596491228,
+    "inclusion_by_activity": {
+     "1 window": {
+      "accounts": 4341,
+      "inclusion": 0.082930200414651
+     },
+     "2-3 windows": {
+      "accounts": 147,
+      "inclusion": 0.1360544217687075
+     },
+     "4-8 windows": {
+      "accounts": 35,
+      "inclusion": 0.3142857142857143
+     },
+     "9-24 windows": {
+      "accounts": 37,
+      "inclusion": 0.8378378378378378
+     }
+    },
+    "inclusion_by_name_class": {
+     "implicit": {
+      "accounts": 281,
+      "inclusion": 0.10676156583629894
+     },
+     "named": {
+      "accounts": 357,
+      "inclusion": 0.1400560224089636
+     },
+     "tg": {
+      "accounts": 3922,
+      "inclusion": 0.08720040795512493
+     }
+    },
+    "share_active_in_one_window_of_24": 0.9519736842105263,
+    "multi_receiver_observable_share": {
+     "fixed_windows": 0.16113744075829384,
+     "all_24_windows": 0.06184210526315789
+    },
+    "name_only_quality_share": {
+     "fixed_windows": 0.1895734597156398,
+     "fixed_windows_inclusion_weighted": 0.1816546762589928,
+     "all_24_windows": 0.13991228070175438,
+     "weighting_moves_toward_fuller_observation": true
+    }
+   },
+   "2025-11-14": {
+    "accounts_24_windows": 3487,
+    "accounts_fixed_windows": 318,
+    "inclusion_overall": 0.0911958703756811,
+    "inclusion_by_activity": {
+     "1 window": {
+      "accounts": 3301,
+      "inclusion": 0.07815813389881854
+     },
+     "2-3 windows": {
+      "accounts": 114,
+      "inclusion": 0.11403508771929824
+     },
+     "4-8 windows": {
+      "accounts": 29,
+      "inclusion": 0.3448275862068966
+     },
+     "9-24 windows": {
+      "accounts": 43,
+      "inclusion": 0.8604651162790697
+     }
+    },
+    "inclusion_by_name_class": {
+     "implicit": {
+      "accounts": 265,
+      "inclusion": 0.07924528301886792
+     },
+     "named": {
+      "accounts": 312,
+      "inclusion": 0.23397435897435898
+     },
+     "sweat": {
+      "accounts": 1,
+      "inclusion": 0.0
+     },
+     "tg": {
+      "accounts": 2909,
+      "inclusion": 0.07700240632519766
+     }
+    },
+    "share_active_in_one_window_of_24": 0.9466590192142242,
+    "multi_receiver_observable_share": {
+     "fixed_windows": 0.21069182389937108,
+     "all_24_windows": 0.07083452824777746
+    },
+    "name_only_quality_share": {
+     "fixed_windows": 0.29559748427672955,
+     "fixed_windows_inclusion_weighted": 0.2886762360446571,
+     "all_24_windows": 0.16547175222254087,
+     "weighting_moves_toward_fuller_observation": true
+    }
+   },
+   "2026-04-13": {
+    "accounts_24_windows": 1974,
+    "accounts_fixed_windows": 189,
+    "inclusion_overall": 0.09574468085106383,
+    "inclusion_by_activity": {
+     "1 window": {
+      "accounts": 1855,
+      "inclusion": 0.07223719676549865
+     },
+     "2-3 windows": {
+      "accounts": 59,
+      "inclusion": 0.1694915254237288
+     },
+     "4-8 windows": {
+      "accounts": 27,
+      "inclusion": 0.5555555555555556
+     },
+     "9-24 windows": {
+      "accounts": 33,
+      "inclusion": 0.9090909090909091
+     }
+    },
+    "inclusion_by_name_class": {
+     "implicit": {
+      "accounts": 133,
+      "inclusion": 0.10526315789473684
+     },
+     "named": {
+      "accounts": 196,
+      "inclusion": 0.23469387755102042
+     },
+     "sweat": {
+      "accounts": 2,
+      "inclusion": 0.5
+     },
+     "tg": {
+      "accounts": 1643,
+      "inclusion": 0.07790626902008521
+     }
+    },
+    "share_active_in_one_window_of_24": 0.9397163120567376,
+    "multi_receiver_observable_share": {
+     "fixed_windows": 0.30158730158730157,
+     "all_24_windows": 0.08156028368794327
+    },
+    "name_only_quality_share": {
+     "fixed_windows": 0.31746031746031744,
+     "fixed_windows_inclusion_weighted": 0.30664857530529166,
+     "all_24_windows": 0.16666666666666666,
+     "weighting_moves_toward_fuller_observation": true
+    }
+   },
+   "2026-05-13": {
+    "accounts_24_windows": 1834,
+    "accounts_fixed_windows": 282,
+    "inclusion_overall": 0.15376226826608505,
+    "inclusion_by_activity": {
+     "1 window": {
+      "accounts": 1681,
+      "inclusion": 0.1273051754907793
+     },
+     "2-3 windows": {
+      "accounts": 85,
+      "inclusion": 0.21176470588235294
+     },
+     "4-8 windows": {
+      "accounts": 31,
+      "inclusion": 0.45161290322580644
+     },
+     "9-24 windows": {
+      "accounts": 37,
+      "inclusion": 0.972972972972973
+     }
+    },
+    "inclusion_by_name_class": {
+     "implicit": {
+      "accounts": 139,
+      "inclusion": 0.19424460431654678
+     },
+     "named": {
+      "accounts": 189,
+      "inclusion": 0.291005291005291
+     },
+     "sweat": {
+      "accounts": 2,
+      "inclusion": 0.5
+     },
+     "tg": {
+      "accounts": 1504,
+      "inclusion": 0.13231382978723405
+     }
+    },
+    "share_active_in_one_window_of_24": 0.9165757906215921,
+    "multi_receiver_observable_share": {
+     "fixed_windows": 0.24468085106382978,
+     "all_24_windows": 0.09487459105779716
+    },
+    "name_only_quality_share": {
+     "fixed_windows": 0.2907801418439716,
+     "fixed_windows_inclusion_weighted": 0.27888086642599275,
+     "all_24_windows": 0.17884405670665213,
+     "weighting_moves_toward_fuller_observation": true
+    }
+   },
+   "2026-09-25": {
+    "accounts_24_windows": 1097,
+    "accounts_fixed_windows": 138,
+    "inclusion_overall": 0.12579762989972654,
+    "inclusion_by_activity": {
+     "1 window": {
+      "accounts": 926,
+      "inclusion": 0.08423326133909287
+     },
+     "2-3 windows": {
+      "accounts": 95,
+      "inclusion": 0.17894736842105263
+     },
+     "4-8 windows": {
+      "accounts": 43,
+      "inclusion": 0.37209302325581395
+     },
+     "9-24 windows": {
+      "accounts": 33,
+      "inclusion": 0.8181818181818182
+     }
+    },
+    "inclusion_by_name_class": {
+     "implicit": {
+      "accounts": 271,
+      "inclusion": 0.1070110701107011
+     },
+     "named": {
+      "accounts": 279,
+      "inclusion": 0.17921146953405018
+     },
+     "tg": {
+      "accounts": 547,
+      "inclusion": 0.10786106032906764
+     }
+    },
+    "share_active_in_one_window_of_24": 0.8441203281677302,
+    "multi_receiver_observable_share": {
+     "fixed_windows": 0.463768115942029,
+     "all_24_windows": 0.20692798541476753
+    },
+    "name_only_quality_share": {
+     "fixed_windows": 0.572463768115942,
+     "fixed_windows_inclusion_weighted": 0.556390977443609,
+     "all_24_windows": 0.5013673655423884,
+     "weighting_moves_toward_fuller_observation": true
+    }
+   }
+  },
+  "pooled": {
+   "accounts_24_windows": 19148,
+   "accounts_fixed_windows": 1890,
+   "inclusion_overall": 0.09870482556925005,
+   "inclusion_by_activity": {
+    "1 window": {
+     "accounts": 17982,
+     "inclusion": 0.08436213991769548
+    },
+    "2-3 windows": {
+     "accounts": 721,
+     "inclusion": 0.1289875173370319
+    },
+    "4-8 windows": {
+     "accounts": 220,
+     "inclusion": 0.38181818181818183
+    },
+    "9-24 windows": {
+     "accounts": 225,
+     "inclusion": 0.8711111111111111
+    }
+   },
+   "inclusion_by_name_class": {
+    "implicit": {
+     "accounts": 1369,
+     "inclusion": 0.12052593133674215
+    },
+    "named": {
+     "accounts": 1686,
+     "inclusion": 0.19098457888493475
+    },
+    "sweat": {
+     "accounts": 6,
+     "inclusion": 0.5
+    },
+    "tg": {
+     "accounts": 16087,
+     "inclusion": 0.08702679181948157
+    }
+   },
+   "share_active_in_one_window_of_24": 0.939105911844579,
+   "multi_receiver_observable_share": {
+    "fixed_windows": 0.2111111111111111,
+    "all_24_windows": 0.0764570712345937
+   },
+   "name_only_quality_share": {
+    "fixed_windows": 0.25767195767195766,
+    "fixed_windows_inclusion_weighted": 0.2481506388702085,
+    "all_24_windows": 0.15954668894923751,
+    "weighting_moves_toward_fuller_observation": true
+   }
+  },
+  "design": {
+   "fixed_hours_utc": [
+    3,
+    15
+   ],
+   "windows_per_day": 24,
+   "blocks_per_window": 50,
+   "days": [
+    "2025-05-18",
+    "2025-08-31",
+    "2025-11-14",
+    "2026-04-13",
+    "2026-05-13",
+    "2026-09-25"
+   ],
+   "selection": "the three motivating and the three validation days of the volume reconciliation; not chosen for this measurement"
+  },
+  "weighting_check": {
+   "days_where_weighting_moves_toward_fuller_observation": 6,
+   "days_compared": 6
+  },
+  "reading": "inclusion is the share of a day's 24-window accounts that the two fixed windows observe; it rises with activity, so light accounts are under-observed and the sampled population is tilted toward frequent signers. The name-only share under the two designs shows how much the composition shifts; the weighting check tells whether the inclusion weighting used as a sensitivity moves the two-window share toward the 24-window share. Within-day inclusion on six days is an observed quantity; it does not identify the month-level bias of the QAA share, which would need a fuller observation of whole months",
+  "kind": "observed (within-day, six days), used as a check of the weighting sensitivity"
  },
  "by_window_hour": {
   "hours": [
@@ -73,6 +456,115 @@
   "correlation": 0.7683966193052888,
   "reading": "the two models label the same months differently; the level of the share depends on the model, its trend less so"
  },
+ "refits": {
+  "computed_on": "2026-11-07",
+  "n": 32173,
+  "latest_month": "2026-10",
+  "baseline_min_cluster_size": 160,
+  "variants": [
+   {
+    "algorithm": "hdbscan",
+    "variant": "committed hyper-parameters refitted on this machine",
+    "parameters": {
+     "min_cluster_size": 160,
+     "min_samples": 25
+    },
+    "clusters": 21,
+    "noise_share": 0.03335094644577752,
+    "adjusted_rand_index_vs_committed": 1.0,
+    "latest_month_share": {
+     "strict": 0.0,
+     "default": 0.6195121951219512,
+     "including_ambiguous": 0.6829268292682927
+    }
+   },
+   {
+    "algorithm": "hdbscan",
+    "variant": "half the minimum cluster size",
+    "parameters": {
+     "min_cluster_size": 80,
+     "min_samples": 25
+    },
+    "clusters": 40,
+    "noise_share": 0.03179684828893793,
+    "adjusted_rand_index_vs_committed": 0.972582126191369,
+    "latest_month_share": {
+     "strict": 0.0,
+     "default": 0.6195121951219512,
+     "including_ambiguous": 0.6634146341463415
+    }
+   },
+   {
+    "algorithm": "hdbscan",
+    "variant": "double the minimum cluster size",
+    "parameters": {
+     "min_cluster_size": 320,
+     "min_samples": 25
+    },
+    "clusters": 14,
+    "noise_share": 0.02383986572591925,
+    "adjusted_rand_index_vs_committed": 0.9881454761216203,
+    "latest_month_share": {
+     "strict": 0.0,
+     "default": 0.6390243902439025,
+     "including_ambiguous": 0.6829268292682927
+    }
+   },
+   {
+    "algorithm": "hdbscan",
+    "variant": "min_samples 10",
+    "parameters": {
+     "min_cluster_size": 160,
+     "min_samples": 10
+    },
+    "clusters": 23,
+    "noise_share": 0.03524694619712181,
+    "adjusted_rand_index_vs_committed": 0.9957120897453554,
+    "latest_month_share": {
+     "strict": 0.0,
+     "default": 0.6487804878048781,
+     "including_ambiguous": 0.6829268292682927
+    }
+   },
+   {
+    "algorithm": "hdbscan",
+    "variant": "min_samples 50",
+    "parameters": {
+     "min_cluster_size": 160,
+     "min_samples": 50
+    },
+    "clusters": 21,
+    "noise_share": 0.042737699313088615,
+    "adjusted_rand_index_vs_committed": 0.9957336945986799,
+    "latest_month_share": {
+     "strict": 0.0,
+     "default": 0.5560975609756098,
+     "including_ambiguous": 0.6829268292682927
+    }
+   },
+   {
+    "algorithm": "gmm",
+    "variant": "Gaussian mixture, diagonal covariance, BIC-selected k in 3..8",
+    "parameters": {
+     "k": 7
+    },
+    "clusters": 7,
+    "noise_share": 0.0,
+    "adjusted_rand_index_vs_committed": 0.26915569155367336,
+    "latest_month_share": {
+     "strict": 0.08292682926829269,
+     "default": 0.4878048780487805,
+     "including_ambiguous": 0.4878048780487805
+    }
+   }
+  ],
+  "default_share_range": [
+   0.4878048780487805,
+   0.6487804878048781
+  ],
+  "reading": "the committed assignment is the baseline; these refits show how much the latest default share and the partition itself depend on hyper-parameters and on the algorithm. Computed by `make qaa-refits` on one machine (HDBSCAN assignments are platform-dependent) and committed as a sensitivity artifact; not regenerated by the build",
+  "kind": "sensitivity"
+ },
  "scope": {
   "observed_unit": "accounts signing at least one transaction inside the sampled windows",
   "account_months": 32173,
@@ -82,7 +574,7 @@
   "identity": "no verified human or bot labels exist; groups are behavioral patterns"
  },
  "not_done": [
-  "refits with other clustering hyper-parameters (platform-dependent HDBSCAN assignments would break the exact regression check; the committed assignment is reused)",
-  "external human/bot labels (none available)"
+  "external human/bot labels (none available)",
+  "a fuller observation of whole months (the within-day inclusion measurement covers six days)"
  ]
 }

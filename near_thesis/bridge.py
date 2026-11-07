@@ -20,6 +20,7 @@ from .config import DATA, DERIVED, MODELS
 from .http import load_raw
 
 TRACE = DATA / "blocks" / "buyback_trace.json"
+TRACE_EXT = DATA / "blocks" / "buyback_trace_extension.json"
 
 
 def receipt_status(outcome: object) -> str:
@@ -122,6 +123,11 @@ def run() -> dict:
     t0, t1 = (float(tot.loc[:y.index[0]].iloc[-1]), float(tot.iloc[-1])) if len(tot) else (np.nan, np.nan)
     receipts = buyback_receipts(cutoff, price)
     trace = json.loads(TRACE.read_text()) if TRACE.exists() else None
+    ext = json.loads(TRACE_EXT.read_text()) if TRACE_EXT.exists() else None
+    if trace and ext:
+        trace["funding_swap_found_within_extension"] = ext["swap_found"]
+        trace["funding_swap_observed_total"] = trace["with_token_diff_in_same_block"] + ext["swap_found"]
+        trace["extension"] = {k: v for k, v in ext.items() if k != "receipts"}
     bb_near = receipts["near_in"] if receipts and receipts.get("purchase_transfers") else None
     bb_usd = receipts["usd_in_at_daily_price"] if receipts and receipts.get("purchase_transfers") else None
     # steps of the bridge; share_of_previous makes the funnel explicit
@@ -142,7 +148,9 @@ def run() -> dict:
             tr_note = (f"Trace of a pre-declared sample ({trace['sampled']} of {trace['receipts_in_snapshot_from_intents_near']} receipts, every 80th plus the five largest): "
                        f"{trace['matched_native_withdraw']} match a dip4 native_withdraw of wrapped NEAR from {trace.get('distinct_intents_accounts', len(trace['intents_accounts']))} distinct Intents-side accounts; "
                        f"for {trace['with_token_diff_in_same_block']} the funding swap (token_diff of the same account, {trace.get('with_wrap_near_bought_in_same_block', 0)} buying wrap.near) is in the same blocks, "
-                       f"for the other {trace['sampled'] - trace['with_token_diff_in_same_block']} it is outside the blocks read and the purchase is not observed. ")
+                       f"for the other {trace['sampled'] - trace['with_token_diff_in_same_block']} it is outside the blocks read and the purchase is not observed. "
+                       + (f"A second pre-declared pass over those found the funding swap within {trace['extension']['blocks_back']} blocks before the withdrawal for {trace['funding_swap_found_within_extension']} more "
+                          f"({trace['funding_swap_observed_total']} of {trace['sampled']} in total); the origin of the sold asset is not traced. " if trace.get("extension") else ""))
         else:
             tr_note = "No receipt trace yet (make blocks-buyback-trace). "
         steps.append({"step": 5, "name": f"NEAR withdrawn from Intents into {BUYBACK_WALLET}", "short": "NEAR received by buyback wallet", "usd": bb_usd, "near": bb_near,

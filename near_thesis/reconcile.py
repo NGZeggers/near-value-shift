@@ -39,7 +39,30 @@ ECONOMIC_UNIT = {
                   "per date_at (adapter source: DefiLlama/dimension-adapters dexs/near-intents/index.ts). The dataset is a curated Dune "
                   "table maintained for NEAR's metrics; whether volume_amount_usd is one-sided or two-sided notional is not published, "
                   "so the two measures are compared, not assumed identical."),
-    "shared_origin": "DefiLlama does not compute this series itself; it queries Dune. A second reference independent of Dune was not accessible without credentials (Dune API key or Intents Explorer JWT).",
+    "shared_origin": ("DefiLlama does not compute this series itself; it queries Dune. Every public reference found derives from NEAR's own metrics "
+                      "datasets (Dune dune.near.*, the ClickHouse table behind near-intents.org, revenue.near.org volumeUsd), so none is of independent "
+                      "origin; the Dune series also covers confidential intents, which emit no public token_diff logs and are therefore outside what "
+                      "any on-chain log extraction can observe (see reference_definition)."),
+}
+
+# What the reference counts, established 2026-11-07 from public sources (adapter code, GitHub issue and PR, site docs); recorded here
+# because none of these numbers can be recomputed from this repository.
+REFERENCE_DEFINITION = {
+    "established": "2026-11-07",
+    "adapter": {"source": "DefiLlama/dimension-adapters dexs/near-intents/index.ts", "query": "SUM(CAST(volume_amount_usd AS DOUBLE)) FROM dune.near.dataset_near_intents_metrics WHERE date_at = day",
+                "notes": "no methodology comments in the adapter; flagged isExpensiveAdapter; start 2024-11-05"},
+    "dataset_maintainer": {"claim": "the dune.near.dataset_near_intents_* tables are uploaded by NEAR (the DefiLlama issue #10317 waits for 'near's datasets' to catch up when fee rows are missing)",
+                           "kind": "observed in a public issue, not confirmed by NEAR documentation"},
+    "confidential_intents": {"claim": "the Dune all-time volume includes confidential intents, which the ClickHouse table behind near-intents.org excludes",
+                             "source": "near/near-intents pull request #77 (hero stat hotfix)", "cumulative_usd_billion": {"public": 30.83, "confidential": 2.52, "dune_total": 33.35, "clickhouse_public_only": 31.03},
+                             "share_of_dune_total": 2.52 / 33.35,
+                             "kind": "estimate: a cumulative share from a secondary source, applied here to the comparison period as if constant; the period share is unknown",
+                             "implication": "confidential intents do not emit public token_diff logs, so they are structurally outside our on-chain measure while inside the reference"},
+    "other_references": {"revenue.near.org": "publishes volumeUsd per day equal to the Dune figure (same origin); no API or download",
+                         "near-intents.org": "ClickHouse near_intents_metrics.intents_external_metrics, public intents only; no public API",
+                         "Intents Explorer API": "1Click swaps only, JWT required, 1 request per 5 s: not a protocol-wide volume source",
+                         "Flipside ez_intents": "independent indexer of intents.near logs (one row per token_diff leg, USD per leg); requires an account; not accessed"},
+    "one_or_two_sided": "not published anywhere found; the comparison keeps both readings",
 }
 
 # Declared 2026-11-06 before the holdout days were evaluated. Symmetric on the log scale (x0.8 to x1.25).
@@ -425,27 +448,37 @@ def run() -> dict:
         bias = intra.get("fixed_window_bias_factor_median") if intra else None
         bias_mean = intra.get("fixed_window_bias_factor_mean") if intra else None
         after = ratio * bias if bias else None
+        conf = REFERENCE_DEFINITION["confidential_intents"]["share_of_dune_total"]
+        after_conf = ratio / (1 - conf)
+        after_conf_intra = after / (1 - conf) if after else None
         residual = {"pooled_ratio": ratio,
                     "if_reference_were_two_sided_notional": two_sided,
+                    "confidential_intents_share_of_reference": conf,
+                    "after_confidential_intents_exclusion": after_conf,
                     "intraday_bias_factor_used": bias,
                     "after_intraday_bias_correction": after,
                     "after_intraday_bias_correction_mean_factor": ratio * bias_mean if bias_mean else None,
+                    "after_confidential_and_intraday": after_conf_intra,
                     "after_both": two_sided * bias if (two_sided and bias) else None,
                     "unexplained_factor_to_parity": (1 / after) if after else (1 / ratio),
+                    "unexplained_factor_after_confidential_and_intraday": (1 / after_conf_intra) if after_conf_intra else (1 / after_conf),
                     "two_sided_and_intraday_overshoot": bool(two_sided and bias and two_sided * bias > 1),
-                    "reading": ("the identified components are definitional (one- versus two-sided) and intraday coverage; the remaining factor "
-                                "to reach parity after the measured intraday bias is unexplained and is reported as such, not attributed to "
-                                "missing large trades. The two-sided reading and the intraday factor are separate hypotheses: that their "
-                                "combination exceeds parity shows the two readings cannot both be taken at face value together, but it does not "
-                                "identify which one overstates, and estimation error and unidentified components remain")}
-    out = {"computed": True, "economic_unit": ECONOMIC_UNIT, "pooled_ratio_all_days": pooled,
+                    "reading": ("identified components: definitional (one- versus two-sided notional, unresolved), coverage of the reference "
+                                "(confidential intents are inside the Dune series and outside any public log; cumulative share from a secondary "
+                                "source, an estimate) and intraday coverage (measured on three days, checked on three more). The factor to parity "
+                                "that remains after the confidential share and the measured intraday bias is unexplained and is reported as such, "
+                                "not attributed to missing large trades. The two-sided reading and the intraday factor are separate hypotheses: "
+                                "that their combination exceeds parity shows the two readings cannot both be taken at face value together, but "
+                                "it does not identify which one overstates, and estimation error and unidentified components remain")}
+    out = {"computed": True, "economic_unit": ECONOMIC_UNIT, "reference_definition": REFERENCE_DEFINITION, "pooled_ratio_all_days": pooled,
            "components": {"temporal_coverage": coverage, "valuation": valuation, "route_reconstruction": routes, "residual": residual},
            "holdout": holdout(table), "intraday": intra or {"available": False, "how": "make blocks-intraday (network, several hours under the public rate limit)"},
            "intraday_validation": validation,
            "trace_examples": [e["kind"] for e in examples],
            "not_possible_here": ["complete-day extracts (FastNear public rate limit ~0.35 blocks/s; a NEAR day has ~150,000 blocks)",
-                                 "a second reference independent of Dune (no Dune API key or Intents Explorer JWT)",
-                                 "the published definition of volume_amount_usd in dune.near.dataset_near_intents_metrics"]}
+                                 "a reference of independent origin: every public series found (DefiLlama, revenue.near.org, near-intents.org) derives from NEAR's own metrics datasets; the only independent indexer found (Flipside ez_intents) requires an account",
+                                 "the published definition of volume_amount_usd in dune.near.dataset_near_intents_metrics (one- or two-sided)",
+                                 "the share of confidential intents in the comparison period (only a cumulative share from a secondary source is available)"]}
     (MODELS / "intents_reconciliation.json").write_text(json.dumps(out, indent=1, default=str))
     print(f"reconcile: {len(table)} days, pooled ratio {ratio:.3f}, holdout {out['holdout']['verdict']}" if ratio else "reconcile: no reference days")
     return out

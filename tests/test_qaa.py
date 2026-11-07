@@ -90,3 +90,42 @@ def test_frozen_qaa_cannot_use_future_months(tmp_path, monkeypatch):
     series = qaa.available_series(index)
     assert series.loc[:'2025-07-31'].isna().all()
     assert pd.notna(series.loc['2025-08-01'])
+
+
+def test_inclusion_from_intraday_measures_fixed_window_coverage(tmp_path):
+    """Accounts active in one window are seen by the two fixed windows with probability 2/24; heavy accounts are always seen."""
+    rows = []
+    rng = np.random.default_rng(0)
+    for i in range(240):                       # light .tg accounts: one random window each
+        rows.append(dict(window_day="2026-01-01", window_hour=int(rng.integers(0, 24)), signer=f"u{i}.tg", txns=1, distinct_receivers=1,
+                         distinct_methods=1, function_calls=1, transfers=0, self_txns=0, intents_actions=0, blocks_active=1))
+    for i in range(10):                        # heavy named accounts: every window
+        for h in range(24):
+            rows.append(dict(window_day="2026-01-01", window_hour=h, signer=f"bot{i}.near", txns=20, distinct_receivers=2,
+                             distinct_methods=1, function_calls=20, transfers=0, self_txns=0, intents_actions=0, blocks_active=20))
+    f = tmp_path / "signers.csv"
+    pd.DataFrame(rows).to_csv(f, index=False)
+    out = qaa.inclusion_from_intraday(f)
+    p = out["pooled"]
+    assert p["accounts_24_windows"] == 250 and p["inclusion_by_activity"]["9-24 windows"]["inclusion"] == 1.0
+    assert 0.02 < p["inclusion_by_activity"]["1 window"]["inclusion"] < 0.2          # about 2/24 of the light accounts
+    nq = p["name_only_quality_share"]
+    assert nq["fixed_windows"] > nq["all_24_windows"]                                   # fixed windows over-represent the heavy named accounts
+    assert nq["fixed_windows_inclusion_weighted"] < nq["fixed_windows"]                 # the weighting moves toward the fuller observation
+    assert out["kind"].startswith("observed") and out["weighting_check"]["days_compared"] == 1
+    assert qaa.inclusion_from_intraday(tmp_path / "missing.csv") is None
+
+
+def test_refit_variants_report_agreement_and_shares():
+    df = synthetic(n=2000, seed=4).sort_values(["month", "account"]).reset_index(drop=True)
+    x = qaa.featurize(df)
+    committed, _ = qaa.fit_clusters(x)
+    res = qaa.refit_variants(df, x, committed, pd.DatetimeIndex(sorted(df["month"].unique())))
+    assert len(res["variants"]) == len(qaa.REFIT_GRID) and res["kind"] == "sensitivity"
+    same = res["variants"][0]
+    assert same["algorithm"] == "hdbscan" and same["adjusted_rand_index_vs_committed"] > 0.95   # the committed parameters refit on the same machine
+    for v in res["variants"]:
+        assert -0.5 <= v["adjusted_rand_index_vs_committed"] <= 1.0
+        assert 0 <= v["latest_month_share"]["default"] <= 1
+    lo, hi = res["default_share_range"]
+    assert lo <= same["latest_month_share"]["default"] <= hi

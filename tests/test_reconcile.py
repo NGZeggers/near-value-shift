@@ -207,3 +207,17 @@ def test_intraday_validation_treats_zero_fixed_window_day_as_unbounded(tmp_path,
     (tmp_path / "v.json").write_text(json.dumps(man))
     out2 = reconcile.intraday_validation({}, bpd, ref, {"fixed_window_bias_factor_median": factor})
     assert out2["within_declared_range"] is False
+
+
+def test_reference_definition_declares_confidential_component_as_estimate():
+    rd = reconcile.REFERENCE_DEFINITION
+    share = rd["confidential_intents"]["share_of_dune_total"]
+    c = rd["confidential_intents"]["cumulative_usd_billion"]
+    assert share == pytest.approx(c["confidential"] / c["dune_total"]) and 0.05 < share < 0.1
+    assert rd["confidential_intents"]["kind"].startswith("estimate") and "both readings" in rd["one_or_two_sided"]
+    assert "Dune" in reconcile.ECONOMIC_UNIT["shared_origin"] and "independent" in reconcile.ECONOMIC_UNIT["shared_origin"]
+    out = reconcile.MODELS / "intents_reconciliation.json"
+    if out.exists():
+        res = json.loads(out.read_text())["components"]["residual"]
+        assert res["after_confidential_intents_exclusion"] == pytest.approx(res["pooled_ratio"] / (1 - share))
+        assert res["after_confidential_and_intraday"] == pytest.approx(res["after_intraday_bias_correction"] / (1 - share))

@@ -328,12 +328,152 @@ def sensitivity(df: pd.DataFrame, x: pd.DataFrame, labels: np.ndarray, monthly: 
              "population_extrapolation": ("the QAA count multiplies the sampled share by NearBlocks mean daily active accounts; "
                                           "inclusion probability rises with activity, so the count is an illustrative rescaling and the share is the measured quantity"),
              "identity": "no verified human or bot labels exist; groups are behavioral patterns"}
+    incl = inclusion_from_intraday() if sampled else None
+    if incl:
+        freq["validation"] = ("checked within six days against 24 hourly windows of the same design (inclusion_from_intraday_days); the month-level "
+                              "bias of the share is still not identified")
+    refits = json.loads(REFITS.read_text()) if REFITS.exists() else None
+    not_done = ["external human/bot labels (none available)", "a fuller observation of whole months (the within-day inclusion measurement covers six days)"]
+    if not refits:
+        not_done.insert(0, "refits with other clustering hyper-parameters (make qaa-refits writes them as a committed sensitivity artifact)")
     return {"latest_month": str(last.date())[:7], "criteria": criteria, "label_threshold_variants_default_share": variants,
             "noise_bounds_default_share": {"noise_excluded": lower, "noise_included": upper},
-            "name_only_baseline": name_only, "inclusion_probability_weighting": freq, "by_window_hour": by_hour,
-            "model_agreement": agreement, "scope": scope,
-            "not_done": ["refits with other clustering hyper-parameters (platform-dependent HDBSCAN assignments would break the exact regression check; the committed assignment is reused)",
-                         "external human/bot labels (none available)"]}
+            "name_only_baseline": name_only, "inclusion_probability_weighting": freq, "inclusion_from_intraday_days": incl, "by_window_hour": by_hour,
+            "model_agreement": agreement, "refits": refits, "scope": scope,
+            "not_done": not_done}
+
+
+INTRADAY_SIGNERS = DATA / "blocks" / "intraday_signers.csv"
+FIXED_HOURS = (3, 15)
+ACTIVITY_STRATA = [(1, 1, "1 window"), (2, 3, "2-3 windows"), (4, 8, "4-8 windows"), (9, 24, "9-24 windows")]
+
+
+def _name_class(account: pd.Series) -> pd.Series:
+    out = pd.Series("named", index=account.index)
+    out[account.str.endswith(".tg")] = "tg"
+    out[account.str.endswith(".sweat")] = "sweat"
+    out[account.str.fullmatch(r"[0-9a-f]{64}")] = "implicit"
+    return out
+
+
+def inclusion_from_intraday(path=INTRADAY_SIGNERS) -> dict | None:
+    """Measure the fixed-window inclusion of accounts against 24 hourly windows of the same days (same 50-block design).
+
+    Six days carry 24 windows (make blocks-intraday / -validation). Within each day, the accounts seen in the 03:00 and 15:00
+    windows are a subset of those seen in all 24: the ratio is the inclusion probability the two-window design achieves for a
+    day, overall and by activity level and name class. The name-only quality share (accounts without a .tg/.sweat name) is
+    compared between the two designs, and the inclusion weighting that the sensitivity applies to the two-window data is
+    checked against the fuller observation. This measures inclusion within a day on six days; it is not the month-level
+    population the QAA share describes, and 24 windows still observe about 0.8% of a day's blocks."""
+    if not os.path.exists(path):
+        return None
+    d = pd.read_csv(path)
+    d["name_class"] = _name_class(d["signer"])
+    d["fixed"] = d["window_hour"].isin(FIXED_HOURS)
+    acc = d.groupby(["window_day", "signer"]).agg(windows_active=("window_hour", "nunique"), fixed_windows_active=("fixed", "sum"),
+                                                   txns=("txns", "sum"), receivers=("distinct_receivers", "sum"), name_class=("name_class", "first")).reset_index()
+    acc["seen_fixed"] = acc["fixed_windows_active"] > 0
+    acc["quality_name_only"] = ~acc["name_class"].isin(["tg", "sweat"])
+    acc["multi_receiver_observable"] = acc["receivers"] >= 2
+
+    def summarize(a: pd.DataFrame) -> dict:
+        n24, nfix = int(len(a)), int(a["seen_fixed"].sum())
+        fx = a[a["seen_fixed"]]
+        w = inclusion_weights(fx["fixed_windows_active"], pd.Series(len(FIXED_HOURS), index=fx.index)) if len(fx) else pd.Series(dtype=float)
+        share24 = float(a["quality_name_only"].mean()) if n24 else None
+        share2 = float(fx["quality_name_only"].mean()) if nfix else None
+        weighted2 = float((fx["quality_name_only"] * w).sum() / w.sum()) if nfix and w.sum() else None
+        strata = {}
+        for lo, hi, name in ACTIVITY_STRATA:
+            m = a["windows_active"].between(lo, hi)
+            strata[name] = {"accounts": int(m.sum()), "inclusion": float(a.loc[m, "seen_fixed"].mean()) if m.any() else None}
+        by_name = {k: {"accounts": int(len(g)), "inclusion": float(g["seen_fixed"].mean())} for k, g in a.groupby("name_class")}
+        return {"accounts_24_windows": n24, "accounts_fixed_windows": nfix, "inclusion_overall": (nfix / n24) if n24 else None,
+                "inclusion_by_activity": strata, "inclusion_by_name_class": by_name,
+                "share_active_in_one_window_of_24": float((a["windows_active"] == 1).mean()) if n24 else None,
+                "multi_receiver_observable_share": {"fixed_windows": float(fx["multi_receiver_observable"].mean()) if nfix else None, "all_24_windows": float(a["multi_receiver_observable"].mean()) if n24 else None},
+                "name_only_quality_share": {"fixed_windows": share2, "fixed_windows_inclusion_weighted": weighted2, "all_24_windows": share24,
+                                            "weighting_moves_toward_fuller_observation": (None if None in (share2, weighted2, share24) else bool(abs(weighted2 - share24) < abs(share2 - share24)))}}
+
+    days = {day: summarize(g) for day, g in acc.groupby("window_day")}
+    pooled = summarize(acc)
+    moved = [v["name_only_quality_share"]["weighting_moves_toward_fuller_observation"] for v in days.values()]
+    moved = [m for m in moved if m is not None]
+    return {"days": days, "pooled": pooled, "design": {"fixed_hours_utc": list(FIXED_HOURS), "windows_per_day": 24, "blocks_per_window": 50,
+                                                      "days": sorted(days), "selection": "the three motivating and the three validation days of the volume reconciliation; not chosen for this measurement"},
+            "weighting_check": {"days_where_weighting_moves_toward_fuller_observation": int(sum(moved)), "days_compared": len(moved)},
+            "reading": ("inclusion is the share of a day's 24-window accounts that the two fixed windows observe; it rises with activity, so "
+                        "light accounts are under-observed and the sampled population is tilted toward frequent signers. The name-only share "
+                        "under the two designs shows how much the composition shifts; the weighting check tells whether the inclusion weighting "
+                        "used as a sensitivity moves the two-window share toward the 24-window share. Within-day inclusion on six days is an "
+                        "observed quantity; it does not identify the month-level bias of the QAA share, which would need a fuller observation of "
+                        "whole months"),
+            "kind": "observed (within-day, six days), used as a check of the weighting sensitivity"}
+
+
+REFITS = MODELS / "qaa_refits.json"
+REFIT_GRID = [("hdbscan", {"min_cluster_size": None, "min_samples": 25}, "committed hyper-parameters refitted on this machine"),
+              ("hdbscan", {"min_cluster_size": 0.5, "min_samples": 25}, "half the minimum cluster size"),
+              ("hdbscan", {"min_cluster_size": 2.0, "min_samples": 25}, "double the minimum cluster size"),
+              ("hdbscan", {"min_cluster_size": None, "min_samples": 10}, "min_samples 10"),
+              ("hdbscan", {"min_cluster_size": None, "min_samples": 50}, "min_samples 50"),
+              ("gmm", {}, "Gaussian mixture, diagonal covariance, BIC-selected k in 3..8")]
+
+
+def refit_variants(df: pd.DataFrame, x: pd.DataFrame, committed: np.ndarray, monthly_index: pd.DatetimeIndex) -> dict:
+    """Refit the clustering under other hyper-parameters and an alternative algorithm; report agreement with the committed assignment
+    and the resulting latest-month shares. Sensitivity only: the committed assignment stays the baseline (platform-dependent fits)."""
+    from sklearn.metrics import adjusted_rand_score
+    scaler = RobustScaler().fit(x[NUMERIC])
+    z = np.hstack([scaler.transform(x[NUMERIC]), x[[f"name_{c}" for c in NAME_CLASSES]].to_numpy()])
+    n = len(z)
+    base_mcs = max(50, int(0.005 * n))
+    last = df["month"] == monthly_index[-1]
+    out = []
+    for algo, params, desc in REFIT_GRID:
+        if algo == "hdbscan":
+            import hdbscan  # type: ignore
+            mcs = base_mcs if params["min_cluster_size"] is None else max(10, int(base_mcs * params["min_cluster_size"]))
+            labels = hdbscan.HDBSCAN(min_cluster_size=mcs, min_samples=params["min_samples"]).fit(z).labels_
+            used = {"min_cluster_size": mcs, "min_samples": params["min_samples"]}
+        else:
+            best, best_bic = None, np.inf
+            for k in range(3, 9):
+                g = GaussianMixture(k, covariance_type="diag", random_state=0, n_init=2).fit(z)
+                if g.bic(z) < best_bic:
+                    best, best_bic = g, g.bic(z)
+            labels = best.predict(z)
+            used = {"k": int(best.n_components)}
+        prof = label_clusters(df.drop(columns=[c for c in ("cluster", "label") if c in df]), x, labels)
+        lab = pd.Series(labels).map(prof.set_index("cluster")["label"])
+        out.append({"algorithm": algo, "variant": desc, "parameters": used, "clusters": int(len(set(labels)) - (1 if -1 in labels else 0)),
+                    "noise_share": float((labels == -1).mean()),
+                    "adjusted_rand_index_vs_committed": float(adjusted_rand_score(committed, labels)),
+                    "latest_month_share": {"strict": float(lab[last.to_numpy()].eq("multi_app").mean()),
+                                           "default": float(lab[last.to_numpy()].isin(QUALITY).mean()),
+                                           "including_ambiguous": float((~lab[last.to_numpy()].isin(NON_QUALITY)).mean())}})
+    defaults = [r["latest_month_share"]["default"] for r in out]
+    return {"computed_on": pd.Timestamp.utcnow().strftime("%Y-%m-%d"), "n": int(n), "latest_month": str(monthly_index[-1].date())[:7],
+            "baseline_min_cluster_size": base_mcs, "variants": out,
+            "default_share_range": [min(defaults), max(defaults)],
+            "reading": ("the committed assignment is the baseline; these refits show how much the latest default share and the partition itself "
+                        "depend on hyper-parameters and on the algorithm. Computed by `make qaa-refits` on one machine (HDBSCAN assignments are "
+                        "platform-dependent) and committed as a sensitivity artifact; not regenerated by the build"),
+            "kind": "sensitivity"}
+
+
+def run_refits() -> dict:
+    df = load_inputs()
+    if df is None:
+        df = load_sampled()
+    df = df[df["txns"] >= 1].sort_values(["month", "account"]).reset_index(drop=True)
+    x = featurize(df)
+    prev = pd.read_csv(MODELS / "qaa_assignments.csv", parse_dates=["month"])
+    committed = df[["month", "account"]].merge(prev, on=["month", "account"], how="left")["cluster"].to_numpy()
+    res = refit_variants(df, x, committed, pd.DatetimeIndex(sorted(df["month"].unique())))
+    REFITS.write_text(json.dumps(res, indent=1, default=str) + "\n")
+    print(f"qaa refits: {len(res['variants'])} variants; latest default share range {res['default_share_range'][0]:.1%}-{res['default_share_range'][1]:.1%} -> {REFITS}")
+    return res
 
 
 def examples(df: pd.DataFrame, x: pd.DataFrame, per_group: int = 3) -> list[dict]:

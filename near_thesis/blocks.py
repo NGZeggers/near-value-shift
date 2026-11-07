@@ -620,3 +620,105 @@ def run_buyback_trace(offline: bool = False) -> dict:
     BUYBACK_TRACE.write_text(json.dumps(out, indent=1))
     print(f"buyback trace done: {out['matched_native_withdraw']}/{len(sample)} matched native_withdraw, accounts {accounts}")
     return out
+
+
+BUYBACK_TRACE_EXTENSION = BLOCKS / "buyback_trace_extension.json"
+BUYBACK_TRACE_EXTENSION_RULE = {
+    "declared": "2026-11-07, after the first trace was published and before any additional block was read",
+    "population": "the sampled receipts whose Intents account had no token_diff in the blocks between the originating transaction and the receipt",
+    "search": "read the blocks immediately before the originating transaction block, newest first, up to 40 blocks (about 45 seconds), and stop at the "
+              "first block that carries a token_diff event of that Intents account",
+    "what_it_establishes": ("whether the funding swap of the withdrawal is visible shortly before it; a swap found this way is an observed exchange of the "
+                            "same Intents-side account, not proof that the withdrawn NEAR was bought with those exact proceeds; the origin of the sold asset "
+                            "(bridge deposit, earlier swap) is not traced"),
+}
+
+
+def _account_token_diffs(block: dict, account: str) -> list[dict]:
+    found = []
+    for rid, pred, log, status in block.get("events", []):
+        if '"token_diff"' not in log or account not in log or not log.startswith("EVENT_JSON:"):
+            continue
+        try:
+            data = json.loads(log[len("EVENT_JSON:"):]).get("data") or []
+        except ValueError:
+            continue
+        for d in data:
+            if d.get("account_id") == account:
+                diff = {k: int(v) for k, v in (d.get("diff") or {}).items()}
+                found.append({"receipt_id": rid, "block_height": block["height"], "status": status,
+                              "sold": sorted(k for k, v in diff.items() if v < 0), "bought": sorted(k for k, v in diff.items() if v > 0)})
+    return found
+
+
+def run_buyback_trace_extension(back: int = 40, offline: bool = False) -> dict:
+    """Second, pre-declared pass over the traced sample: look for the funding swap in the blocks just before the withdrawal."""
+    trace = json.loads(BUYBACK_TRACE.read_text())
+    todo = [r for r in trace["receipts"] if r.get("intents_account") and not r.get("token_diff_same_block")]
+    print(f"buyback trace extension: {len(todo)} receipts without a same-range token_diff; reading up to {back} blocks before each", flush=True)
+    rows, missing, blocks_read = [], 0, 0
+    for i, r in enumerate(todo, 1):
+        acc, start = r["intents_account"], int(r["transaction_block_height"])
+        found, scanned = [], []
+        for h in range(start - 1, start - back - 1, -1):
+            b = fetch_block(h, offline=offline)
+            blocks_read += 1
+            if b is None:
+                missing += 1
+                continue
+            scanned.append(h)
+            found = _account_token_diffs(b, acc)
+            if found:
+                break
+        rows.append({"receipt_id": r["receipt_id"], "intents_account": acc, "transaction_block_height": start, "blocks_scanned_back": len(scanned),
+                     "earliest_block_scanned": min(scanned) if scanned else None,
+                     "swap_found": bool(found), "blocks_before_withdrawal": (start - found[0]["block_height"]) if found else None,
+                     "swap": found[0] if found else None,
+                     "wrap_near_bought": bool(found and "nep141:wrap.near" in found[0]["bought"]),
+                     "block_url": NEARDATA.format(h=found[0]["block_height"]) if found else None})
+        print(f"  {i}/{len(todo)} receipts, {blocks_read} blocks read, {missing} missing, {sum(1 for x in rows if x['swap_found'])} swaps found", flush=True)
+    out = {"fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": NEARDATA, "rule": BUYBACK_TRACE_EXTENSION_RULE,
+           "blocks_back": back, "receipts_searched": len(todo), "blocks_read": blocks_read, "blocks_missing": missing,
+           "swap_found": sum(1 for x in rows if x["swap_found"]), "wrap_near_bought": sum(1 for x in rows if x["wrap_near_bought"]),
+           "distance_blocks": sorted(x["blocks_before_withdrawal"] for x in rows if x["swap_found"]),
+           "first_pass_with_swap_in_range": int(trace.get("with_token_diff_in_same_block", 0)), "sampled": int(trace.get("sampled", 0)),
+           "receipts": rows}
+    BUYBACK_TRACE_EXTENSION.write_text(json.dumps(out, indent=1))
+    print(f"buyback trace extension: {out['swap_found']}/{len(todo)} funding swaps found within {back} blocks -> {BUYBACK_TRACE_EXTENSION}", flush=True)
+    return out
+
+
+INTRADAY_SIGNERS = BLOCKS / "intraday_signers.csv"
+
+
+def write_intraday_signers(offline: bool = True) -> pd.DataFrame:
+    """Per (day, hour, signer) activity inside every hourly window of the six intraday days, from the cached blocks.
+
+    Acquisition artifact for the QAA inclusion measurement: the same observation design as the main sample (50-block
+    windows), but 24 windows per day instead of the two fixed ones, so the fixed-window inclusion of accounts can be measured."""
+    import pandas as pd
+    rows = []
+    for man_path in (INTRADAY_MANIFEST, INTRADAY_VALIDATION_MANIFEST):
+        man = json.loads(man_path.read_text())
+        for w in man["windows"]:
+            if not w.get("usable"):
+                continue
+            agg: dict[str, dict] = {}
+            for h in range(w["start_height"], w["start_height"] + w["n"]):
+                b = fetch_block(h, offline=offline)
+                if b is None:
+                    continue
+                for signer, receiver, kind, method, deposit in b.get("txs", []):
+                    a = agg.setdefault(signer, {"txns": 0, "receivers": set(), "methods": set(), "function_calls": 0, "transfers": 0, "self_txns": 0, "intents_actions": 0, "blocks": set()})
+                    a["txns"] += 1; a["receivers"].add(receiver); a["blocks"].add(h)
+                    if method: a["methods"].add(method)
+                    a["function_calls"] += kind == "FUNCTION_CALL"; a["transfers"] += kind == "TRANSFER"
+                    a["self_txns"] += signer == receiver; a["intents_actions"] += receiver == "intents.near"
+            for signer, a in agg.items():
+                rows.append({"window_day": w["day"], "window_hour": int(w["hour"]), "signer": signer, "txns": a["txns"], "distinct_receivers": len(a["receivers"]),
+                             "distinct_methods": len(a["methods"]), "function_calls": a["function_calls"], "transfers": a["transfers"], "self_txns": a["self_txns"],
+                             "intents_actions": a["intents_actions"], "blocks_active": len(a["blocks"])})
+    df = pd.DataFrame(rows).sort_values(["window_day", "window_hour", "signer"]).reset_index(drop=True)
+    df.to_csv(INTRADAY_SIGNERS, index=False)
+    print(f"intraday signers: {len(df):,} (day, hour, signer) rows over {df['window_day'].nunique()} days -> {INTRADAY_SIGNERS}", flush=True)
+    return df

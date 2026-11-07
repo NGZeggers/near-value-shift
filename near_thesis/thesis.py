@@ -183,6 +183,21 @@ def qaa_scope_section(qs: dict) -> list[str]:
             f"Inclusion-probability weighting (accounts active in fewer windows are under-observed) moves the latest share from {sens['inclusion_probability_weighting']['latest_month_unweighted']:.1%} to {sens['inclusion_probability_weighting']['latest_month_weighted']:.1%}. "
             "This is a sensitivity under stated assumptions (" + "; ".join(sens['inclusion_probability_weighting'].get('assumptions', [])) + "), not a demonstrated correction of the observation bias; "
             "never-observed accounts stay outside the index, so the QAA count is an illustrative rescaling and the share is the measured quantity."]
+    if sens.get('inclusion_from_intraday_days'):
+        inc = sens['inclusion_from_intraday_days']; pl = inc['pooled']; nq = pl['name_only_quality_share']; strata = pl['inclusion_by_activity']
+        rows.append(f"**Inclusion measured within the day ({len(inc['design']['days'])} days with 24 hourly windows).** On the days that carry 24 windows of the same 50-block design, the two fixed windows observe {pl['inclusion_overall']:.1%} of the accounts seen across all 24 "
+                    f"({pl['accounts_fixed_windows']:,} of {pl['accounts_24_windows']:,} account-days pooled): {strata['1 window']['inclusion']:.1%} of accounts active in a single window, {strata['9-24 windows']['inclusion']:.1%} of those active in nine or more. "
+                    f"Inclusion by name class: " + ", ".join(f"{k} {v['inclusion']:.1%}" for k, v in pl['inclusion_by_name_class'].items() if v['accounts'] >= 100) + ". "
+                    f"The composition shift is large: the name-only quality share is {nq['fixed_windows']:.1%} among accounts the fixed windows observe and {nq['all_24_windows']:.1%} among all accounts seen in 24 windows; the inclusion weighting applied to the fixed-window data moves it to {nq['fixed_windows_inclusion_weighted']:.1%}, "
+                    f"in the right direction on {inc['weighting_check']['days_where_weighting_moves_toward_fuller_observation']} of {inc['weighting_check']['days_compared']} days but recovering only a small part of the gap. "
+                    f"Multi-receiver behavior is observable for {pl['multi_receiver_observable_share']['fixed_windows']:.1%} of fixed-window accounts against {pl['multi_receiver_observable_share']['all_24_windows']:.1%} under 24 windows. "
+                    "Reading: within a day, the two-window design over-represents frequent and named accounts, so a share computed on it sits above the share among all accounts active that day, and the weighting sensitivity under-corrects. "
+                    "This is an observed within-day quantity on six days chosen for the volume reconciliation; it does not identify the month-level bias of the QAA share, and 24 windows still observe under one percent of a day's blocks. The published QAA share is therefore an upper reading for the observed-account population, not a population estimate.")
+    if sens.get('refits'):
+        rf = sens['refits']; lo, hi = rf['default_share_range']
+        rows.append(f"**Refits ({rf['computed_on']}, `make qaa-refits`).** Refitting the clustering with other hyper-parameters and an alternative algorithm gives latest-month default shares between {lo:.1%} and {hi:.1%} (committed assignment {crit['default']:.1%}): "
+                    + "; ".join(f"{v['variant']} ARI {v['adjusted_rand_index_vs_committed']:.2f}, default {v['latest_month_share']['default']:.1%}" for v in rf['variants'])
+                    + ". HDBSCAN variants agree with the committed partition (adjusted Rand index above 0.97) and move the default share by a few points; the Gaussian mixture partitions differently (ARI below 0.3) and gives a lower share. The level depends on the model; the committed assignment remains the baseline and these are sensitivities.")
     if sens.get('by_window_hour'):
         bh = sens['by_window_hour']
         rows.append("By observation hour the latest share is " + ", ".join(f"{h}:00 UTC {v:.1%}" for h, v in bh['latest_month'].items()) + f"; mean absolute difference between hours {bh['mean_abs_difference_between_hours']:.1%}.")
@@ -245,8 +260,14 @@ def reconciliation_section() -> list[str]:
                f"Sampled totals under alternative definitions: half gross participant notional {usd(alt['half_gross_participant_notional'])}, full gross {usd(alt['full_gross_participant_notional'])}, user-side notional with heuristic roles {usd(alt['user_side_notional_heuristic_roles'])}. "
                f"If the reference counted both sides of each swap our ratio would be {res['if_reference_were_two_sided_notional']:.2f}; this is a definitional bound, not evidence about the reference.\n")
     if res.get('after_intraday_bias_correction'):
-        out.append(f"**Residual.** After the measured intraday bias (median factor {res['intraday_bias_factor_used']:.2f}) the ratio would be {res['after_intraday_bias_correction']:.2f} "
-                   f"({res['after_intraday_bias_correction_mean_factor']:.2f} with the mean factor); a factor of {res['unexplained_factor_to_parity']:.1f}x to parity remains unexplained and is reported as such, not attributed to missing large trades. "
+        rd = rec.get('reference_definition') or {}
+        ci = rd.get('confidential_intents') or {}
+        cap = lambda t: (t[:1].upper() + t[1:]) if t else t
+        out.append(f"**What the reference counts.** {rd.get('adapter', {}).get('query', '')}. {cap(rd.get('dataset_maintainer', {}).get('claim', ''))} ({rd.get('dataset_maintainer', {}).get('kind', '')}). "
+                   f"{cap(ci.get('claim', ''))} ({ci.get('source', '')}): cumulative USD {ci.get('cumulative_usd_billion', {}).get('public')}B public, {ci.get('cumulative_usd_billion', {}).get('confidential')}B confidential, {ci.get('cumulative_usd_billion', {}).get('dune_total')}B total, a confidential share of {res['confidential_intents_share_of_reference']:.1%}; {cap(ci.get('kind', ''))}. {cap(ci.get('implication', ''))}. "
+                   f"Other references found: " + "; ".join(f"{k}: {v}" for k, v in (rd.get('other_references') or {}).items()) + f". One- or two-sided: {rd.get('one_or_two_sided', '')}.\n")
+        out.append(f"**Residual.** Excluding the confidential share of the reference raises the ratio from {res['pooled_ratio']:.3f} to {res['after_confidential_intents_exclusion']:.3f} (estimate). After the measured intraday bias (median factor {res['intraday_bias_factor_used']:.2f}) the ratio would be {res['after_intraday_bias_correction']:.2f} "
+                   f"({res['after_intraday_bias_correction_mean_factor']:.2f} with the mean factor), and {res['after_confidential_and_intraday']:.2f} with both identified components; a factor of {res['unexplained_factor_after_confidential_and_intraday']:.1f}x to parity remains unexplained and is reported as such, not attributed to missing large trades. "
                    f"If the reference additionally counted both sides the corrected ratio would be {res['after_both']:.2f}"
                    + ("; that exceeds parity, which shows the two readings cannot both be taken at face value together but does not identify which one overstates: estimation error and unidentified components remain.\n" if res.get('two_sided_and_intraday_overshoot') else ".\n"))
     else:
@@ -320,7 +341,9 @@ def bridge_section() -> list[str]:
         out.append(f"**What the receipts establish.** A pre-declared sample of {tr['sampled']} of {tr['receipts_in_snapshot_from_intents_near']} inbound receipts ({tr['rule']['sample']}) was traced to the Intents events between the originating transaction and the receipt: "
                    f"{tr['matched_native_withdraw']} match a `native_withdraw` of wrapped NEAR from {tr.get('distinct_intents_accounts', 0)} distinct Intents-side accounts, and {tr['with_token_diff_in_same_block']} show the funding `token_diff` of the same account in the same blocks "
                    f"({tr.get('with_wrap_near_bought_in_same_block', 0)} buying wrap.near). For the remaining {tr['sampled'] - tr['with_token_diff_in_same_block']} the swap is outside the blocks read and is not observed. "
-                   f"{tr['rule']['what_it_establishes'][0].upper() + tr['rule']['what_it_establishes'][1:]}. At the trace time {sum(1 for v in (tr.get('intents_side_balances_at_fetch') or {}).values() if isinstance(v, dict) and v.get('token_ids_held'))} of those accounts still held tokens inside Intents.\n")
+                   + ((lambda ex: f"A second pass declared before any further block was read ({ex['rule']['search']}) found the funding swap for {ex['swap_found']} of the {ex['receipts_searched']} ({ex['wrap_near_bought']} buying wrap.near; distances {', '.join(str(x) for x in ex['distance_blocks'])} blocks before the withdrawal), "
+                                   f"so the exchange is observed for {tr['funding_swap_observed_total']} of {tr['sampled']} sampled receipts; {ex['rule']['what_it_establishes']}. ")(tr['extension']) if tr.get('extension') else "")
+                   + f"{tr['rule']['what_it_establishes'][0].upper() + tr['rule']['what_it_establishes'][1:]}. At the trace time {sum(1 for v in (tr.get('intents_side_balances_at_fetch') or {}).values() if isinstance(v, dict) and v.get('token_ids_held'))} of those accounts still held tokens inside Intents.\n")
     if led:
         out.append(f"**Ledger reconciliation.** {led['method'][0].upper() + led['method'][1:]}. Reconstructed to the snapshot date: {led['reconstructed_balance_at_fetch_near']:,.0f} NEAR against a snapshot balance of {led['snapshot_balance_at_fetch_near']:,.0f} NEAR "
                    f"(residual {led['unexplained_residual_near']:,.1f} NEAR, {led['unexplained_residual_share_of_inflows']:.4%} of inflows). Reconstructed to the analysis cutoff {led['cutoff']}: {led['reconstructed_balance_at_cutoff_near']:,.0f} NEAR; "
