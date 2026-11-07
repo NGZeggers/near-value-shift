@@ -1,6 +1,8 @@
 """Value bridge (observed/classified/unavailable steps, issuance, scenarios) and the pre-registered out-of-sample test."""
 import json
 
+import pytest
+
 import numpy as np
 import pandas as pd
 
@@ -173,11 +175,48 @@ def test_oos_protocol_declares_retrospective_scope_and_prospective_plan():
     p = signal.OOS_PROTOCOL
     assert "retrospective" in p["declaration"] and "cannot establish" in p["declaration"]
     assert "Bonferroni" in p["fixed_rule"] and "not tested for passing" in p["benchmark_predictor_treatment"]
-    short = signal.oos_table(_weekly().iloc[-40:])
+    assert "oos_freeze.json" in p["prospective"]["intents_and_qaa"] and "never recompute" in p["prospective"]["intents_and_qaa"]
+    short = signal.oos_table(_weekly().iloc[-40:], frozen_plan={})          # no persisted plan: a draft, labelled as such
     rows = [r for r in short["tests"] if r["kind"] == "usage"]
-    assert all("prospective_plan" in r for r in rows) and short["summary"]["prospective_evaluable_from"]
-    for r in rows:
-        plan = r["prospective_plan"]
-        assert pd.Timestamp(plan["evaluation_starts"]) - pd.Timestamp(plan["freeze_date"]) == pd.Timedelta(weeks=r["horizon_weeks"])
-        assert pd.Timestamp(plan["evaluable_from"]) - pd.Timestamp(plan["evaluation_starts"]) == pd.Timedelta(weeks=20 + r["horizon_weeks"])
-        assert pd.Timestamp(plan["freeze_date"]) > pd.Timestamp("2026-01-01") and plan["calibration_weeks_at_freeze"] > 0
+    assert all(r["prospective_plan"]["frozen"] is False and "draft" in r["prospective_plan"]["status"] for r in rows)
+    assert short["summary"]["prospective"]["frozen"] is False
+
+
+def test_prospective_plan_is_persisted_and_invariant_to_new_history(tmp_path):
+    """The auditor's reproduction: adding 20 weeks must not move the cutoff, the sign or the evaluation dates; matured targets must score."""
+    full = _weekly(n=130, seed=5)
+    w60 = full.iloc[:60]
+    frozen_on = str((w60.index.max() + pd.Timedelta(days=6)).date())        # the freeze happens after the last observation
+    path = tmp_path / "oos_freeze.json"
+    plan = signal.freeze_prospective_plan(w60, frozen_on, path=path)
+    assert plan["frozen_on"] == frozen_on and plan["data_cutoff"] == str(w60.index.max().date())
+    key = "active_accounts h=12 vs btc"
+    e = plan["tests"][key]
+    assert e["frozen_sign"] in (1.0, -1.0) and e["calibration_sha256"] and e["calibration_end"] == e["last_signal_week_with_realized_target"]
+    assert len(e["interim_signal_weeks_excluded"]) == 12 and len(e["evaluation_signal_weeks"]) == 20
+    assert pd.Timestamp(e["evaluation_starts"]) > pd.Timestamp(frozen_on) and pd.Timestamp(e["evaluation_starts"]) - pd.Timestamp(frozen_on) <= pd.Timedelta(days=7)
+    assert pd.Timestamp(e["evaluable_from"]) == pd.Timestamp(e["evaluation_ends"]) + pd.Timedelta(weeks=12)
+    with pytest.raises(FileExistsError):
+        signal.freeze_prospective_plan(w60, frozen_on, path=path)
+
+    def planned(w):
+        o = signal.oos_table(w, freeze_path=path)
+        r = [t for t in o["tests"] if t["kind"] == "usage" and t["horizon_weeks"] == 12 and t["benchmark"] == "btc"][0]
+        return r["prospective_plan"], o["summary"]["prospective"]
+
+    p60, _ = planned(w60)
+    p80, s80 = planned(full.iloc[:80])                                         # 20 more weeks: the auditor's case
+    for k in ("frozen_on", "last_signal_week_with_realized_target", "frozen_sign", "evaluation_starts", "evaluation_ends", "evaluable_from", "calibration_weeks"):
+        assert p60[k] == p80[k] == e[k if k != "frozen_sign" else "frozen_sign"]
+    assert p80["frozen"] is True and p80["calibration_data_unchanged"] is True and p80["protocol_unchanged"] is True
+    assert "not evaluable yet" in p80["status"] and p80["evaluation_targets_realized"] < 20 and s80["tests_scored"] == 0
+
+    p130, s130 = planned(full)                                                 # all 20 targets realized: scored, no new deferral
+    assert p130["evaluation_targets_realized"] == 20 and "ic_evaluation_signed" in p130 and isinstance(p130["passes_declared_criterion"], bool)
+    assert p130["status"].startswith("prospective:") and p130["evaluable_from"] == e["evaluable_from"] and p130["frozen_sign"] == e["frozen_sign"]
+    assert s130["tests_scored"] >= 1 and "prospective:" in signal.oos_table(full, freeze_path=path)["summary"]["conclusion"]
+
+    revised = full.copy()
+    revised.loc[revised.index[:30], "active_accounts"] *= 1.5                 # a revised history is flagged, not silently recalibrated
+    pr, _ = planned(revised)
+    assert pr["calibration_data_unchanged"] is False and pr["frozen_sign"] == e["frozen_sign"]

@@ -260,6 +260,10 @@ def reconciliation_section() -> list[str]:
     return out
 
 
+from .signal import OOS_PROTOCOL as _OOS_P
+OOS_MIN_EVAL = _OOS_P['minimum_rows']['evaluation']
+
+
 def oos_section() -> list[str]:
     o = _opt('signal_oos.json')
     if not o.get('tests'):
@@ -277,9 +281,22 @@ def oos_section() -> list[str]:
                        f"{num(100 * r['walk_forward_hit_rate'], 0) if r.get('walk_forward_hit_rate') is not None else 'n/a'}% ({r['walk_forward_n']}) | {r['status']} |")
         else:
             plan = r.get('prospective_plan') or {}
-            out.append(f"| {r['predictor']} | {r['horizon_weeks']} | {r['benchmark']} | n={r['n_calibration']} | n={r['n_evaluation']} | | | | {r['status']}" + (f"; evaluable from {plan['evaluable_from']} under the fixed plan" if plan else "") + " |")
-    if sm.get('prospective_evaluable_from'):
-        out.append("\nProspective plan for the tests that are not evaluable (fixed now, not to be re-tuned): calibration on every signal week with a realized target at the data cutoff, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the cutoff, under the same familywise criterion. Earliest scoring dates: " + "; ".join(f"{k} from {v}" for k, v in sm['prospective_evaluable_from'].items()) + ".")
+            if 'ic_evaluation_signed' in plan:
+                lo, hi = plan['ci95_block_bootstrap']; flo, fhi = plan['ci95_familywise_bonferroni']
+                out.append(f"| {r['predictor']} | {r['horizon_weeks']} | {r['benchmark']} | {plan['ic_calibration']:+.2f} ({plan['calibration_weeks']}, frozen {plan['frozen_on']}) | {plan['ic_evaluation_signed']:+.2f} ({plan['evaluation_targets_realized']}) | {lo:+.2f} to {hi:+.2f} | {flo:+.2f} to {fhi:+.2f} | n/a | {plan['status']} |")
+            else:
+                tail = (f"; prospective plan frozen {plan['frozen_on']}: sign {plan['frozen_sign']:+.0f} from {plan['calibration_weeks']} calibration weeks, evaluation {plan['evaluation_starts']} to {plan['evaluation_ends']}, {plan['evaluation_targets_realized']}/{plan['evaluation_weeks_required']} targets realized, scored from {plan['evaluable_from']}"
+                        if plan.get('frozen') else f"; {plan['status']}" if plan else "")
+                out.append(f"| {r['predictor']} | {r['horizon_weeks']} | {r['benchmark']} | n={r['n_calibration']} | n={r['n_evaluation']} | | | | {r['status']}{tail} |")
+    pro = sm.get('prospective') or {}
+    if pro.get('frozen'):
+        out.append(f"\n**Prospective plan (persisted, not recomputed).** Frozen on {pro['frozen_on']} at data cutoff {pro['data_cutoff_at_freeze']} in `{pro['file']}` for the {pro['tests_planned']} tests that are not evaluable retrospectively. "
+                   "The file records, per test, the last signal week with a realized target at the cutoff, the SHA-256 of the calibration rows, the calibration IC and its frozen sign, the interim weeks excluded (observed before the freeze, targets unrealized), the fixed evaluation signal weeks and the family. "
+                   f"Evaluation signal weeks start on {', '.join(pro['evaluation_starts'])}, the first weekly date after the freeze; a test is scored once all {OOS_MIN_EVAL} evaluation targets are realized, under the frozen sign and the familywise criterion, by the same build. "
+                   f"Later builds load this file: adding history cannot move the cutoff, the sign or the dates (calibration rows unchanged: {'yes' if pro['calibration_data_unchanged'] else 'NO, the history was revised'}; protocol unchanged: {'yes' if pro['protocol_unchanged'] else 'NO'}). "
+                   f"Scored so far: {pro['tests_scored']} of {pro['tests_planned']} ({pro['tests_passing']} passing). Earliest scoring dates: " + "; ".join(f"{k} from {v}" for k, v in sm['prospective_evaluable_from'].items()) + ".")
+    elif sm.get('prospective_evaluable_from'):
+        out.append("\nProspective plan for the tests that are not evaluable: draft recomputed from the current data (not persisted; `make oos-freeze` fixes it). Earliest scoring dates: " + "; ".join(f"{k} from {v}" for k, v in sm['prospective_evaluable_from'].items()) + ".")
     out.append("\nLimitations: " + "; ".join(p['limitations']) + ". A negative or inconclusive result is a valid outcome and is carried into the verdict; no trading strategy is proposed.\n")
     return out
 
@@ -374,7 +391,7 @@ def metrics_doc() -> str:
         ('users', 'same events', 'observed unique non-solver accounts, never expanded'),
         ('intents_reconciliation_daily.*', 'reconcile.py', 'per sampled day: observed, expanded, reference, difference, coverage, pricing and routing components, holdout role'),
         ('qaa_sensitivity.json', 'qaa.py', 'criteria, thresholds, name-only baseline, inclusion weighting, hour split, model agreement'),
-        ('signal_oos.json', 'signal.py', 'retrospective, temporally separated out-of-sample evaluation: frozen sign, purge, familywise criterion, walk-forward hit rate, prospective plan'),
+        ('signal_oos.json', 'signal.py', 'retrospective, temporally separated out-of-sample evaluation: frozen sign, purge, familywise criterion, walk-forward hit rate; persisted prospective plan loaded from data/prospective/oos_freeze.json'),
         ('value_bridge.json', 'bridge.py', 'volume -> fees -> captured revenue -> labelled buyback -> NEAR withdrawn from Intents into the buyback wallet (purchase attribution inferred) -> ledger at the cutoff; issuance from total supply; three scenarios'),
         ('total_supply', 'NearBlocks', 'daily total supply; its yearly change is the issuance used for dilution (circulating_supply is stale in the source)'),
     ]

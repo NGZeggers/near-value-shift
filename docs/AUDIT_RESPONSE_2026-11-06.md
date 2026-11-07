@@ -119,3 +119,25 @@ Resultado: ninguna métrica de uso supera el criterio declarado; el veredicto lo
 - Comprobaciones de navegador: 47 de 47 aprobadas (tipos de evidencia, enlaces de método, sensibilidades, teclado).
 - `make check-generated`: artefactos regenerados coincidentes con el commit (ejecutado tras confirmar los cambios).
 - Extracto intradía de validación completado (`make blocks-intraday-validation`, 4 h 51 min bajo el límite público, 3,588 de 3,600 bloques) y `make build` ejecutado después: la sección "Validation of the intraday factor" de THESIS.md publica los factores por día y el veredicto.
+
+---
+
+## Cuarta pasada: respuesta a la tercera revisión (93/100, base `8d02769`)
+
+**English summary.** The third review found one code item: the prospective plan recomputed its dates from the last observation, so adding history shifted the freeze, the evaluation start and the scoring date together. The plan is now persisted once (`make oos-freeze`, `data/prospective/oos_freeze.json`, frozen 2026-11-07 at data cutoff 2026-11-01) with the calibration hash, the learned sign, the family and the fixed evaluation weeks; builds load it and never recompute it, and a test reproduces the auditor's 60-to-80-week case. The remaining evidence items (global volume reconciliation, external QAA validation, complete buyback attribution) stay open and declared as such.
+
+| Punto | Estado | Qué se hizo y dónde verificarlo |
+| --- | --- | --- |
+| Plan prospectivo no congelado | Hecho | `signal.freeze_prospective_plan` escribe una sola vez `data/prospective/oos_freeze.json` (fuera de `data/derived`, no lo regenera `make build`; `FileExistsError` si existe, `--force` solo de forma deliberada). Por prueba guarda: fecha efectiva de congelación (2026-11-07), corte de datos (2026-11-01), última semana de señal con objetivo realizado (2026-10-04 para h=4, 2026-08-09 para h=12), SHA-256 de las filas de calibración, IC de calibración y signo congelado, semanas intermedias excluidas (observadas antes de la congelación con objetivo sin realizar: 4 y 12), las 20 semanas de evaluación fijas (2026-11-08 a 2027-03-21, primera semana posterior a la congelación), familia (24) y parámetros del bootstrap; además el hash del protocolo. `signal.prospective_evaluation` carga la entrada, comprueba que las filas de calibración y el protocolo no cambiaron (`calibration_data_unchanged`, `protocol_unchanged`; una revisión del historial se marca, no se recalibra) y, mientras falten objetivos, informa `k/20 realizados` sin mover fechas; con los 20 realizados puntúa con el signo congelado y el criterio familiar en la misma construcción. Las primeras puntuaciones quedan en 2027-04-18 (h=4) y 2027-06-13 (h=12). Sin el fichero, el plan se etiqueta "draft" explícitamente. |
+| Prueba de invariancia | Hecho | `test_prospective_plan_is_persisted_and_invariant_to_new_history`: congela con 60 semanas sintéticas, amplía a 80 (el caso del auditor) y comprueba que corte, signo, semanas de calibración y fechas no cambian y que el estado es "not evaluable yet"; con 130 semanas los 20 objetivos están realizados y la prueba devuelve `ic_evaluation_signed` y `passes_declared_criterion`, no un nuevo aplazamiento; una historia revisada pone `calibration_data_unchanged=False` manteniendo el signo guardado; el segundo `freeze` sin `force` falla. |
+| Texto visible | Hecho | THESIS.md: filas de las ocho pruebas no evaluables muestran signo congelado, semanas de calibración, ventana de evaluación y objetivos realizados; párrafo "Prospective plan (persisted, not recomputed)" con fichero, fechas y comprobaciones de integridad. Dashboard: la evidencia en contra menciona el plan persistido y cuántas pruebas se han puntuado. `OOS_PROTOCOL["prospective"]` describe el mecanismo. README y Makefile documentan `make oos-freeze`. |
+| Reconciliación global del volumen | Abierto, declarado | Sin cambios respecto a la tercera pasada: el estimador declarado mantiene su ratio y su validación alterna fuera de tolerancia; la sensibilidad horaria queda separada; la referencia independiente no está disponible (`not_possible_here`). |
+| Validación externa de QAA | Abierto, declarado | La ponderación sigue etiquetada como sensibilidad bajo supuestos; evaluación externa y refits separados pendientes. |
+| Atribución completa de las recompras | Abierto, declarado | Retiros observados y atribución inferida; la traza cubre la muestra declarada (45 recibos), no los 3,081 recibos anteriores al corte. |
+
+### Verificación de esta pasada
+
+- `make oos-freeze --frozen-on 2026-11-07` ejecutado una vez; `make build` completo después.
+- `make test`: 122 pruebas aprobadas (1 nueva de invariancia; la prueba del protocolo se reescribe para el plan persistido y el borrador etiquetado).
+- Comprobaciones de navegador: 47 de 47 aprobadas.
+- `make check-generated`: artefactos regenerados coincidentes con el commit (ejecutado tras confirmar los cambios).

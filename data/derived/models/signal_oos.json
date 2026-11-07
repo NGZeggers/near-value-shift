@@ -4,7 +4,8 @@
   "prospective": {
    "frozen_on": "2026-11-06",
    "rule": "this protocol is not re-tuned; a prospective result uses only data published after 2026-11-06",
-   "intents_and_qaa": "not evaluable under the declared calibration end; their prospective plan freezes calibration at the data cutoff and evaluates 20 weeks of data published after it (purged by h); the dates are listed per test and nothing is scored before then"
+   "intents_and_qaa": "not evaluable under the declared calibration end; their prospective plan is persisted once in data/prospective/oos_freeze.json (near-thesis oos-freeze) with the effective freeze date, the hash of the calibration rows, the learned sign, the family and the fixed evaluation weeks; later builds load that file and never recompute it, so adding history cannot move the cutoff or the scoring dates, and once the 20 evaluation targets are realized the same build scores the test under the frozen sign",
+   "persisted_plan": "data/prospective/oos_freeze.json"
   },
   "hypothesis": "a four-week rise in usage is associated with the subsequent h-week NEAR log return in excess of the benchmark, with the sign fixed in calibration",
   "signal_transform": "weekly means of the daily series; log of the trailing four-week mean, differenced by four weeks; QAA only from the frozen past-only model, available on the first day of the following month",
@@ -167,12 +168,23 @@
    "n_evaluation": 62,
    "status": "not evaluable: too few calibration or evaluation weeks",
    "prospective_plan": {
-    "freeze_date": "2026-10-04",
-    "calibration_weeks_at_freeze": 88,
-    "calibration_sufficient_at_freeze": true,
-    "evaluation_starts": "2026-11-01",
+    "frozen": true,
+    "frozen_on": "2026-11-07",
+    "data_cutoff_at_freeze": "2026-11-01",
+    "last_signal_week_with_realized_target": "2026-10-04",
+    "calibration_weeks": 88,
+    "calibration_sufficient": true,
+    "calibration_data_unchanged": true,
+    "protocol_unchanged": true,
+    "frozen_sign": -1.0,
+    "ic_calibration": -0.15246028671057732,
+    "interim_signal_weeks_excluded": 4,
+    "evaluation_starts": "2026-11-08",
+    "evaluation_ends": "2027-03-21",
     "evaluable_from": "2027-04-18",
-    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+    "evaluation_targets_realized": 0,
+    "evaluation_weeks_required": 20,
+    "status": "not evaluable yet: 0 of 20 evaluation targets realized; evaluable from 2027-04-18"
    }
   },
   {
@@ -184,12 +196,23 @@
    "n_evaluation": 62,
    "status": "not evaluable: too few calibration or evaluation weeks",
    "prospective_plan": {
-    "freeze_date": "2026-10-04",
-    "calibration_weeks_at_freeze": 64,
-    "calibration_sufficient_at_freeze": true,
-    "evaluation_starts": "2026-11-01",
+    "frozen": true,
+    "frozen_on": "2026-11-07",
+    "data_cutoff_at_freeze": "2026-11-01",
+    "last_signal_week_with_realized_target": "2026-10-04",
+    "calibration_weeks": 64,
+    "calibration_sufficient": true,
+    "calibration_data_unchanged": true,
+    "protocol_unchanged": true,
+    "frozen_sign": -1.0,
+    "ic_calibration": -0.03612637362637362,
+    "interim_signal_weeks_excluded": 4,
+    "evaluation_starts": "2026-11-08",
+    "evaluation_ends": "2027-03-21",
     "evaluable_from": "2027-04-18",
-    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+    "evaluation_targets_realized": 0,
+    "evaluation_weeks_required": 20,
+    "status": "not evaluable yet: 0 of 20 evaluation targets realized; evaluable from 2027-04-18"
    }
   },
   {
@@ -381,12 +404,23 @@
    "n_evaluation": 62,
    "status": "not evaluable: too few calibration or evaluation weeks",
    "prospective_plan": {
-    "freeze_date": "2026-10-04",
-    "calibration_weeks_at_freeze": 88,
-    "calibration_sufficient_at_freeze": true,
-    "evaluation_starts": "2026-11-01",
+    "frozen": true,
+    "frozen_on": "2026-11-07",
+    "data_cutoff_at_freeze": "2026-11-01",
+    "last_signal_week_with_realized_target": "2026-10-04",
+    "calibration_weeks": 88,
+    "calibration_sufficient": true,
+    "calibration_data_unchanged": true,
+    "protocol_unchanged": true,
+    "frozen_sign": -1.0,
+    "ic_calibration": -0.160367722165475,
+    "interim_signal_weeks_excluded": 4,
+    "evaluation_starts": "2026-11-08",
+    "evaluation_ends": "2027-03-21",
     "evaluable_from": "2027-04-18",
-    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+    "evaluation_targets_realized": 0,
+    "evaluation_weeks_required": 20,
+    "status": "not evaluable yet: 0 of 20 evaluation targets realized; evaluable from 2027-04-18"
    }
   },
   {
@@ -398,12 +432,23 @@
    "n_evaluation": 62,
    "status": "not evaluable: too few calibration or evaluation weeks",
    "prospective_plan": {
-    "freeze_date": "2026-10-04",
-    "calibration_weeks_at_freeze": 64,
-    "calibration_sufficient_at_freeze": true,
-    "evaluation_starts": "2026-11-01",
+    "frozen": true,
+    "frozen_on": "2026-11-07",
+    "data_cutoff_at_freeze": "2026-11-01",
+    "last_signal_week_with_realized_target": "2026-10-04",
+    "calibration_weeks": 64,
+    "calibration_sufficient": true,
+    "calibration_data_unchanged": true,
+    "protocol_unchanged": true,
+    "frozen_sign": 1.0,
+    "ic_calibration": 0.010576923076923076,
+    "interim_signal_weeks_excluded": 4,
+    "evaluation_starts": "2026-11-08",
+    "evaluation_ends": "2027-03-21",
     "evaluable_from": "2027-04-18",
-    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+    "evaluation_targets_realized": 0,
+    "evaluation_weeks_required": 20,
+    "status": "not evaluable yet: 0 of 20 evaluation targets realized; evaluable from 2027-04-18"
    }
   },
   {
@@ -595,12 +640,23 @@
    "n_evaluation": 46,
    "status": "not evaluable: too few calibration or evaluation weeks",
    "prospective_plan": {
-    "freeze_date": "2026-08-09",
-    "calibration_weeks_at_freeze": 80,
-    "calibration_sufficient_at_freeze": true,
-    "evaluation_starts": "2026-11-01",
+    "frozen": true,
+    "frozen_on": "2026-11-07",
+    "data_cutoff_at_freeze": "2026-11-01",
+    "last_signal_week_with_realized_target": "2026-08-09",
+    "calibration_weeks": 80,
+    "calibration_sufficient": true,
+    "calibration_data_unchanged": true,
+    "protocol_unchanged": true,
+    "frozen_sign": -1.0,
+    "ic_calibration": -0.5764885138302861,
+    "interim_signal_weeks_excluded": 12,
+    "evaluation_starts": "2026-11-08",
+    "evaluation_ends": "2027-03-21",
     "evaluable_from": "2027-06-13",
-    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+    "evaluation_targets_realized": 0,
+    "evaluation_weeks_required": 20,
+    "status": "not evaluable yet: 0 of 20 evaluation targets realized; evaluable from 2027-06-13"
    }
   },
   {
@@ -612,12 +668,23 @@
    "n_evaluation": 46,
    "status": "not evaluable: too few calibration or evaluation weeks",
    "prospective_plan": {
-    "freeze_date": "2026-08-09",
-    "calibration_weeks_at_freeze": 56,
-    "calibration_sufficient_at_freeze": true,
-    "evaluation_starts": "2026-11-01",
+    "frozen": true,
+    "frozen_on": "2026-11-07",
+    "data_cutoff_at_freeze": "2026-11-01",
+    "last_signal_week_with_realized_target": "2026-08-09",
+    "calibration_weeks": 56,
+    "calibration_sufficient": true,
+    "calibration_data_unchanged": true,
+    "protocol_unchanged": true,
+    "frozen_sign": 1.0,
+    "ic_calibration": 0.31708817498291186,
+    "interim_signal_weeks_excluded": 12,
+    "evaluation_starts": "2026-11-08",
+    "evaluation_ends": "2027-03-21",
     "evaluable_from": "2027-06-13",
-    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+    "evaluation_targets_realized": 0,
+    "evaluation_weeks_required": 20,
+    "status": "not evaluable yet: 0 of 20 evaluation targets realized; evaluable from 2027-06-13"
    }
   },
   {
@@ -809,12 +876,23 @@
    "n_evaluation": 46,
    "status": "not evaluable: too few calibration or evaluation weeks",
    "prospective_plan": {
-    "freeze_date": "2026-08-09",
-    "calibration_weeks_at_freeze": 80,
-    "calibration_sufficient_at_freeze": true,
-    "evaluation_starts": "2026-11-01",
+    "frozen": true,
+    "frozen_on": "2026-11-07",
+    "data_cutoff_at_freeze": "2026-11-01",
+    "last_signal_week_with_realized_target": "2026-08-09",
+    "calibration_weeks": 80,
+    "calibration_sufficient": true,
+    "calibration_data_unchanged": true,
+    "protocol_unchanged": true,
+    "frozen_sign": -1.0,
+    "ic_calibration": -0.6170651664322552,
+    "interim_signal_weeks_excluded": 12,
+    "evaluation_starts": "2026-11-08",
+    "evaluation_ends": "2027-03-21",
     "evaluable_from": "2027-06-13",
-    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+    "evaluation_targets_realized": 0,
+    "evaluation_weeks_required": 20,
+    "status": "not evaluable yet: 0 of 20 evaluation targets realized; evaluable from 2027-06-13"
    }
   },
   {
@@ -826,12 +904,23 @@
    "n_evaluation": 46,
    "status": "not evaluable: too few calibration or evaluation weeks",
    "prospective_plan": {
-    "freeze_date": "2026-08-09",
-    "calibration_weeks_at_freeze": 56,
-    "calibration_sufficient_at_freeze": true,
-    "evaluation_starts": "2026-11-01",
+    "frozen": true,
+    "frozen_on": "2026-11-07",
+    "data_cutoff_at_freeze": "2026-11-01",
+    "last_signal_week_with_realized_target": "2026-08-09",
+    "calibration_weeks": 56,
+    "calibration_sufficient": true,
+    "calibration_data_unchanged": true,
+    "protocol_unchanged": true,
+    "frozen_sign": 1.0,
+    "ic_calibration": 0.36151742993848257,
+    "interim_signal_weeks_excluded": 12,
+    "evaluation_starts": "2026-11-08",
+    "evaluation_ends": "2027-03-21",
     "evaluable_from": "2027-06-13",
-    "rule": "fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then 20 evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion"
+    "evaluation_targets_realized": 0,
+    "evaluation_weeks_required": 20,
+    "status": "not evaluable yet: 0 of 20 evaluation targets realized; evaluable from 2027-06-13"
    }
   },
   {
@@ -919,6 +1008,30 @@
    "qaa h=12 vs btc": "2027-06-13",
    "intents_volume_usd h=12 vs eth": "2027-06-13",
    "qaa h=12 vs eth": "2027-06-13"
+  },
+  "prospective": {
+   "frozen": true,
+   "frozen_on": "2026-11-07",
+   "data_cutoff_at_freeze": "2026-11-01",
+   "file": "data/prospective/oos_freeze.json",
+   "tests_planned": 8,
+   "tests_scored": 0,
+   "tests_passing": 0,
+   "evaluation_starts": [
+    "2026-11-08"
+   ],
+   "targets_realized": {
+    "intents_volume_usd h=4 vs btc": "0/20",
+    "qaa h=4 vs btc": "0/20",
+    "intents_volume_usd h=4 vs eth": "0/20",
+    "qaa h=4 vs eth": "0/20",
+    "intents_volume_usd h=12 vs btc": "0/20",
+    "qaa h=12 vs btc": "0/20",
+    "intents_volume_usd h=12 vs eth": "0/20",
+    "qaa h=12 vs eth": "0/20"
+   },
+   "calibration_data_unchanged": true,
+   "protocol_unchanged": true
   },
   "best_naive_benchmark_ic": 0.429663891458526,
   "conclusion": "no usage metric passes the declared familywise out-of-sample criterion"

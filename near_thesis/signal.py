@@ -9,13 +9,15 @@ Outputs (data/derived/models/):
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import pathlib
 
 import numpy as np
 import pandas as pd
 from scipy import stats
 
-from .config import DERIVED, MODELS
+from .config import DATA, DERIVED, MODELS
 
 METRICS = ["active_accounts", "txns", "tx_fee_near", "tx_volume_usd", "intents_volume_usd", "qaa"]
 HORIZONS = [4, 12]
@@ -28,8 +30,11 @@ OOS_PROTOCOL = {
                     "exploratory analyses of this project had already used; the code enforces calibration/evaluation separation but cannot "
                     "establish that the evaluation period was unknown when the protocol was designed"),
     "prospective": {"frozen_on": "2026-11-06", "rule": "this protocol is not re-tuned; a prospective result uses only data published after 2026-11-06",
-                    "intents_and_qaa": ("not evaluable under the declared calibration end; their prospective plan freezes calibration at the data cutoff and evaluates "
-                                        "20 weeks of data published after it (purged by h); the dates are listed per test and nothing is scored before then")},
+                    "intents_and_qaa": ("not evaluable under the declared calibration end; their prospective plan is persisted once in data/prospective/oos_freeze.json "
+                                        "(near-thesis oos-freeze) with the effective freeze date, the hash of the calibration rows, the learned sign, the family and the "
+                                        "fixed evaluation weeks; later builds load that file and never recompute it, so adding history cannot move the cutoff or the "
+                                        "scoring dates, and once the 20 evaluation targets are realized the same build scores the test under the frozen sign"),
+                    "persisted_plan": "data/prospective/oos_freeze.json"},
     "hypothesis": "a four-week rise in usage is associated with the subsequent h-week NEAR log return in excess of the benchmark, with the sign fixed in calibration",
     "signal_transform": "weekly means of the daily series; log of the trailing four-week mean, differenced by four weeks; QAA only from the frozen past-only model, available on the first day of the following month",
     "target": "forward h-week log return of NEAR minus the same return of the benchmark (BTC or ETH)",
@@ -135,22 +140,136 @@ def oos_criterion(draws: np.ndarray, family: int = OOS_FAMILY) -> dict:
                        else "no out-of-sample association established")}
 
 
-def _oos_one(sig: pd.Series, fwd: pd.Series, h: int, calibration_end: pd.Timestamp) -> dict:
-    df = pd.DataFrame({"sig": sig, "fwd": fwd}).replace([np.inf, -np.inf], np.nan).dropna()
+PROSPECTIVE_FREEZE = DATA / "prospective" / "oos_freeze.json"
+PROSPECTIVE_PROTOCOL_FIELDS = ("signal_transform", "target", "fixed_rule", "family", "minimum_rows", "horizons_weeks", "benchmarks")
+
+
+def _test_key(predictor: str, h: int, bench: str) -> str:
+    return f"{predictor} h={h} vs {bench}"
+
+
+def _pairs(sig: pd.Series, fwd: pd.Series) -> pd.DataFrame:
+    return pd.DataFrame({"sig": sig, "fwd": fwd}).replace([np.inf, -np.inf], np.nan).dropna()
+
+
+def _calibration_hash(cal: pd.DataFrame) -> str:
+    rows = [(str(t.date()), round(float(a), 10), round(float(b), 10)) for t, a, b in zip(cal.index, cal["sig"], cal["fwd"])]
+    return hashlib.sha256(json.dumps(rows).encode()).hexdigest()
+
+
+def protocol_hash() -> str:
+    return hashlib.sha256(json.dumps({k: OOS_PROTOCOL[k] for k in PROSPECTIVE_PROTOCOL_FIELDS}, sort_keys=True).encode()).hexdigest()
+
+
+def _draft_plan(df: pd.DataFrame, h: int) -> dict:
+    """Recomputed from the current data: a draft until near-thesis oos-freeze persists it. Dates here move with the data by construction."""
+    last = df.index[-1]      # last signal week whose h-week target is already realized at the data cutoff
+    n_eval = OOS_PROTOCOL["minimum_rows"]["evaluation"]
+    return {"frozen": False, "status": "draft: not persisted; run near-thesis oos-freeze to fix the cutoff, sign and evaluation weeks",
+            "last_signal_week_with_realized_target": str(last.date()), "calibration_weeks": int(len(df)),
+            "calibration_sufficient": bool(len(df) >= OOS_PROTOCOL["minimum_rows"]["calibration"]),
+            "evaluation_starts": str((last + pd.Timedelta(weeks=h)).date()),
+            "evaluable_from": str((last + pd.Timedelta(weeks=2 * h + n_eval)).date())}
+
+
+def _freeze_entry(df: pd.DataFrame, predictor: str, h: int, bench: str, frozen_on: pd.Timestamp, data_cutoff: pd.Timestamp) -> dict:
+    """Everything a later build needs to score the test without recomputing anything from the history."""
+    n_eval = OOS_PROTOCOL["minimum_rows"]["evaluation"]
+    cal = df[df.index <= data_cutoff]
+    last = cal.index[-1]
+    first_eval = frozen_on + pd.offsets.Week(weekday=6)            # first weekly signal date strictly after the freeze
+    eval_weeks = pd.date_range(first_eval, periods=n_eval, freq="W-SUN")
+    interim = pd.date_range(last + pd.Timedelta(weeks=1), frozen_on, freq="W-SUN")
+    rho = float(stats.spearmanr(cal["sig"], cal["fwd"]).statistic) if len(cal) >= 3 else float("nan")
+    return {"predictor": predictor, "horizon_weeks": h, "benchmark": bench,
+            "frozen_on": str(frozen_on.date()), "data_cutoff": str(data_cutoff.date()),
+            "last_signal_week_with_realized_target": str(last.date()),
+            "calibration_start": str(cal.index[0].date()), "calibration_end": str(last.date()), "calibration_weeks": int(len(cal)),
+            "calibration_sufficient": bool(len(cal) >= OOS_PROTOCOL["minimum_rows"]["calibration"]),
+            "calibration_sha256": _calibration_hash(cal), "ic_calibration": rho, "frozen_sign": 1.0 if (np.isnan(rho) or rho >= 0) else -1.0,
+            "interim_signal_weeks_excluded": [str(t.date()) for t in interim],
+            "interim_reading": ("signal weeks observed before the freeze whose targets were not yet realized: excluded from calibration (no target) and "
+                                "from evaluation (observed before the freeze)"),
+            "evaluation_signal_weeks": [str(t.date()) for t in eval_weeks],
+            "evaluation_starts": str(eval_weeks[0].date()), "evaluation_ends": str(eval_weeks[-1].date()),
+            "evaluable_from": str((eval_weeks[-1] + pd.Timedelta(weeks=h)).date()),
+            "family_tests": OOS_FAMILY, "block_weeks": max(h, 8), "bootstrap_draws": 4000}
+
+
+def freeze_prospective_plan(w: pd.DataFrame, frozen_on: str, path=PROSPECTIVE_FREEZE, force: bool = False) -> dict:
+    """Persist the prospective plan for every usage test that is not evaluable retrospectively. Written once; refuses to overwrite."""
+    path = pathlib.Path(path)
+    if path.exists() and not force:
+        raise FileExistsError(f"{path} exists; the frozen plan is not recomputed (pass force to replace it deliberately)")
+    fo, cutoff = pd.Timestamp(frozen_on), w.index.max()
+    lp = np.log(w["near_price"])
+    bench = {"btc": np.log(w["price_bitcoin"]), "eth": np.log(w["price_ethereum"])}
+    cal_end = pd.Timestamp(OOS_PROTOCOL["calibration_end"])
+    tests = {}
+    for m in [c for c in METRICS if c in w.columns]:
+        sig = np.log(w[m].rolling(4, min_periods=4).mean()).diff(4)
+        for h in HORIZONS:
+            for bname, lb in bench.items():
+                fwd = (lp.shift(-h) - lp) - (lb.shift(-h) - lb)
+                df = _pairs(sig, fwd)
+                retro_ok = (len(df[df.index <= cal_end]) >= OOS_PROTOCOL["minimum_rows"]["calibration"]
+                            and len(df[df.index > cal_end + pd.Timedelta(weeks=h)]) >= OOS_PROTOCOL["minimum_rows"]["evaluation"])
+                if retro_ok or not len(df):
+                    continue
+                tests[_test_key(m, h, bname)] = _freeze_entry(df, m, h, bname, fo, cutoff)
+    plan = {"frozen_on": str(fo.date()), "data_cutoff": str(cutoff.date()), "protocol_sha256": protocol_hash(),
+            "protocol": {k: OOS_PROTOCOL[k] for k in PROSPECTIVE_PROTOCOL_FIELDS},
+            "rule": ("calibration on every signal week whose target was realized at the data cutoff, sign frozen from that calibration, interim weeks excluded, "
+                     f"then {OOS_PROTOCOL['minimum_rows']['evaluation']} evaluation signal weeks starting the first week after the freeze; scored once their last "
+                     "target is realized, under the frozen sign and the familywise criterion; this file is loaded by later builds and never recomputed"),
+            "tests": tests}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(plan, indent=1))
+    return plan
+
+
+def load_frozen_plan(path=PROSPECTIVE_FREEZE) -> dict | None:
+    path = pathlib.Path(path)
+    return json.loads(path.read_text()) if path.exists() else None
+
+
+def prospective_evaluation(df: pd.DataFrame, entry: dict) -> dict:
+    """Score the frozen plan on the fixed evaluation weeks; nothing is recomputed and no date moves."""
+    weeks = pd.DatetimeIndex([pd.Timestamp(d) for d in entry["evaluation_signal_weeks"]])
+    cal_now = df[df.index <= pd.Timestamp(entry["calibration_end"])]
+    eva = df[df.index.isin(weeks)]
+    out = {"frozen": True, "frozen_on": entry["frozen_on"], "data_cutoff_at_freeze": entry["data_cutoff"],
+           "last_signal_week_with_realized_target": entry["last_signal_week_with_realized_target"],
+           "calibration_weeks": entry["calibration_weeks"], "calibration_sufficient": entry["calibration_sufficient"],
+           "calibration_data_unchanged": bool(len(cal_now) and _calibration_hash(cal_now) == entry["calibration_sha256"]),
+           "protocol_unchanged": bool(protocol_hash() == entry.get("protocol_sha256", protocol_hash())),
+           "frozen_sign": entry["frozen_sign"], "ic_calibration": entry["ic_calibration"],
+           "interim_signal_weeks_excluded": len(entry["interim_signal_weeks_excluded"]),
+           "evaluation_starts": entry["evaluation_starts"], "evaluation_ends": entry["evaluation_ends"], "evaluable_from": entry["evaluable_from"],
+           "evaluation_targets_realized": int(len(eva)), "evaluation_weeks_required": int(len(weeks))}
+    if len(eva) < len(weeks):
+        out["status"] = f"not evaluable yet: {len(eva)} of {len(weeks)} evaluation targets realized; evaluable from {entry['evaluable_from']}"
+        return out
+    sign = float(entry["frozen_sign"])
+    rho = stats.spearmanr(sign * eva["sig"], eva["fwd"]).statistic
+    draws = _bootstrap_rhos((sign * eva["sig"]).to_numpy(), eva["fwd"].to_numpy(), block=int(entry["block_weeks"]), n_boot=int(entry["bootstrap_draws"]))
+    crit = oos_criterion(draws, int(entry["family_tests"]))
+    out.update({"ic_evaluation_signed": float(rho), **crit, "status": "prospective: " + crit["status"]
+                + ("" if entry["calibration_sufficient"] else " (calibration below the declared minimum at the freeze: exploratory)")})
+    return out
+
+
+def _oos_one(sig: pd.Series, fwd: pd.Series, h: int, calibration_end: pd.Timestamp, frozen: dict | None = None) -> dict:
+    df = _pairs(sig, fwd)
     cal = df[df.index <= calibration_end]
     eva = df[df.index > calibration_end + pd.Timedelta(weeks=h)]
     out = {"n_calibration": int(len(cal)), "n_evaluation": int(len(eva))}
     if len(cal) < OOS_PROTOCOL["minimum_rows"]["calibration"] or len(eva) < OOS_PROTOCOL["minimum_rows"]["evaluation"]:
         out["status"] = "not evaluable: too few calibration or evaluation weeks"
-        if len(df):
-            freeze = df.index[-1]      # last signal week whose h-week target is already realized at the data cutoff
-            n_eval = OOS_PROTOCOL["minimum_rows"]["evaluation"]
-            out["prospective_plan"] = {"freeze_date": str(freeze.date()), "calibration_weeks_at_freeze": int(len(df)),
-                                       "calibration_sufficient_at_freeze": bool(len(df) >= OOS_PROTOCOL["minimum_rows"]["calibration"]),
-                                       "evaluation_starts": str((freeze + pd.Timedelta(weeks=h)).date()),
-                                       "evaluable_from": str((freeze + pd.Timedelta(weeks=2 * h + n_eval)).date()),
-                                       "rule": ("fixed now: calibration on every signal week with a realized target at the freeze, sign frozen there, purge h weeks, then "
-                                                f"{n_eval} evaluation signal weeks whose targets realize after the freeze (so scoring waits a further h weeks); same transform, target and familywise criterion")}
+        if frozen:
+            out["prospective_plan"] = prospective_evaluation(df, frozen)
+        elif len(df):
+            out["prospective_plan"] = _draft_plan(df, h)
         return out
     rho_cal = stats.spearmanr(cal["sig"], cal["fwd"]).statistic
     sign = 1.0 if rho_cal >= 0 else -1.0
@@ -176,8 +295,12 @@ def _oos_one(sig: pd.Series, fwd: pd.Series, h: int, calibration_end: pd.Timesta
     return out
 
 
-def oos_table(w: pd.DataFrame) -> dict:
-    """Temporally separated (retrospective) out-of-sample evaluation of the usage signals and of two naive benchmark predictors."""
+def oos_table(w: pd.DataFrame, frozen_plan: dict | None = None, freeze_path=PROSPECTIVE_FREEZE) -> dict:
+    """Temporally separated (retrospective) out-of-sample evaluation of the usage signals and of two naive benchmark predictors.
+
+    Tests that are not evaluable retrospectively carry the persisted prospective plan (loaded, never recomputed)."""
+    frozen_plan = frozen_plan if frozen_plan is not None else (load_frozen_plan(freeze_path) or {})
+    frozen_tests = frozen_plan.get("tests", {})
     lp = np.log(w["near_price"])
     bench = {"btc": np.log(w["price_bitcoin"]), "eth": np.log(w["price_ethereum"])}
     cal_end = pd.Timestamp(OOS_PROTOCOL["calibration_end"])
@@ -188,7 +311,8 @@ def oos_table(w: pd.DataFrame) -> dict:
         for bname, lb in bench.items():
             fwd = (lp.shift(-h) - lp) - (lb.shift(-h) - lb)
             for m, sig in predictors.items():
-                rows.append({"predictor": m, "kind": "usage", "horizon_weeks": h, "benchmark": bname, **_oos_one(sig, fwd, h, cal_end)})
+                rows.append({"predictor": m, "kind": "usage", "horizon_weeks": h, "benchmark": bname,
+                             **_oos_one(sig, fwd, h, cal_end, frozen_tests.get(_test_key(m, h, bname)))})
             for name, fn in naive.items():
                 rows.append({"predictor": name, "kind": "naive_benchmark", "horizon_weeks": h, "benchmark": bname, **_oos_one(fn(lb), fwd, h, cal_end)})
     usage = [r for r in rows if r["kind"] == "usage"]
@@ -201,11 +325,25 @@ def oos_table(w: pd.DataFrame) -> dict:
                   else "no usage test is evaluable under the declared protocol")
     if nominal_only:
         conclusion += f" ({len(nominal_only)} would pass the unadjusted interval only; exploratory)"
-    plans = {f"{r['predictor']} h={r['horizon_weeks']} vs {r['benchmark']}": r["prospective_plan"]["evaluable_from"] for r in usage if r.get("prospective_plan")}
+    planned = [r for r in usage if r.get("prospective_plan")]
+    plans = {_test_key(r["predictor"], r["horizon_weeks"], r["benchmark"]): r["prospective_plan"]["evaluable_from"] for r in planned}
+    scored = [r for r in planned if "ic_evaluation_signed" in r["prospective_plan"]]
+    pro_pass = [r for r in scored if r["prospective_plan"]["passes_declared_criterion"]]
+    if scored:
+        conclusion += f"; prospective: {len(pro_pass)} of {len(scored)} scored tests pass the familywise criterion under the frozen sign"
+    prospective = {"frozen": bool(frozen_tests), "frozen_on": frozen_plan.get("frozen_on"), "data_cutoff_at_freeze": frozen_plan.get("data_cutoff"),
+                   "file": str(pathlib.Path(freeze_path).relative_to(DATA.parent)) if frozen_tests and pathlib.Path(freeze_path).is_relative_to(DATA.parent) else None,
+                   "tests_planned": len(planned), "tests_scored": len(scored), "tests_passing": len(pro_pass),
+                   "evaluation_starts": sorted({r["prospective_plan"]["evaluation_starts"] for r in planned}),
+                   "targets_realized": {_test_key(r["predictor"], r["horizon_weeks"], r["benchmark"]):
+                                        f"{r['prospective_plan'].get('evaluation_targets_realized', 0)}/{r['prospective_plan'].get('evaluation_weeks_required', OOS_PROTOCOL['minimum_rows']['evaluation'])}"
+                                        for r in planned},
+                   "calibration_data_unchanged": all(r["prospective_plan"].get("calibration_data_unchanged", True) for r in planned),
+                   "protocol_unchanged": all(r["prospective_plan"].get("protocol_unchanged", True) for r in planned)}
     return {"protocol": OOS_PROTOCOL, "tests": rows, "summary": {"usage_tests": len(usage), "evaluable": len(evaluable), "passing": len(passing),
             "passing_nominal_only": len(nominal_only),
-            "not_evaluable": [f"{r['predictor']} h={r['horizon_weeks']} vs {r['benchmark']}" for r in usage if "ic_evaluation_signed" not in r],
-            "prospective_evaluable_from": plans,
+            "not_evaluable": [_test_key(r["predictor"], r["horizon_weeks"], r["benchmark"]) for r in usage if "ic_evaluation_signed" not in r],
+            "prospective_evaluable_from": plans, "prospective": prospective,
             "best_naive_benchmark_ic": best_naive, "conclusion": conclusion}}
 
 

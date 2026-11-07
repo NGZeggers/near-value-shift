@@ -30,6 +30,9 @@ def main(argv: list[str] | None = None) -> None:
     bt = sub.add_parser("blocks-buyback-trace", help="read the execution block of a pre-declared sample of buyback-wallet receipts and match the Intents withdraw events")
     bt.add_argument("--offline", action="store_true", help="cached blocks only")
 
+    of = sub.add_parser("oos-freeze", help="persist the prospective out-of-sample plan once (data/prospective/oos_freeze.json); refuses to overwrite")
+    of.add_argument("--frozen-on", default=None, help="effective freeze date (default: today, UTC)")
+    of.add_argument("--force", action="store_true", help="replace an existing frozen plan deliberately")
     ve = sub.add_parser("verify-events", help="revalidate saved event receipts against full blocks; resumable and atomic")
     ve.add_argument("--offline", action="store_true", help="use only full verification blocks already cached")
 
@@ -66,6 +69,11 @@ def main(argv: list[str] | None = None) -> None:
     elif a.cmd == "blocks-buyback-trace":
         from . import blocks
         blocks.run_buyback_trace(offline=a.offline)
+    elif a.cmd == "oos-freeze":
+        import datetime as _dt
+        from . import signal
+        plan = signal.freeze_prospective_plan(signal._weekly(), a.frozen_on or _dt.datetime.now(_dt.timezone.utc).date().isoformat(), force=a.force)
+        print(f"oos-freeze: {len(plan['tests'])} tests frozen on {plan['frozen_on']} at data cutoff {plan['data_cutoff']} -> {signal.PROSPECTIVE_FREEZE}")
     elif a.cmd == "verify-events":
         from . import blocks
         blocks.verify_events(offline=a.offline)

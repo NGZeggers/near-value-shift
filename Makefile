@@ -3,7 +3,7 @@
 PY := uv run
 
 BLOCKS ?= 50   # blocks per sampling window for `make blocks` (budget: ~0.35 blocks/s)
-.PHONY: all build setup fetch bq blocks blocks-intraday blocks-intraday-validation blocks-buyback-trace onchain onchain-verify features models charts thesis site notebook index check-generated test clean
+.PHONY: all build setup fetch bq blocks blocks-intraday blocks-intraday-validation blocks-buyback-trace oos-freeze onchain onchain-verify features models charts thesis site notebook index check-generated test clean
 .NOTPARALLEL:
 
 all: fetch build
@@ -65,6 +65,9 @@ blocks-intraday-validation:  ## hourly windows for the pre-declared validation d
 
 blocks-buyback-trace:  ## execution blocks of a pre-declared sample of buyback-wallet receipts (network; ~50 blocks)
 	$(PY) near-thesis blocks-buyback-trace
+
+oos-freeze:       ## persist the prospective out-of-sample plan once (refuses to overwrite; FORCE=1 to replace deliberately)
+	$(PY) near-thesis oos-freeze $(if $(filter 1,$(strip $(FORCE))),--force,)
 
 verify-events:    ## verify historical event statuses from full blocks (resumable; network required)
 	$(PY) near-thesis verify-events

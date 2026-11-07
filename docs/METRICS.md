@@ -19,6 +19,6 @@
 | `users` | same events | observed unique non-solver accounts, never expanded |
 | `intents_reconciliation_daily.*` | reconcile.py | per sampled day: observed, expanded, reference, difference, coverage, pricing and routing components, holdout role |
 | `qaa_sensitivity.json` | qaa.py | criteria, thresholds, name-only baseline, inclusion weighting, hour split, model agreement |
-| `signal_oos.json` | signal.py | retrospective, temporally separated out-of-sample evaluation: frozen sign, purge, familywise criterion, walk-forward hit rate, prospective plan |
+| `signal_oos.json` | signal.py | retrospective, temporally separated out-of-sample evaluation: frozen sign, purge, familywise criterion, walk-forward hit rate; persisted prospective plan loaded from data/prospective/oos_freeze.json |
 | `value_bridge.json` | bridge.py | volume -> fees -> captured revenue -> labelled buyback -> NEAR withdrawn from Intents into the buyback wallet (purchase attribution inferred) -> ledger at the cutoff; issuance from total supply; three scenarios |
 | `total_supply` | NearBlocks | daily total supply; its yearly change is the issuance used for dilution (circulating_supply is stale in the source) |

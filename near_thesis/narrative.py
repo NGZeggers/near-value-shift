@@ -289,7 +289,9 @@ def build(d: pd.DataFrame, m: pd.DataFrame, qs: dict, ins: dict, ic: list, vg: l
                         "href": "#chart-value_bridge", "kind": "assumption"})
     if oos_sum.get("conclusion"):
         against.append({"text": f"Temporally separated out-of-sample test (retrospective: protocol declared 2026-11-06 on already-examined history; calibration through {oos['protocol']['calibration_end']}, frozen sign, purged evaluation, familywise criterion): {oos_sum['conclusion']}; "
-                                f"{len(oos_sum.get('not_evaluable', []))} of {oos_sum.get('usage_tests', 0)} declared tests are not evaluable for lack of calibration weeks (Intents, QAA).",
+                                f"{len(oos_sum.get('not_evaluable', []))} of {oos_sum.get('usage_tests', 0)} declared tests are not evaluable for lack of calibration weeks (Intents, QAA)"
+                                + (f"; their prospective plan is persisted (frozen {oos_sum['prospective']['frozen_on']}, evaluation from {', '.join(oos_sum['prospective']['evaluation_starts'])}, "
+                                   f"{oos_sum['prospective']['tests_scored']} of {oos_sum['prospective']['tests_planned']} scored so far)." if (oos_sum.get('prospective') or {}).get('frozen') else "."),
                         "href": "#chart-oos", "kind": "inconclusive"})
     if int_ic:
         lo, hi = int_ic["ci95_block_bootstrap"]
