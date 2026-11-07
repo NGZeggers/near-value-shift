@@ -1,3 +1,4 @@
+import pytest
 """Reconciliation artifacts: economic unit, per-day table, holdout split, trace examples and intraday comparison."""
 import json
 
@@ -167,3 +168,42 @@ def test_intraday_validation_verdict_uses_declared_range(tmp_path, monkeypatch):
     assert out["within_declared_range"] is True and "reproduce" in out["verdict"]
     out2 = reconcile.intraday_validation({}, pd.Series({day: 24_000.0}), pd.Series({day: 100_000.0}), {"fixed_window_bias_factor_median": factor * 3})
     assert out2["within_declared_range"] is False and "not supported" in out2["verdict"]
+
+
+def test_intraday_validation_treats_zero_fixed_window_day_as_unbounded(tmp_path, monkeypatch):
+    """A day whose fixed windows observe nothing has an unbounded factor; the verdict must hold with it treated as infinite."""
+    days = ["2026-03-01", "2026-03-02", "2026-03-03"]
+    man = {"days": days, "selection_rule": "test", "fetched_at": "x", "blocks_per_window": 10, "complete": True,
+           "windows": [{"day": d, "hour": h, "start_height": (i * 24 + h) * 10, "n": 10, "fetched": 10, "usable": True}
+                       for i, d in enumerate(days) for h in range(24)]}
+    rows = []
+    for i, d in enumerate(days):
+        for h in range(24):
+            usd = 10 if h in (3, 15) else 30
+            if d == "2026-03-03" and h in (3, 15):
+                continue  # fixed windows observed no volume at all on the third day
+            log = json.dumps({"standard": "dip4", "event": "token_diff", "data": [
+                {"account_id": "u", "intent_hash": f"u{i}{h}", "diff": {"usdc": str(-usd * 10**6), "zzz": "1"}},
+                {"account_id": "mm", "intent_hash": f"m{i}{h}", "diff": {"usdc": str(usd * 10**6), "zzz": "-1"}}]})
+            rows.append({"block_date": d, "block_timestamp": h, "receipt_id": f"r{i}{h}", "caller": "relay", "log": "EVENT_JSON:" + log,
+                         "window_day": d, "window_hour": h, "block_height": (i * 24 + h) * 10, "execution_status": "SUCCESS_VALUE"})
+    (tmp_path / "v.csv").write_text(pd.DataFrame(rows).to_csv(index=False))
+    (tmp_path / "v.json").write_text(json.dumps(man))
+    monkeypatch.setattr(reconcile, "INTRADAY_VALIDATION_EVENTS", tmp_path / "v.csv")
+    monkeypatch.setattr(reconcile, "INTRADAY_VALIDATION_MANIFEST", tmp_path / "v.json")
+    monkeypatch.setattr(intents, "_REGISTRY", {"usdc": ("usdc", 6, "usd-coin")})
+    bpd = pd.Series({pd.Timestamp(d): 24_000.0 for d in days})
+    ref = pd.Series({pd.Timestamp(d): 100_000.0 for d in days})
+    factor = (22 * 30 + 2 * 10) / 24 / 10
+    out = reconcile.intraday_validation({}, bpd, ref, {"fixed_window_bias_factor_median": factor})
+    assert out["days_with_defined_factor"] == 2 and out["days_with_unbounded_factor"] == ["2026-03-03"]
+    assert out["validation_median_factor"] == pytest.approx(factor)
+    assert out["validation_median_factor_unbounded_as_infinite"] == pytest.approx(factor)  # median of [f, f, inf]
+    assert out["within_declared_range"] is True and "unbounded" in out["verdict"]
+    # With only one defined day the conservative median is infinite and the verdict cannot pass.
+    rows2 = [r for r in rows if r["window_day"] != "2026-03-01"]
+    man["days"] = days[1:]
+    (tmp_path / "v.csv").write_text(pd.DataFrame(rows2).to_csv(index=False))
+    (tmp_path / "v.json").write_text(json.dumps(man))
+    out2 = reconcile.intraday_validation({}, bpd, ref, {"fixed_window_bias_factor_median": factor})
+    assert out2["within_declared_range"] is False

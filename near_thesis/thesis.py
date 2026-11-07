@@ -230,7 +230,11 @@ def reconciliation_section() -> list[str]:
     if iv:
         rule = iv['rule']
         out.append(f"**Validation of the intraday factor (declared {rule['declared']}).** Selection: {rule['selection']}. Aggregation: {rule['aggregation']}. Acceptance: {rule['acceptance']}. {rule['not_a_correction_of_the_estimator'][0].upper() + rule['not_a_correction_of_the_estimator'][1:]}. "
-                   + (f"Result: validation days {', '.join(d['day'] for d in iv.get('days', []))}, median factor {num(iv.get('validation_median_factor'), 2)} versus {num(iv.get('motivating_median_factor'), 2)} on the motivating days (ratio {num(iv.get('ratio_validation_over_motivating'), 2)}); {iv.get('verdict', '')}.\n"
+                   + (f"Result: validation days {', '.join(d['day'] for d in iv.get('days', []))}; per-day factors "
+                      + ", ".join(f"{d['day']} {num(d['fixed_window_bias_factor'], 2) if d.get('fixed_window_bias_factor') else ('unbounded (fixed windows observed no volume)' if d['day'] in (iv.get('days_with_unbounded_factor') or []) else 'undefined')}" for d in iv.get('days', []))
+                      + f"; median over the {iv.get('days_with_defined_factor')} defined days {num(iv.get('validation_median_factor'), 2)} versus {num(iv.get('motivating_median_factor'), 2)} on the motivating days (ratio {num(iv.get('ratio_validation_over_motivating'), 2)})"
+                      + (f", {num(iv.get('validation_median_factor_unbounded_as_infinite'), 2)} with the unbounded day treated as infinite (ratio {num(iv.get('ratio_validation_over_motivating_unbounded_as_infinite'), 2)})" if iv.get('days_with_unbounded_factor') else "")
+                      + f". Verdict: {iv.get('verdict', '')}. The validation days are three; this supports the order of magnitude of the sensitivity, not a precise correction.\n"
                       if iv.get('validation_median_factor') else f"Status: {iv['status']}.\n"))
     chk = val['two_sided_pricing_check']
     out.append(f"**Valuation.** {val['legs_unpriced']} of {val['legs_total']} legs ({val['legs_unpriced_share']:.1%}) are unpriced, but an account-intent is valued by whichever side is priced: only {val['account_intents_without_any_priced_side']} of {val['account_intents']} account-intents in {val['batches_with_unvalued_account_intent']} batches lose value entirely. "

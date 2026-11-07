@@ -265,11 +265,15 @@ def intraday(prices: dict, blocks_per_day: pd.Series, llama: pd.Series, fixed_ho
                      "ratio_all_hours_to_reference": float(est_all / ref) if ref and np.isfinite(est_all) else None,
                      "ratio_fixed_hours_to_reference": float(est_fixed / ref) if ref and np.isfinite(est_fixed) else None})
     factors = [d["fixed_window_bias_factor"] for d in days if d.get("fixed_window_bias_factor")]
+    # A day whose fixed windows observed nothing while other hours did has an unbounded factor (all-hours rate / 0).
+    unbounded = [d["day"] for d in days if d.get("fixed_window_bias_factor") is None and d.get("fixed_hours_share_of_sampled") == 0.0]
     ratios_all = [d["ratio_all_hours_to_reference"] for d in days if d.get("ratio_all_hours_to_reference")]
     return {"selection_rule": man.get("selection_rule"), "fetched_at": man.get("fetched_at"), "blocks_per_window": man.get("blocks_per_window"),
             "complete": man.get("complete"), "days": days,
+            "days_with_defined_factor": len(factors), "days_with_unbounded_factor": unbounded,
             "fixed_window_bias_factor_mean": float(np.mean(factors)) if factors else None,
             "fixed_window_bias_factor_median": float(np.median(factors)) if factors else None,
+            "fixed_window_bias_factor_median_unbounded_as_infinite": (float(np.median(factors + [np.inf] * len(unbounded))) if factors else None),
             "aggregate_used_for_correction": "median",
             "ratio_all_hours_to_reference_median": float(np.median(ratios_all)) if ratios_all else None,
             "reading": ("Factor > 1 means the two fixed windows under-represent the day's hourly mean; even 24 hourly windows observe "
@@ -289,14 +293,27 @@ def intraday_validation(prices: dict, blocks_per_day: pd.Series, llama: pd.Serie
         return out
     med_m = (motivating or {}).get("fixed_window_bias_factor_median")
     med_v = v.get("fixed_window_bias_factor_median")
+    med_cons = v.get("fixed_window_bias_factor_median_unbounded_as_infinite")
+    unbounded = v.get("days_with_unbounded_factor") or []
     out.update({"status": "complete" if v.get("complete") else "partial extract", "days": v.get("days"), "fetched_at": v.get("fetched_at"),
-                "complete": v.get("complete"), "validation_median_factor": med_v, "validation_mean_factor": v.get("fixed_window_bias_factor_mean"),
+                "complete": v.get("complete"), "days_total": len(v.get("days") or []), "days_with_defined_factor": v.get("days_with_defined_factor"),
+                "days_with_unbounded_factor": unbounded,
+                "unbounded_factor_reading": ("on these days the two fixed windows observed no volume while other hours did, so the factor is "
+                                             "unbounded rather than missing; the verdict is required to hold both excluding them and treating "
+                                             "them as infinite (which moves the median to the largest defined factor)") if unbounded else None,
+                "validation_median_factor": med_v, "validation_mean_factor": v.get("fixed_window_bias_factor_mean"),
+                "validation_median_factor_unbounded_as_infinite": med_cons,
                 "motivating_median_factor": med_m, "ratio_validation_over_motivating": (med_v / med_m) if (med_v and med_m) else None,
+                "ratio_validation_over_motivating_unbounded_as_infinite": (med_cons / med_m) if (med_cons and med_m and np.isfinite(med_cons)) else None,
                 "validation_ratio_all_hours_to_reference_median": v.get("ratio_all_hours_to_reference_median")})
     if med_v and med_m:
-        r = med_v / med_m
-        out["within_declared_range"] = bool(0.5 <= r <= 2.0)
-        out["verdict"] = ("validation days reproduce the motivating factor within the declared x0.5-x2 range" if out["within_declared_range"]
+        checks = [med_v / med_m] + ([med_cons / med_m] if med_cons is not None and np.isfinite(med_cons) else [])
+        if med_cons is not None and not np.isfinite(med_cons):
+            checks.append(np.inf)
+        out["within_declared_range"] = bool(all(0.5 <= r <= 2.0 for r in checks))
+        out["verdict"] = (("validation days reproduce the motivating factor within the declared x0.5-x2 range"
+                           + (" (also when the day with an unbounded factor is treated as infinite)" if unbounded else ""))
+                          if out["within_declared_range"]
                           else "validation days do not reproduce the motivating factor within the declared range: the correction is not supported")
     return out
 
