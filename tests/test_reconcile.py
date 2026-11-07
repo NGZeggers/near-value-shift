@@ -116,7 +116,9 @@ def test_intraday_measures_fixed_window_bias(tmp_path, monkeypatch):
     assert d["hours_usable"] == 24 and abs(d["fixed_window_bias_factor"] - (22 * 40 + 2 * 10) / 24 / 10) < 1e-9
     assert abs(d["expanded_from_all_hours_usd"] - (22 * 40 + 2 * 10) / 240 * 24_000) < 1e-6
     assert d["ratio_fixed_hours_to_reference"] < d["ratio_all_hours_to_reference"]
-    assert out["fixed_window_bias_factor_mean"] > 1
+    assert out["fixed_window_bias_factor_mean"] > 1 and out["fixed_window_bias_factor_median"] == out["fixed_window_bias_factor_mean"]  # one day
+    assert out["aggregate_used_for_correction"] == "median" and abs(out["ratio_all_hours_to_reference_median"] - d["ratio_all_hours_to_reference"]) < 1e-12
+    assert d["largest_hour"] == "00" and abs(d["largest_hour_share_of_sampled"] - 40 / (22 * 40 + 2 * 10)) < 1e-12
 
 
 def test_economic_unit_and_tolerance_are_declared_text():

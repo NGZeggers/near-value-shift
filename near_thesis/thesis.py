@@ -219,7 +219,10 @@ def reconciliation_section() -> list[str]:
                            f"{num(dday.get('ratio_all_hours_to_reference'), 3)} | {num(dday.get('ratio_fixed_hours_to_reference'), 3)} | {num(dday.get('fixed_window_bias_factor'), 2)} |")
             else:
                 out.append(f"| {dday['day']} | 0 | n/a | n/a | n/a | n/a |")
-        out.append(f"\nMean bias factor {num(intra.get('fixed_window_bias_factor_mean'), 2)}: {intra['reading']}.\n")
+        conc = max((d for d in intra.get('days', []) if d.get('largest_hour_share_of_sampled')), key=lambda d: d['largest_hour_share_of_sampled'], default=None)
+        out.append(f"\nMedian bias factor {num(intra.get('fixed_window_bias_factor_median'), 2)} (mean {num(intra.get('fixed_window_bias_factor_mean'), 2)}"
+                   + (f"; on {conc['day']} the {conc['largest_hour']}:00 window alone carries {conc['largest_hour_share_of_sampled']:.0%} of the day's sampled volume" if conc else "") + "). "
+                   f"Estimates from all 24 hours reach {num(intra.get('ratio_all_hours_to_reference_median'), 2)}x the reference (median over the three days). {intra['reading']}.\n")
     else:
         out.append("**Intraday expansion error.** Not measured yet: `make blocks-intraday` fetches 24 hourly windows for three pre-declared days (highest reference volume, 2026 median day, 2025 median day).\n")
     chk = val['two_sided_pricing_check']
@@ -230,8 +233,13 @@ def reconciliation_section() -> list[str]:
     out.append(f"**Route reconstruction.** {rt['batches_with_more_than_two_accounts_share']:.0%} of batches have more than two accounts; per-token diffs within a receipt balance to rounding dust (99th percentile of |net|/gross {rt['per_token_net_relative_to_gross']['p99']:.1e}). "
                f"Sampled totals under alternative definitions: half gross participant notional {usd(alt['half_gross_participant_notional'])}, full gross {usd(alt['full_gross_participant_notional'])}, user-side notional with heuristic roles {usd(alt['user_side_notional_heuristic_roles'])}. "
                f"If the reference counted both sides of each swap our ratio would be {res['if_reference_were_two_sided_notional']:.2f}; this is a definitional bound, not evidence about the reference.\n")
-    out.append(f"**Residual.** " + (f"After the intraday bias factor the ratio would be {res['after_intraday_bias_correction']:.2f}, and {res['after_both']:.2f} with the two-sided reading as well; a" if res.get('after_both') else "A")
-               + f" factor of {res['unexplained_factor_to_parity']:.1f}x to parity remains unexplained and is reported as such, not attributed to missing large trades.\n")
+    if res.get('after_intraday_bias_correction'):
+        out.append(f"**Residual.** After the measured intraday bias (median factor {res['intraday_bias_factor_used']:.2f}) the ratio would be {res['after_intraday_bias_correction']:.2f} "
+                   f"({res['after_intraday_bias_correction_mean_factor']:.2f} with the mean factor); a factor of {res['unexplained_factor_to_parity']:.1f}x to parity remains unexplained and is reported as such, not attributed to missing large trades. "
+                   f"If the reference additionally counted both sides the corrected ratio would be {res['after_both']:.2f}"
+                   + ("; that exceeds parity, so the two-sided reading and the full intraday correction cannot both hold.\n" if res.get('two_sided_and_intraday_overshoot') else ".\n"))
+    else:
+        out.append(f"**Residual.** A factor of {res['unexplained_factor_to_parity']:.1f}x to parity remains unexplained and is reported as such, not attributed to missing large trades.\n")
     cal, valid = hold['calibration'], hold['validation']
     tol = hold['tolerance']
     out.append(f"**Pre-declared tolerance and holdout.** Tolerance ({tol['declared']}): point ratio within [{tol['point_ratio_min']}, {tol['point_ratio_max']}] and interval covering {tol['interval_must_include']}; {tol['justification']}. Split: {hold['rule']}. "

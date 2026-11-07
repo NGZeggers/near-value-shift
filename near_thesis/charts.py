@@ -233,10 +233,10 @@ def reconciliation_specs() -> list[dict]:
     days = [x for x in intra.get("days", []) if x.get("hour_share_of_sampled")]
     if days:
         series = [{"name": x["day"], "points": [[f"{h}h", round(float(v or 0) * 100, 1)] for h, v in sorted(x["hour_share_of_sampled"].items())]} for x in days]
-        bias = intra.get("fixed_window_bias_factor_mean")
+        bias = intra.get("fixed_window_bias_factor_median")
         out.append(_spec("intents_intraday", "3. Quality-adjusted", "Intraday profile on the pre-declared reconciliation days: share of sampled volume by hour",
-            (f"Twenty-four 50-block windows per day. The fixed 03:00 and 15:00 UTC windows of the main sample under-represent the hourly mean by a factor of {bias:.2f} on these days; " if bias else "") +
-            "a flat profile would put about 4.2% in every hour. " + (intra.get("selection_rule") or ""),
+            (f"Twenty-four 50-block windows per day. The fixed 03:00 and 15:00 UTC windows of the main sample under-represent the hourly mean by a median factor of {bias:.2f} on these days (mean {intra.get('fixed_window_bias_factor_mean'):.2f}; one hourly window can carry most of a day's sampled volume); " if bias else "") +
+            "a flat profile would put about 4.2% in every hour. Selection rule: " + (intra.get("selection_rule") or "") + ".",
             "diverging", series, unit="% of day's sampled volume", y_domain=[0, max(5.0, max(p[1] for sr in series for p in sr["points"]) * 1.1)],
             source="make blocks-intraday: FastNear neardata hourly windows (data/blocks/intraday_events.csv, intraday_manifest.json)",
             query="near_thesis/reconcile.py intraday(): half gross notional per hourly window / day total"))

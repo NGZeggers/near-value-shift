@@ -246,6 +246,8 @@ def intraday(prices: dict, blocks_per_day: pd.Series, llama: pd.Series, fixed_ho
                      "usd_per_hour_window": {f"{h:02d}": per_hour[h] for h in hours_ok},
                      "hour_share_of_sampled": {f"{h:02d}": (per_hour[h] / total if total else None) for h in hours_ok},
                      "fixed_hours_share_of_sampled": float(sum(per_hour[h] for h in fixed) / total) if total and fixed else None,
+                     "largest_hour": (f"{max(per_hour, key=per_hour.get):02d}" if total else None),
+                     "largest_hour_share_of_sampled": float(max(per_hour.values()) / total) if total else None,
                      "expanded_from_all_hours_usd": float(est_all) if np.isfinite(est_all) else None,
                      "expanded_from_fixed_hours_usd": float(est_fixed) if np.isfinite(est_fixed) else None,
                      "fixed_window_bias_factor": float(rate_all / rate_fixed) if fixed and rate_fixed > 0 else None,
@@ -253,11 +255,17 @@ def intraday(prices: dict, blocks_per_day: pd.Series, llama: pd.Series, fixed_ho
                      "ratio_all_hours_to_reference": float(est_all / ref) if ref and np.isfinite(est_all) else None,
                      "ratio_fixed_hours_to_reference": float(est_fixed / ref) if ref and np.isfinite(est_fixed) else None})
     factors = [d["fixed_window_bias_factor"] for d in days if d.get("fixed_window_bias_factor")]
+    ratios_all = [d["ratio_all_hours_to_reference"] for d in days if d.get("ratio_all_hours_to_reference")]
     return {"selection_rule": man.get("selection_rule"), "fetched_at": man.get("fetched_at"), "blocks_per_window": man.get("blocks_per_window"),
             "complete": man.get("complete"), "days": days,
             "fixed_window_bias_factor_mean": float(np.mean(factors)) if factors else None,
-            "reading": ("factor > 1 means the two fixed windows under-represent the day's hourly mean; even 24 hourly windows observe "
-                        "about 1,200 of ~150,000 blocks, so this measures the intraday expansion error, not a complete day")}
+            "fixed_window_bias_factor_median": float(np.median(factors)) if factors else None,
+            "aggregate_used_for_correction": "median",
+            "ratio_all_hours_to_reference_median": float(np.median(ratios_all)) if ratios_all else None,
+            "reading": ("Factor > 1 means the two fixed windows under-represent the day's hourly mean; even 24 hourly windows observe "
+                        "about 1,200 of ~150,000 blocks, so this measures the intraday expansion error, not a complete day. "
+                        "The median across days is used for the correction because a single hourly window can carry most of a day's "
+                        "sampled volume and dominate the mean")}
 
 
 def trace_examples(legs: pd.DataFrame, raw: pd.DataFrame, ef: pd.Series) -> list[dict]:
@@ -363,14 +371,21 @@ def run() -> dict:
     residual = {}
     if ratio:
         two_sided = ratio * alt["full_gross_participant_notional"] / alt["half_gross_participant_notional"] if alt["half_gross_participant_notional"] else None
-        bias = intra.get("fixed_window_bias_factor_mean") if intra else None
+        bias = intra.get("fixed_window_bias_factor_median") if intra else None
+        bias_mean = intra.get("fixed_window_bias_factor_mean") if intra else None
+        after = ratio * bias if bias else None
         residual = {"pooled_ratio": ratio,
                     "if_reference_were_two_sided_notional": two_sided,
-                    "after_intraday_bias_correction": ratio * bias if bias else None,
+                    "intraday_bias_factor_used": bias,
+                    "after_intraday_bias_correction": after,
+                    "after_intraday_bias_correction_mean_factor": ratio * bias_mean if bias_mean else None,
                     "after_both": two_sided * bias if (two_sided and bias) else None,
-                    "unexplained_factor_to_parity": (1 / (two_sided * bias)) if (two_sided and bias) else (1 / ratio),
+                    "unexplained_factor_to_parity": (1 / after) if after else (1 / ratio),
+                    "two_sided_and_intraday_overshoot": bool(two_sided and bias and two_sided * bias > 1),
                     "reading": ("the identified components are definitional (one- versus two-sided) and intraday coverage; the remaining factor "
-                                "to reach parity is unexplained and is reported as such, not attributed to missing large trades")}
+                                "to reach parity after the measured intraday bias is unexplained and is reported as such, not attributed to "
+                                "missing large trades. The two-sided reading is a definitional bound, not a correction: if it and the full "
+                                "intraday correction both held the ratio would exceed parity, so they cannot both hold")}
     out = {"computed": True, "economic_unit": ECONOMIC_UNIT, "pooled_ratio_all_days": pooled,
            "components": {"temporal_coverage": coverage, "valuation": valuation, "route_reconstruction": routes, "residual": residual},
            "holdout": holdout(table), "intraday": intra or {"available": False, "how": "make blocks-intraday (network, several hours under the public rate limit)"},

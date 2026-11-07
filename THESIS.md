@@ -82,13 +82,21 @@ Intervals condition on the observed sampled days; they omit intraday, routing an
 
 **Temporal coverage.** Two 50-block windows observe 0.09% of a day's blocks. On days where both windows carry volume the 15:00 UTC window has 4.8x the 03:00 volume (median over 30 days); one window carries over 80% of the day's sampled volume on 59% of days.
 
-**Intraday expansion error.** Not measured yet: `make blocks-intraday` fetches 24 hourly windows for three pre-declared days (highest reference volume, 2026 median day, 2025 median day).
+**Intraday expansion error (measured).** Selection rule, declared before fetching: sampled days with both fixed windows usable and a DefiLlama reference; pick the highest-volume day, the day closest to the 2026 median and the day closest to the 2025 median; declared before fetching. Hourly windows of 50 blocks, fetched 2026-11-07T04:55:45+00:00.
+
+| Day | Hourly windows | Fixed-hours share of sampled volume | Estimate from 24 hours / reference | Estimate from fixed hours / reference | Bias factor |
+|---|---|---|---|---|---|
+| 2025-08-31 | 24 | 1.1% | 1.501 | 0.194 | 7.72 |
+| 2026-04-13 | 24 | 4.2% | 0.374 | 0.187 | 2.00 |
+| 2026-09-25 | 24 | 3.0% | 0.871 | 0.309 | 2.82 |
+
+Median bias factor 2.82 (mean 4.18; on 2025-08-31 the 18:00 window alone carries 94% of the day's sampled volume). Estimates from all 24 hours reach 0.87x the reference (median over the three days). Factor > 1 means the two fixed windows under-represent the day's hourly mean; even 24 hourly windows observe about 1,200 of ~150,000 blocks, so this measures the intraday expansion error, not a complete day. The median across days is used for the correction because a single hourly window can carry most of a day's sampled volume and dominate the mean.
 
 **Valuation.** 222 of 3844 legs (5.8%) are unpriced, but an account-intent is valued by whichever side is priced: only 20 of 1870 account-intents in 16 batches lose value entirely. For the 1577 account-intents with both sides priced, inflow/outflow has median 1.000 and 5th-95th percentiles 0.970-1.026: daily prices and decimals are consistent across legs. Unpriced assets and the reason for each: pol (52 legs: price snapshot polygon-ecosystem-token is empty (DefiLlama coins API returned no history)); sweat (24 legs: price snapshot sweatcoin is empty (DefiLlama coins API returned no history)); xlm (10 legs: no price snapshot for stellar); bera (8 legs: price snapshot berachain-bera is empty (DefiLlama coins API returned no history)); gno (6 legs: no price snapshot for gnosis); aurora (6 legs: no price snapshot for aurora-near).
 
 **Route reconstruction.** 52% of batches have more than two accounts; per-token diffs within a receipt balance to rounding dust (99th percentile of |net|/gross 8.0e-04). Sampled totals under alternative definitions: half gross participant notional $407.4K, full gross $814.8K, user-side notional with heuristic roles $395.2K. If the reference counted both sides of each swap our ratio would be 0.51; this is a definitional bound, not evidence about the reference.
 
-**Residual.** A factor of 4.0x to parity remains unexplained and is reported as such, not attributed to missing large trades.
+**Residual.** After the measured intraday bias (median factor 2.82) the ratio would be 0.71 (1.06 with the mean factor); a factor of 1.4x to parity remains unexplained and is reported as such, not attributed to missing large trades. If the reference additionally counted both sides the corrected ratio would be 1.42; that exceeds parity, so the two-sided reading and the full intraday correction cannot both hold.
 
 **Pre-declared tolerance and holdout.** Tolerance (2026-11-06, before evaluating the holdout days): point ratio within [0.8, 1.25] and interval covering 1.0; covers measured pricing dispersion (a few percent), not coverage or definitional gaps. Split: sampled days with a positive reference value are sorted chronologically; even positions calibrate, odd positions validate; declared before evaluation. Calibration days (23): 0.210 [0.114, 0.305]. Validation days (23): 0.297 [0.186, 0.416]. Verdict: validation days outside the declared tolerance: the on-chain estimate does not reproduce the reference level.
 

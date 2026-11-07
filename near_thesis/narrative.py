@@ -302,13 +302,14 @@ def build(d: pd.DataFrame, m: pd.DataFrame, qs: dict, ins: dict, ic: list, vg: l
         res = comp.get("residual") or {}
         cov = comp.get("temporal_coverage") or {}
         intra = recon.get("intraday") or {}
-        bias = intra.get("fixed_window_bias_factor_mean")
+        bias = intra.get("fixed_window_bias_factor_median")
         against.append({"text": (f"Decomposition of the gap: two 50-block windows observe {cov.get('block_coverage_share_mean', 0):.2%} of a day's blocks and the 15:00 UTC window carries "
                                  f"{cov['between_window_ratio_15_over_03']['median']:.1f}x the 03:00 volume; " if cov.get("between_window_ratio_15_over_03", {}).get("median") else "")
-                                + (f"24 hourly windows on {len(intra.get('days', []))} pre-declared days put the fixed-window bias factor at {bias:.2f}; " if bias else "the intraday extract is not yet available; ")
+                                + (f"24 hourly windows on {len(intra.get('days', []))} pre-declared days put the fixed-window bias factor at {bias:.2f} (median; mean {intra.get('fixed_window_bias_factor_mean'):.2f}); " if bias else "the intraday extract is not yet available; ")
                                 + (f"valuation loses only {comp['valuation']['account_intents_without_any_priced_side']} of {comp['valuation']['account_intents']} account-intents; "
                                    f"a two-sided reading of the reference would double the ratio to {res.get('if_reference_were_two_sided_notional', 0):.2f}. "
-                                   f"After the identified components a factor of {res.get('unexplained_factor_to_parity', 0):.1f}x to parity stays unexplained."),
+                                   + (f"After the intraday correction the ratio would be {res['after_intraday_bias_correction']:.2f} and a factor of {res.get('unexplained_factor_to_parity', 0):.1f}x to parity stays unexplained." if res.get('after_intraday_bias_correction')
+                                      else f"A factor of {res.get('unexplained_factor_to_parity', 0):.1f}x to parity stays unexplained.")),
                         "href": "#chart-intents_recon_daily", "kind": "estimate"})
     else:
         against.append({"text": "Fixed intraday windows, sparse sampling, role assumptions, unpriced assets and routed batches can all affect the on-chain comparison; their separate contributions are not identified.",
@@ -347,9 +348,10 @@ def sensitivity_table(ratio: dict, cross_ok: bool, qaa_last, qsens: dict, recon:
         if res.get("if_reference_were_two_sided_notional"):
             variants.append({"label": "if the reference counted both sides", "value": f"{res['if_reference_were_two_sided_notional']:.2f}"})
         if res.get("after_intraday_bias_correction"):
-            variants.append({"label": "after the measured intraday bias", "value": f"{res['after_intraday_bias_correction']:.2f}"})
+            variants.append({"label": "after the measured intraday bias (median factor)", "value": f"{res['after_intraday_bias_correction']:.2f}"})
+            variants.append({"label": "after the measured intraday bias (mean factor)", "value": f"{res['after_intraday_bias_correction_mean_factor']:.2f}"})
         if res.get("after_both"):
-            variants.append({"label": "both corrections", "value": f"{res['after_both']:.2f}"})
+            variants.append({"label": "two-sided reading and intraday correction together", "value": f"{res['after_both']:.2f}" + (" (exceeds parity)" if res.get("two_sided_and_intraday_overshoot") else "")})
         for role in ("calibration", "validation"):
             r = hold.get(role) or {}
             if "ratio" in r:

@@ -1,0 +1,619 @@
+{
+ "fetched_at": "2026-11-07T04:55:45+00:00",
+ "source": "https://mainnet.neardata.xyz/v0/block/{h}",
+ "days": [
+  "2025-08-31",
+  "2026-04-13",
+  "2026-09-25"
+ ],
+ "hours": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  22,
+  23
+ ],
+ "blocks_per_window": 50,
+ "selection_rule": "sampled days with both fixed windows usable and a DefiLlama reference; pick the highest-volume day, the day closest to the 2026 median and the day closest to the 2025 median; declared before fetching",
+ "windows": [
+  {
+   "day": "2025-08-31",
+   "hour": 0,
+   "start_height": 161926842,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 1,
+   "start_height": 161932842,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 2,
+   "start_height": 161938842,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 3,
+   "start_height": 161944847,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 4,
+   "start_height": 161950841,
+   "n": 50,
+   "fetched": 49,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 5,
+   "start_height": 161956841,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 6,
+   "start_height": 161962841,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 7,
+   "start_height": 161968841,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 8,
+   "start_height": 161974841,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 9,
+   "start_height": 161980841,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 10,
+   "start_height": 161986841,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 11,
+   "start_height": 161992841,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 12,
+   "start_height": 161998637,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 13,
+   "start_height": 162004402,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 14,
+   "start_height": 162010212,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 15,
+   "start_height": 162016011,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 16,
+   "start_height": 162022066,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 17,
+   "start_height": 162028042,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 18,
+   "start_height": 162033961,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 19,
+   "start_height": 162039908,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 20,
+   "start_height": 162045855,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 21,
+   "start_height": 162051832,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 22,
+   "start_height": 162057824,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2025-08-31",
+   "hour": 23,
+   "start_height": 162063851,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 0,
+   "start_height": 193749406,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 1,
+   "start_height": 193755406,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 2,
+   "start_height": 193761406,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 3,
+   "start_height": 193767468,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 4,
+   "start_height": 193772967,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 5,
+   "start_height": 193778544,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 6,
+   "start_height": 193784079,
+   "n": 50,
+   "fetched": 49,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 7,
+   "start_height": 193789648,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 8,
+   "start_height": 193795205,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 9,
+   "start_height": 193800903,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 10,
+   "start_height": 193806700,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 11,
+   "start_height": 193812538,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 12,
+   "start_height": 193818596,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 13,
+   "start_height": 193824811,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 14,
+   "start_height": 193830872,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 15,
+   "start_height": 193836785,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 16,
+   "start_height": 193842939,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 17,
+   "start_height": 193848993,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 18,
+   "start_height": 193855040,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 19,
+   "start_height": 193861010,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 20,
+   "start_height": 193867084,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 21,
+   "start_height": 193873173,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 22,
+   "start_height": 193879249,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-04-13",
+   "hour": 23,
+   "start_height": 193885322,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 0,
+   "start_height": 217119109,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 1,
+   "start_height": 217125109,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 2,
+   "start_height": 217131109,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 3,
+   "start_height": 217137096,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 4,
+   "start_height": 217143108,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 5,
+   "start_height": 217149108,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 6,
+   "start_height": 217155108,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 7,
+   "start_height": 217161283,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 8,
+   "start_height": 217167108,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 9,
+   "start_height": 217173108,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 10,
+   "start_height": 217179108,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 11,
+   "start_height": 217185108,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 12,
+   "start_height": 217191298,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 13,
+   "start_height": 217197341,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 14,
+   "start_height": 217203373,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 15,
+   "start_height": 217209572,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 16,
+   "start_height": 217215510,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 17,
+   "start_height": 217221574,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 18,
+   "start_height": 217227578,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 19,
+   "start_height": 217233639,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 20,
+   "start_height": 217239630,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 21,
+   "start_height": 217245612,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 22,
+   "start_height": 217251673,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  },
+  {
+   "day": "2026-09-25",
+   "hour": 23,
+   "start_height": 217257773,
+   "n": 50,
+   "fetched": 50,
+   "usable": true
+  }
+ ],
+ "blocks_requested": 3600,
+ "blocks_fetched": 3598,
+ "blocks_missing": 2,
+ "complete": true
+}
