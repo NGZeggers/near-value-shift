@@ -192,3 +192,21 @@ Resultado: ninguna métrica de uso supera el criterio declarado; el veredicto lo
 ### Verificación de esta pasada
 
 - `make build` completo; `make test`: 126 pruebas aprobadas; comprobaciones de navegador: 47 de 47; `make check-generated`: coincidente tras el commit.
+
+---
+
+## Octava pasada: respuesta a la séptima revisión (96/100, base `5c52f79`)
+
+**English summary.** The three remaining items need evidence the public block API cannot give in full, and no BigQuery, Dune, Flipside or Explorer credentials are available in this environment. This pass adds what the public API can still supply, each under a rule declared before reading: (1) a systematic sample of every 40th block of one validation day (about 2.5% of its blocks spread over the whole day, with a design-based standard error) to separate sampling error from definitional gap for that day; (2) the buyback trace deepened from 40 to 200 blocks before each withdrawal; (3) the QAA reading bounded as the auditor asked. Month-level QAA validation and a reference of independent origin remain impossible here and are declared.
+
+| Punto | Estado | Qué se hizo y dónde verificarlo |
+| --- | --- | --- |
+| Volumen: cobertura e incertidumbre de muestreo | Declarado y en adquisición al cerrar esta pasada | `SYSTEMATIC_RULE` en `near_thesis/blocks.py` (declarada 2026-11-07 antes de leer): día 2025-11-14 (validación, posición central), cada 40.º bloque de 00:00 a 24:00 UTC con desplazamiento aleatorio de semilla declarada (3,496 bloques de 139,853). `reconcile.systematic_day`: estimación = media por bloque × bloques del día; error estándar de diseño por diferencias sucesivas; intervalo del ratio frente a la referencia y comparación con los otros dos diseños del mismo día. THESIS.md publica la regla con estado "pending" hasta que llegue el extracto, y el resultado cuando exista. Prueba `test_systematic_day_estimate_and_design_error`. Alcance: un día acota la componente de muestreo de ese día; no establece el total global. |
+| Volumen: referencia de origen independiente | No posible aquí, declarado | Sin credenciales de BigQuery, Dune, Flipside ni Explorer JWT en este entorno; `not_possible_here` lo recoge. |
+| QAA: alcance de la lectura | Hecho | La frase "upper reading" se sustituye en THESIS.md y en el dashboard por: en este contraste (seis días, clasificación por nombre) el diseño de dos ventanas sobreestimó la cuota por nombre; que la cuota mensual por clustering tenga el mismo sesgo es una hipótesis compatible, no una cota demostrada. |
+| QAA: validación mensual y externa | No posible aquí, declarado | Requiere observación completa de meses (BigQuery) o etiquetas externas; ninguna disponible. |
+| Recompras: búsqueda del swap de financiación a 200 bloques | Declarado y en adquisición al cerrar esta pasada | Regla ampliada antes de leer más allá del bloque 40 (`BUYBACK_TRACE_EXTENSION_RULE["declared"]`); se ejecuta tras la muestra sistemática sobre los 23 recibos sin swap a 40 bloques. Origen de fondos: sigue sin trazarse. |
+
+### Verificación de esta pasada
+
+- `make build` completo con el extracto sistemático pendiente; `make test`: 127 pruebas aprobadas (1 nueva); comprobaciones de navegador: 47 de 47; `make check-generated`: coincidente tras el commit.

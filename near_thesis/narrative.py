@@ -352,6 +352,9 @@ def sensitivity_table(ratio: dict, cross_ok: bool, qaa_last, qsens: dict, recon:
         if res.get("after_intraday_bias_correction"):
             if res.get("after_confidential_intents_exclusion"):
                 variants.append({"label": "excluding the reference's confidential-intents share (estimate from a cumulative figure)", "value": f"{res['after_confidential_intents_exclusion']:.2f}"})
+            sd = recon.get("systematic_day") or {}
+            if sd.get("ratio_to_reference") is not None:
+                variants.append({"label": f"systematic 2.5% block sample of {sd['day']} (design interval)", "value": f"{sd['ratio_to_reference']:.2f} [{sd['ratio_ci95'][0]:.2f}, {sd['ratio_ci95'][1]:.2f}]"})
             variants.append({"label": "after the measured intraday bias (median factor)", "value": f"{res['after_intraday_bias_correction']:.2f}"})
             if res.get("after_confidential_and_intraday"):
                 variants.append({"label": "confidential share and intraday bias together", "value": f"{res['after_confidential_and_intraday']:.2f}"})
@@ -384,7 +387,7 @@ def sensitivity_table(ratio: dict, cross_ok: bool, qaa_last, qsens: dict, recon:
         if qsens.get("model_agreement"):
             variants.append({"label": "frozen past-only model", "value": f"{qsens['model_agreement']['latest']['frozen']:.0%}"})
         rows.append({"headline": f"Share of accounts outside mini-app and high-frequency patterns, {qsens.get('latest_month', 'latest month')}", "kind": "estimate", "variants": variants,
-                     "effect": "the level depends on the model and criterion, and the two-window design over-represents frequent and named accounts within a day, so the level is an upper reading for the observed-account population; the rising trend holds across variants. QAA is not one of the verdict's pass/fail checks, so the verdict does not move",
+                     "effect": "the level depends on the model and criterion; within the day the two-window design over-represents frequent and named accounts (six days, name-only contrast), so a same-direction bias of the monthly share is a hypothesis, not a demonstrated bound; the rising trend holds across variants. QAA is not one of the verdict's pass/fail checks, so the verdict does not move",
                      "href": "#chart-qaa_shares"})
     if bridge.get("scenarios"):
         sc = bridge["scenarios"]

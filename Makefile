@@ -3,7 +3,7 @@
 PY := uv run
 
 BLOCKS ?= 50   # blocks per sampling window for `make blocks` (budget: ~0.35 blocks/s)
-.PHONY: all build setup fetch bq blocks blocks-intraday blocks-intraday-validation blocks-buyback-trace oos-freeze qaa-refits onchain onchain-verify features models charts thesis site notebook index check-generated test clean
+.PHONY: all build setup fetch bq blocks blocks-intraday blocks-intraday-validation blocks-buyback-trace oos-freeze qaa-refits blocks-systematic-day onchain onchain-verify features models charts thesis site notebook index check-generated test clean
 .NOTPARALLEL:
 
 all: fetch build
@@ -68,6 +68,9 @@ blocks-buyback-trace:  ## execution blocks of a pre-declared sample of buyback-w
 
 oos-freeze:       ## persist the prospective out-of-sample plan once (refuses to overwrite; FORCE=1 to replace deliberately)
 	$(PY) near-thesis oos-freeze $(if $(filter 1,$(strip $(FORCE))),--force,)
+
+blocks-systematic-day:  ## every 40th block of the pre-declared validation day 2025-11-14 (network; ~3,500 blocks; resumable)
+	$(PY) near-thesis blocks-systematic-day
 
 qaa-refits:       ## refit the QAA clustering under other hyper-parameters (sensitivity artifact; platform-dependent, committed)
 	$(PY) near-thesis qaa-refits

@@ -194,7 +194,7 @@ def qaa_scope_section(qs: dict) -> list[str]:
                        if pl['multi_receiver_observable_share'].get('fixed_windows') is not None else "")
                     + 
                     "Reading: within a day, the two-window design over-represents frequent and named accounts, so a share computed on it sits above the share among all accounts active that day, and the weighting sensitivity under-corrects. "
-                    "This is an observed within-day quantity on six days chosen for the volume reconciliation; it does not identify the month-level bias of the QAA share, and 24 windows still observe under one percent of a day's blocks. The published QAA share is therefore an upper reading for the observed-account population, not a population estimate.")
+                    "This is an observed within-day quantity on six days chosen for the volume reconciliation; it does not identify the month-level bias of the QAA share, and 24 windows still observe under one percent of a day's blocks. In this contrast the two-window design overstated the name-only share; that the monthly clustering share is biased in the same direction is a hypothesis consistent with it, not a demonstrated bound, and the uncertainty outside this scope remains.")
     if sens.get('refits'):
         rf = sens['refits']; lo, hi = rf['default_share_range']
         rows.append(f"**Refits ({rf['computed_on']}, `make qaa-refits`).** Refitting the clustering with other hyper-parameters and an alternative algorithm gives latest-month default shares between {lo:.1%} and {hi:.1%} (committed assignment {crit['default']:.1%}): "
@@ -253,6 +253,18 @@ def reconciliation_section() -> list[str]:
                       + (f", {num(iv.get('validation_median_factor_unbounded_as_infinite'), 2)} with the unbounded day treated as infinite (ratio {num(iv.get('ratio_validation_over_motivating_unbounded_as_infinite'), 2)})" if iv.get('days_with_unbounded_factor') else "")
                       + f". Verdict: {iv.get('verdict', '')}. The validation days are three; this supports the order of magnitude of the sensitivity, not a precise correction.\n"
                       if iv.get('validation_median_factor') else f"Status: {iv['status']}.\n"))
+    sd = rec.get('systematic_day') or {}
+    if sd.get('rule'):
+        rule = sd['rule']
+        head = f"**Systematic within-day sample (declared {rule['declared']}).** Day: {rule['day']}. Design: {rule['design']}. Estimator: {rule['estimator']}. "
+        if sd.get('estimate_usd') is not None:
+            dz = sd['design']; od = sd.get('same_day_other_designs') or {}
+            out.append(head + f"Result: {dz['blocks_fetched']:,} of {dz['blocks_in_day']:,} blocks ({dz['sampling_fraction']:.2%}), {sd['blocks_with_volume']:,} with Intents volume; "
+                       f"estimate {usd(sd['estimate_usd'])} with design standard error {usd(sd['standard_error_usd'])} (relative {sd['relative_standard_error']:.1%}) against a reference of {usd(sd['reference_usd'])}: ratio {sd['ratio_to_reference']:.2f}, 95% interval {sd['ratio_ci95'][0]:.2f} to {sd['ratio_ci95'][1]:.2f}. "
+                       + (f"The same day under the two fixed windows gave {num(od.get('two_fixed_windows_ratio'), 2)} and under 24 hourly windows {num(od.get('twenty_four_hourly_windows_ratio'), 2)}. " if od else "")
+                       + f"The top one percent of sampled blocks carries {sd['share_of_sampled_usd_in_top_1pct_blocks']:.0%} of the sampled volume. Reading: {sd['reading']}. {rule['what_it_establishes'][0].upper() + rule['what_it_establishes'][1:]}.\n")
+        else:
+            out.append(head + f"Status: {sd['status']}.\n")
     chk = val['two_sided_pricing_check']
     out.append(f"**Valuation.** {val['legs_unpriced']} of {val['legs_total']} legs ({val['legs_unpriced_share']:.1%}) are unpriced, but an account-intent is valued by whichever side is priced: only {val['account_intents_without_any_priced_side']} of {val['account_intents']} account-intents in {val['batches_with_unvalued_account_intent']} batches lose value entirely. "
                f"For the {chk['account_intents_two_sided']} account-intents with both sides priced, inflow/outflow has median {chk['in_over_out']['p50']:.3f} and 5th-95th percentiles {chk['in_over_out']['p5']:.3f}-{chk['in_over_out']['p95']:.3f}: daily prices and decimals are consistent across legs. "

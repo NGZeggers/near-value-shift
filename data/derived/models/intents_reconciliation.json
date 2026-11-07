@@ -672,6 +672,16 @@
   "within_declared_range": true,
   "verdict": "validation days reproduce the motivating factor within the declared x0.5-x2 range (also when the day with an unbounded factor is treated as infinite)"
  },
+ "systematic_day": {
+  "rule": {
+   "declared": "2026-11-07, before any block of this design was read",
+   "day": "the chronologically middle of the three validation days (selected earlier by position, not by volume): 2025-11-14",
+   "design": "systematic sample of every 40th block from the first block at or after 00:00 UTC to the last block before 00:00 UTC of the next day, with a random start offset in [0, 40) drawn from seed 20261107; about 2.5% of the day's blocks, spread over the whole day instead of 24 fifty-block windows",
+   "estimator": "day volume = sum of the sampled blocks' half-gross participant notional x step; design-based standard error from successive differences",
+   "what_it_establishes": "whether the day's total under our definition is compatible with the reference once intraday selection is replaced by an even spread with a quantified sampling error; one day, so it bounds the sampling component for that day, not the global total"
+  },
+  "status": "pending: systematic day not fetched yet (make blocks-systematic-day)"
+ },
  "trace_examples": [
   "simple_two_party_fully_priced",
   "multi_participant_batch",

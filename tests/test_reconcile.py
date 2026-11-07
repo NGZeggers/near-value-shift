@@ -221,3 +221,31 @@ def test_reference_definition_declares_confidential_component_as_estimate():
         res = json.loads(out.read_text())["components"]["residual"]
         assert res["after_confidential_intents_exclusion"] == pytest.approx(res["pooled_ratio"] / (1 - share))
         assert res["after_confidential_and_intraday"] == pytest.approx(res["after_intraday_bias_correction"] / (1 - share))
+
+
+def test_systematic_day_estimate_and_design_error(tmp_path, monkeypatch):
+    """Mean per sampled block x blocks in the day; successive-difference standard error; pending without data."""
+    assert reconcile.systematic_day({}, pd.Series(dtype=float), events=tmp_path / "no.csv", manifest=tmp_path / "no.json")["status"].startswith("pending")
+    day = "2025-11-14"
+    heights = list(range(1000, 1000 + 40 * 10, 40))
+    rows = []
+    for i, h in enumerate(heights):
+        if i % 2 == 0:                       # half the blocks carry one 100-USDC swap
+            log = json.dumps({"standard": "dip4", "event": "token_diff", "data": [
+                {"account_id": "u", "intent_hash": f"u{i}", "diff": {"usdc": str(-100 * 10**6), "zzz": "1"}},
+                {"account_id": "mm", "intent_hash": f"m{i}", "diff": {"usdc": str(100 * 10**6), "zzz": "-1"}}]})
+            rows.append({"block_date": day, "block_timestamp": i, "receipt_id": f"r{i}", "caller": "relay", "log": "EVENT_JSON:" + log,
+                         "window_day": day, "window_hour": i % 24, "block_height": h, "execution_status": "SUCCESS_VALUE"})
+    (tmp_path / "e.csv").write_text(pd.DataFrame(rows).to_csv(index=False))
+    man = {"day": day, "step": 40, "offset": 0, "blocks_in_day": 400, "blocks_requested": 10, "blocks_fetched": 10, "blocks_missing": 0, "complete": True,
+           "heights_sampled": heights, "fetched_at": "x"}
+    (tmp_path / "m.json").write_text(json.dumps(man))
+    monkeypatch.setattr(intents, "_REGISTRY", {"usdc": ("usdc", 6, "usd-coin")})
+    ref = pd.Series({pd.Timestamp(day): 20_000.0})
+    out = reconcile.systematic_day({}, ref, events=tmp_path / "e.csv", manifest=tmp_path / "m.json",
+                                   intraday_days=[{"day": day, "ratio_fixed_hours_to_reference": 0.3, "ratio_all_hours_to_reference": 0.4, "blocks_observed": 1200}])
+    assert out["sampled_usd"] == pytest.approx(500.0) and out["estimate_usd"] == pytest.approx(500 / 10 * 400)   # 20,000 = the reference
+    assert out["ratio_to_reference"] == pytest.approx(1.0) and out["reference_inside_ci95"] is True
+    sd = np.sqrt(sum(100.0**2 for _ in range(9)) / (2 * 9))          # alternating 100/0: every successive difference is 100
+    assert out["standard_error_usd"] == pytest.approx(sd / np.sqrt(10) * np.sqrt(1 - 10 / 400) * 400)
+    assert out["same_day_other_designs"]["two_fixed_windows_ratio"] == 0.3 and "includes parity" in out["reading"]

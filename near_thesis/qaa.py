@@ -465,7 +465,7 @@ def refit_variants(df: pd.DataFrame, x: pd.DataFrame, committed: np.ndarray, mon
                                            "default": float(lab[last.to_numpy()].isin(QUALITY).mean()),
                                            "including_ambiguous": float((~lab[last.to_numpy()].isin(NON_QUALITY)).mean())}})
     defaults = [r["latest_month_share"]["default"] for r in out]
-    return {"computed_on": pd.Timestamp.utcnow().strftime("%Y-%m-%d"), "n": int(n), "latest_month": str(monthly_index[-1].date())[:7],
+    return {"computed_on": pd.Timestamp.now("UTC").strftime("%Y-%m-%d"), "n": int(n), "latest_month": str(monthly_index[-1].date())[:7],
             "baseline_min_cluster_size": base_mcs, "variants": out,
             "default_share_range": [min(defaults), max(defaults)],
             "reading": ("the committed assignment is the baseline; these refits show how much the latest default share and the partition itself "

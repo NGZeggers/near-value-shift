@@ -624,10 +624,11 @@ def run_buyback_trace(offline: bool = False) -> dict:
 
 BUYBACK_TRACE_EXTENSION = BLOCKS / "buyback_trace_extension.json"
 BUYBACK_TRACE_EXTENSION_RULE = {
-    "declared": "2026-11-07, after the first trace was published and before any additional block was read",
+    "declared": ("2026-11-07, after the first trace was published and before any additional block was read: up to 40 blocks; extended the same day "
+                 "to 200 blocks after 6 of 29 were found within 40, before reading any block beyond the 40th"),
     "population": "the sampled receipts whose Intents account had no token_diff in the blocks between the originating transaction and the receipt",
-    "search": "read the blocks immediately before the originating transaction block, newest first, up to 40 blocks (about 45 seconds), and stop at the "
-              "first block that carries a token_diff event of that Intents account",
+    "search": "read the blocks immediately before the originating transaction block, newest first, up to the declared depth (40 blocks is about 45 seconds, "
+              "200 about four minutes), and stop at the first block that carries a token_diff event of that Intents account",
     "what_it_establishes": ("whether the funding swap of the withdrawal is visible shortly before it; a swap found this way is an observed exchange of the "
                             "same Intents-side account, not proof that the withdrawn NEAR was bought with those exact proceeds; the origin of the sold asset "
                             "(bridge deposit, earlier swap) is not traced"),
@@ -729,3 +730,62 @@ def write_intraday_signers(offline: bool = True) -> pd.DataFrame:
     days.to_csv(INTRADAY_SIGNER_DAYS, index=False)
     print(f"intraday signers: {len(df):,} (day, hour, signer) rows and {len(days):,} (day, signer) rows with day-level distinct receivers over {df['window_day'].nunique()} days", flush=True)
     return df
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Systematic within-day sample of one validation day. Declared 2026-11-07 before any block of this design was read.
+SYSTEMATIC_DAY = "2025-11-14"
+SYSTEMATIC_STEP = 40
+SYSTEMATIC_SEED = 20261107
+SYSTEMATIC_EVENTS = BLOCKS / "systematic_day_events.csv"
+SYSTEMATIC_MANIFEST = BLOCKS / "systematic_day_manifest.json"
+SYSTEMATIC_RULE = {
+    "declared": "2026-11-07, before any block of this design was read",
+    "day": "the chronologically middle of the three validation days (selected earlier by position, not by volume): 2025-11-14",
+    "design": (f"systematic sample of every {SYSTEMATIC_STEP}th block from the first block at or after 00:00 UTC to the last block before 00:00 UTC "
+               f"of the next day, with a random start offset in [0, {SYSTEMATIC_STEP}) drawn from seed {SYSTEMATIC_SEED}; about 2.5% of the day's blocks, "
+               "spread over the whole day instead of 24 fifty-block windows"),
+    "estimator": "day volume = sum of the sampled blocks' half-gross participant notional x step; design-based standard error from successive differences",
+    "what_it_establishes": ("whether the day's total under our definition is compatible with the reference once intraday selection is replaced by an even "
+                            "spread with a quantified sampling error; one day, so it bounds the sampling component for that day, not the global total"),
+}
+
+
+def run_systematic_day(day: str = SYSTEMATIC_DAY, step: int = SYSTEMATIC_STEP, offline: bool = False) -> dict:
+    import random
+    plan = json.loads(INTRADAY_VALIDATION_PLAN.read_text())
+    h0 = next(w["start_height"] for w in plan if w["day"] == day and int(w["hour"]) == 0)
+    nxt = (datetime.fromisoformat(day) + timedelta(days=1)).replace(tzinfo=timezone.utc)
+    if SYSTEMATIC_MANIFEST.exists():
+        man0 = json.loads(SYSTEMATIC_MANIFEST.read_text()); h_end = man0["end_height"]; offset = man0["offset"]
+    else:
+        h_end = find_height_fast(int(nxt.timestamp() * 1e9), h0 + 78_000, latest_height())
+        offset = random.Random(SYSTEMATIC_SEED).randrange(step)
+    heights = list(range(h0 + offset, h_end, step))
+    if offline:
+        heights = [h for h in heights if (CACHE / f"{h}.json").exists()]
+    print(f"systematic day {day}: heights {h0}..{h_end}, step {step}, offset {offset}, {len(heights)} blocks" + (" (offline)" if offline else ""), flush=True)
+    t0 = time.time(); fetched = 0; missing = 0
+    tmp = SYSTEMATIC_EVENTS.with_suffix(".csv.tmp")
+    with tmp.open("w", newline="") as fe:
+        we = csv.writer(fe)
+        we.writerow(["block_date", "block_timestamp", "receipt_id", "caller", "log", "window_day", "window_hour", "block_height", "execution_status"])
+        for i, h in enumerate(heights, 1):
+            b = fetch_block(h, offline=offline)
+            if b is None:
+                missing += 1
+            else:
+                fetched += 1
+                d = datetime.fromtimestamp(b["ts"] / 1e9, tz=timezone.utc)
+                for rid, pred, log, status in b["events"]:
+                    we.writerow([d.strftime("%Y-%m-%d"), b["ts"], rid, pred, log, day, d.hour, b["height"], status])
+            if i % 100 == 0:
+                el = time.time() - t0
+                print(f"  {i}/{len(heights)} blocks, {missing} missing, {el:,.0f}s, eta {(len(heights) - i) / max(i / el, 1e-9) / 60:,.0f} min", flush=True)
+    tmp.replace(SYSTEMATIC_EVENTS)
+    man = {"fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": NEARDATA, "rule": SYSTEMATIC_RULE, "day": day, "step": step,
+           "offset": offset, "start_height": h0, "end_height": h_end, "blocks_in_day": h_end - h0, "blocks_requested": len(heights),
+           "blocks_fetched": fetched, "blocks_missing": missing, "complete": fetched + missing >= len(heights), "heights_sampled": heights}
+    SYSTEMATIC_MANIFEST.write_text(json.dumps(man, indent=1))
+    print(f"systematic day done: {fetched} blocks in {time.time() - t0:,.0f}s (complete={man['complete']})", flush=True)
+    return man

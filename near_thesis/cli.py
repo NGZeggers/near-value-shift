@@ -33,6 +33,8 @@ def main(argv: list[str] | None = None) -> None:
     of = sub.add_parser("oos-freeze", help="persist the prospective out-of-sample plan once (data/prospective/oos_freeze.json); refuses to overwrite")
     of.add_argument("--frozen-on", default=None, help="effective freeze date (default: today, UTC)")
     of.add_argument("--force", action="store_true", help="replace an existing frozen plan deliberately")
+    sd = sub.add_parser("blocks-systematic-day", help="systematic sample of every 40th block of the pre-declared validation day (network, hours; resumable)")
+    sd.add_argument("--offline", action="store_true")
     sub.add_parser("qaa-refits", help="refit the QAA clustering under other hyper-parameters and an alternative algorithm; writes a committed sensitivity artifact")
     ve = sub.add_parser("verify-events", help="revalidate saved event receipts against full blocks; resumable and atomic")
     ve.add_argument("--offline", action="store_true", help="use only full verification blocks already cached")
@@ -75,6 +77,9 @@ def main(argv: list[str] | None = None) -> None:
         from . import signal
         plan = signal.freeze_prospective_plan(signal._weekly(), a.frozen_on or _dt.datetime.now(_dt.timezone.utc).date().isoformat(), force=a.force)
         print(f"oos-freeze: {len(plan['tests'])} tests frozen on {plan['frozen_on']} at data cutoff {plan['data_cutoff']} -> {signal.PROSPECTIVE_FREEZE}")
+    elif a.cmd == "blocks-systematic-day":
+        from . import blocks
+        blocks.run_systematic_day(offline=a.offline)
     elif a.cmd == "qaa-refits":
         from . import qaa
         qaa.run_refits()

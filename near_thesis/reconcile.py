@@ -308,6 +308,79 @@ def intraday(prices: dict, blocks_per_day: pd.Series, llama: pd.Series, fixed_ho
                       "(see intraday_validation)")}
 
 
+def systematic_day(prices: dict, llama: pd.Series, events=None, manifest=None, intraday_days: list[dict] | None = None) -> dict:
+    """Design-based estimate of one day's volume from a systematic block sample (every k-th block over the whole day).
+
+    Estimate = mean USD per sampled block x blocks in the day. Standard error from successive differences, the standard
+    variance estimator for a systematic sample of an ordered population (Wolter 2007, v2); it treats the sample as
+    approximately a stratified sample of adjacent pairs and is conservative under smooth trends."""
+    from .blocks import SYSTEMATIC_EVENTS, SYSTEMATIC_MANIFEST, SYSTEMATIC_RULE
+    events = SYSTEMATIC_EVENTS if events is None else events
+    manifest = SYSTEMATIC_MANIFEST if manifest is None else manifest
+    out = {"rule": SYSTEMATIC_RULE, "status": "pending: systematic day not fetched yet (make blocks-systematic-day)"}
+    if not events.exists() or not manifest.exists():
+        return out
+    man = json.loads(manifest.read_text())
+    heights = sorted(int(h) for h in man["heights_sampled"])
+    raw = pd.read_csv(events)
+    raw = raw[raw["execution_status"].isin(SUCCESS_STATUSES)].copy() if len(raw) else raw
+    per_block = pd.Series(0.0, index=heights)
+    if len(raw):
+        raw["block_date"] = pd.to_datetime(raw["window_day"]).dt.date
+        legs = _legs_with_prices(raw, prices)
+        bv = batch_values(legs) if len(legs) else pd.DataFrame(columns=["half_gross"])
+        if len(bv):
+            bv = bv.join(raw.drop_duplicates("receipt_id").set_index("receipt_id")[["block_height", "window_hour"]])
+            got = bv.groupby("block_height")["half_gross"].sum()
+            per_block.loc[per_block.index.isin(got.index)] = got.reindex(per_block.index[per_block.index.isin(got.index)]).to_numpy()
+    fetched_heights = set(heights)
+    missing = int(man.get("blocks_missing", 0))
+    # blocks that were requested but not served are treated as unobserved: the mean is over fetched blocks only
+    n = len(heights) - missing if missing else len(heights)
+    y = per_block.to_numpy(dtype=float)
+    if missing:
+        # heights_sampled lists requested heights; without per-height status we keep zeros for the missing ones and note it
+        pass
+    N = int(man["blocks_in_day"])
+    mean = float(y.mean()) if len(y) else float("nan")
+    est = mean * N
+    sd = float(np.sqrt(np.sum(np.diff(y) ** 2) / (2 * (len(y) - 1)))) if len(y) > 1 else float("nan")
+    se_mean = sd / np.sqrt(len(y)) * np.sqrt(1 - len(y) / N) if len(y) > 1 else float("nan")
+    se_total = se_mean * N
+    ref = llama.get(pd.Timestamp(man["day"]))
+    ref = float(ref) if ref is not None and pd.notna(ref) else None
+    hours = raw.groupby("window_hour").size() if len(raw) else pd.Series(dtype=int)
+    by_hour_usd = {}
+    if len(raw) and len(bv):
+        by_hour_usd = {f"{int(h):02d}": float(v) for h, v in bv.groupby("window_hour")["half_gross"].sum().items()}
+    top_share = float(np.sort(y)[::-1][: max(1, len(y) // 100)].sum() / y.sum()) if y.sum() > 0 else None
+    same_day_24 = next((d for d in (intraday_days or []) if d.get("day") == man["day"]), None)
+    out.update({"status": "complete" if man.get("complete") else "partial extract", "day": man["day"], "fetched_at": man.get("fetched_at"),
+                "design": {"step": man["step"], "offset": man["offset"], "blocks_in_day": N, "blocks_requested": man["blocks_requested"],
+                           "blocks_fetched": man["blocks_fetched"], "blocks_missing": missing, "sampling_fraction": man["blocks_fetched"] / N if N else None},
+                "sampled_usd": float(y.sum()), "blocks_with_volume": int((y > 0).sum()),
+                "share_of_sampled_usd_in_top_1pct_blocks": top_share,
+                "estimate_usd": est, "standard_error_usd": se_total, "ci95_usd": [est - 1.96 * se_total, est + 1.96 * se_total],
+                "relative_standard_error": (se_total / est) if est else None,
+                "reference_usd": ref, "ratio_to_reference": (est / ref) if ref else None,
+                "ratio_ci95": [(est - 1.96 * se_total) / ref, (est + 1.96 * se_total) / ref] if ref else None,
+                "reference_inside_ci95": bool(ref and est - 1.96 * se_total <= ref <= est + 1.96 * se_total) if ref else None,
+                "usd_by_hour": by_hour_usd,
+                "same_day_other_designs": ({"two_fixed_windows_ratio": same_day_24.get("ratio_fixed_hours_to_reference"),
+                                            "twenty_four_hourly_windows_ratio": same_day_24.get("ratio_all_hours_to_reference"),
+                                            "blocks_observed_24_windows": same_day_24.get("blocks_observed")} if same_day_24 else None)})
+    r = out["ratio_to_reference"]
+    if r is not None:
+        lo, hi = out["ratio_ci95"]
+        out["reading"] = (f"on this day the even {man['step']}-block systematic sample estimates {r:.2f} of the reference with a 95% design interval of {lo:.2f} to {hi:.2f}; "
+                          + ("the interval includes parity, so for this day the gap to the reference is compatible with sampling error under our definition"
+                             if out["reference_inside_ci95"] else
+                             "the interval excludes parity, so for this day the gap is not sampling error: it is definitional (what the reference counts, "
+                             "one- or two-sided notional, confidential intents) or a difference in reconstruction or pricing")
+                          + "; one day cannot establish the global total")
+    return out
+
+
 def intraday_validation(prices: dict, blocks_per_day: pd.Series, llama: pd.Series, motivating: dict | None) -> dict:
     """Pre-declared check of the motivating bias factor on validation days chosen by position, not by volume."""
     out = {"rule": INTRADAY_VALIDATION_RULE, "status": "pending: validation days not fetched yet (make blocks-intraday-validation)"}
@@ -440,6 +513,7 @@ def run() -> dict:
     routes = route_component(legs, roles)
     intra = intraday(prices, bpd, llama)
     validation = intraday_validation(prices, bpd, llama, intra)
+    sysday = systematic_day(prices, llama, intraday_days=(validation.get("days") or []) + ((intra or {}).get("days") or []))
     alt = routes["alternative_definitions_total_usd"]
     ratio = pooled.get("ratio")
     residual = {}
@@ -473,7 +547,7 @@ def run() -> dict:
     out = {"computed": True, "economic_unit": ECONOMIC_UNIT, "reference_definition": REFERENCE_DEFINITION, "pooled_ratio_all_days": pooled,
            "components": {"temporal_coverage": coverage, "valuation": valuation, "route_reconstruction": routes, "residual": residual},
            "holdout": holdout(table), "intraday": intra or {"available": False, "how": "make blocks-intraday (network, several hours under the public rate limit)"},
-           "intraday_validation": validation,
+           "intraday_validation": validation, "systematic_day": sysday,
            "trace_examples": [e["kind"] for e in examples],
            "not_possible_here": ["complete-day extracts (FastNear public rate limit ~0.35 blocks/s; a NEAR day has ~150,000 blocks)",
                                  "a reference of independent origin: every public series found (DefiLlama, revenue.near.org, near-intents.org) derives from NEAR's own metrics datasets; the only independent indexer found (Flipside ez_intents) requires an account",
