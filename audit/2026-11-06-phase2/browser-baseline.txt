@@ -1,0 +1,149 @@
+[
+  {
+    "name": "http_chart_count",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "http_6_kpis",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "http_valid_svg_geometry",
+    "passed": true,
+    "detail": 0
+  },
+  {
+    "name": "http_no_javascript_errors",
+    "passed": true,
+    "detail": []
+  },
+  {
+    "name": "file_chart_count",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "file_6_kpis",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "file_valid_svg_geometry",
+    "passed": true,
+    "detail": 0
+  },
+  {
+    "name": "file_no_javascript_errors",
+    "passed": true,
+    "detail": []
+  },
+  {
+    "name": "range_Since 2023",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "range_Since 2024",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "range_Since Intents",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "range_Last 12 months",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "range_All",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "theme_Dark",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "theme_Light",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "theme_Auto",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "theme_persists_after_reload",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "table_view_populates",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "source_query_visible",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "tooltip_on_hover",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "layout_375_no_overflow",
+    "passed": true,
+    "detail": {
+      "content": 375,
+      "viewport": 375
+    }
+  },
+  {
+    "name": "layout_768_no_overflow",
+    "passed": true,
+    "detail": {
+      "content": 768,
+      "viewport": 768
+    }
+  },
+  {
+    "name": "executed_notebook_available",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "hostile_text_not_executed",
+    "passed": true,
+    "detail": null
+  },
+  {
+    "name": "zero_series_has_valid_geometry",
+    "passed": true,
+    "detail": 0
+  },
+  {
+    "name": "flat_negative_has_valid_geometry",
+    "passed": true,
+    "detail": 0
+  },
+  {
+    "name": "zero_log_has_valid_geometry",
+    "passed": true,
+    "detail": 0
+  },
+  {
+    "name": "all_normal_actions_no_javascript_exceptions",
+    "passed": true,
+    "detail": []
+  }
+]
+Browser evidence: /tmp/near-phase2-browser-baseline

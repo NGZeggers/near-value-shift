@@ -1,0 +1,29 @@
+{
+  "scope": "Disposable /tmp copy only; production inputs untouched",
+  "before": {
+    "intents_events_sampled.csv": {
+      "rows": 7227,
+      "sha256": "c9aeb3830f15e2e597b431d67a7314c82be01dd0a4e89f851b06baa7614bb111",
+      "bytes": 4383281
+    },
+    "tx_sampled.csv": {
+      "rows": 198565,
+      "sha256": "3a7de3ac562a89bb6e83d030262f67bbc30d8d44073e18e03eb6beca181f38e2",
+      "bytes": 22653523
+    }
+  },
+  "after": {
+    "intents_events_sampled.csv": {
+      "rows": 0,
+      "sha256": "66b81e5d5ed1bf6c54412b0560d3b782ba9a11f8c0fa388eba8073de37b9d30f",
+      "bytes": 103
+    },
+    "tx_sampled.csv": {
+      "rows": 0,
+      "sha256": "d44dd1230be480b6b9f7a8d9c7d113ef65f537a3ef10253fbc0c9c220bf4a87b",
+      "bytes": 107
+    }
+  },
+  "manifest_complete": false,
+  "source_unchanged": true
+}

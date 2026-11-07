@@ -1,0 +1,38 @@
+[
+  {
+    "height": 134214723,
+    "source": "https://mainnet.neardata.xyz/v0/block/134214723",
+    "http_status": "200",
+    "curl_exit_code": 0,
+    "checked_logs": 5,
+    "failed_logs_checked": 0,
+    "all_matches": true
+  },
+  {
+    "height": 193836799,
+    "source": "https://mainnet.neardata.xyz/v0/block/193836799",
+    "http_status": "200",
+    "curl_exit_code": 0,
+    "checked_logs": 1,
+    "failed_logs_checked": 1,
+    "all_matches": true
+  },
+  {
+    "height": 221554864,
+    "source": "https://mainnet.neardata.xyz/v0/block/221554864",
+    "http_status": "200",
+    "curl_exit_code": 0,
+    "checked_logs": 2,
+    "failed_logs_checked": 1,
+    "all_matches": true
+  },
+  {
+    "height": 221554876,
+    "source": "https://mainnet.neardata.xyz/v0/block/221554876",
+    "http_status": "200",
+    "curl_exit_code": 0,
+    "checked_logs": 7,
+    "failed_logs_checked": 0,
+    "all_matches": true
+  }
+]

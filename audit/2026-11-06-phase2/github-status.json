@@ -1,0 +1,52 @@
+{
+  "repository": {
+    "http_status": 200,
+    "full_name": "NGZeggers/hackathons",
+    "private": true,
+    "default_branch": "bluiders.io",
+    "html_url": "https://github.com/NGZeggers/hackathons"
+  },
+  "actions_http_status": 200,
+  "runs": [
+    {
+      "id": 42177658588,
+      "head_sha": "743e24374d41c8ca604414896ffd8066d9c70441",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/NGZeggers/hackathons/actions/runs/42177658588",
+      "created_at": "2026-11-06T06:56:55Z",
+      "jobs": [
+        {
+          "name": "build",
+          "conclusion": "success",
+          "failed_steps": []
+        },
+        {
+          "name": "deploy",
+          "conclusion": "skipped",
+          "failed_steps": []
+        }
+      ]
+    },
+    {
+      "id": 41977804022,
+      "head_sha": "e8d69e1ca617e677872a1a391afde7f549dce042",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/NGZeggers/hackathons/actions/runs/41977804022",
+      "created_at": "2026-11-05T06:02:47Z",
+      "jobs": [
+        {
+          "name": "build",
+          "conclusion": "success",
+          "failed_steps": []
+        },
+        {
+          "name": "deploy",
+          "conclusion": "skipped",
+          "failed_steps": []
+        }
+      ]
+    }
+  ]
+}

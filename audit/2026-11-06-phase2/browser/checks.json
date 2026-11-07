@@ -1,0 +1,28 @@
+[
+  {
+    "name": "direct_close",
+    "passed": true,
+    "cards": 20,
+    "javascript_errors": []
+  },
+  {
+    "name": "comment_script",
+    "passed": false,
+    "cards": 0,
+    "javascript_errors": []
+  },
+  {
+    "name": "unicode",
+    "passed": true,
+    "cards": 20,
+    "javascript_errors": []
+  },
+  {
+    "name": "nonfinite_data_is_handled",
+    "passed": false,
+    "cards": 0,
+    "javascript_errors": [
+      "Unexpected token 'I', ...\"1-01-10\", Infinity],\"... is not valid JSON"
+    ]
+  }
+]
