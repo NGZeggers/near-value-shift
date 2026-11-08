@@ -4,7 +4,7 @@ This is a reproducible investment thesis on NEAR, built for NEAR Hackathon 2026,
 
 **Question:** do falling account counts obscure a shift toward cross-chain settlement, and does the evidence support a token investment case? The project compares activity, behavioral proxies, Intents flows, net captured fees and forward associations. It reports failed cross-checks and inconclusive statistical tests. Settlement growth alone does not establish undervaluation.
 
-[Dashboard](https://ngzeggers.github.io/near-value-shift/) · [Generated argument](THESIS.md) · [Reconciliation method and tolerance](docs/RECONCILIATION.md) · [Sampling and limits](docs/SAMPLING.md) · [Audit and corrections](docs/VALIDACION_HACKATHON.md) · [Response to the 2026-11-06 product audit](docs/AUDIT_RESPONSE_2026-11-06.md) · [What is still open and the data that closes it](docs/PENDIENTES_AL_100.md)
+[Dashboard](https://ngzeggers.github.io/near-value-shift/) · [Generated argument](THESIS.md) · [Reconciliation method and tolerance](docs/RECONCILIATION.md) · [Sampling and limits](docs/SAMPLING.md) · [Audit and corrections](docs/VALIDACION_HACKATHON.md) · [Response to the 2026-11-06 product audit](docs/AUDIT_RESPONSE_2026-11-06.md) · [What is still open and the data that closes it](docs/PENDIENTES_AL_100.md) · [Balance of the 2026-11-08 round against the audit](docs/BALANCE_AUDITORIA_2026-11-08.md)
 
 ## What is implemented
 
