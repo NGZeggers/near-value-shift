@@ -6,7 +6,7 @@
  "intents_volume_usd": 3985641601,
  "usd_per_txn": 345.98,
  "ic_intents_12w_vs_btc": -0.576,
- "thesis_sha256": "3ac80066f5276ec99de421250050ade52db5e2ac4a89d95783489b5b163a73e9",
+ "thesis_sha256": "63965c484e7860da5bfe390185cd99c1be242f951e2760d0445c70864d19fdec",
  "raw_manifest_sha256": "a3a45f5eb31d2c46614f5b0af28d9b54eed795373b42c980ddfffb35cb390027",
  "repo": "https://github.com/NGZeggers/near-value-shift"
 }

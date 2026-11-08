@@ -1,0 +1,10 @@
+{
+ "sql": "l3_buyback_wnear_origin.sql",
+ "run_at": "2026-11-08T08:39:38+00:00",
+ "bytes_processed": 287292578795,
+ "bytes_billed": 287293046784,
+ "accounted_bytes": 287293046784,
+ "maximum_bytes_billed": 300000000000,
+ "rows": 3197,
+ "job_id": "6feaabd4-ea4e-4514-b367-8ed5bca45c4e"
+}

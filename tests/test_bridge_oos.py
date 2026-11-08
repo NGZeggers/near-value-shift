@@ -269,3 +269,23 @@ def test_full_attribution_summarizes_withdrawals_and_matches_snapshot_on_day_and
     rec = out["reconciliation_with_nearblocks_snapshot"]
     assert rec["matched_on_day_and_amount"] == 2 and rec["snapshot_receipts_unmatched"] == 0 and rec["near_ratio_bigquery_over_snapshot"] == pytest.approx(1.0)
     assert "observed" in out["kind"] and bridge.full_attribution(txns, path=tmp_path / "missing.csv") is None
+
+
+def test_second_pass_classifies_how_wnear_reached_the_account(tmp_path, monkeypatch):
+    base = [{"block_date": "2026-05-01", "block_height": 100 + i, "receipt_id": f"e{i}", "intents_account": f"a{i}", "amount_yocto": str(10**24), "intent_hash": None,
+             "swap_block": None, "swap_receipt": None, "sold": None, "bought": None, "blocks_withdrawal_minus_swap": None,
+             "deposit_block": None, "blocks_swap_minus_deposit": None, "transfer_in_block": None, "blocks_swap_minus_transfer_in": None} for i in range(5)]
+    base[0]["swap_block"] = 100; base[0]["bought"] = "nep141:wrap.near"
+    f = tmp_path / "l3_buyback_attribution.csv"; pd.DataFrame(base).to_csv(f, index=False)
+    origin = [{"receipt_id": "e0", "own_swap_block": 100, "wnear_in_block": None, "wnear_in_from": None, "upstream_swap_block": None, "wnear_mint_block": None},
+              {"receipt_id": "e1", "own_swap_block": None, "wnear_in_block": 90, "wnear_in_from": "src", "upstream_swap_block": 80, "wnear_mint_block": None},
+              {"receipt_id": "e2", "own_swap_block": None, "wnear_in_block": 90, "wnear_in_from": "src2", "upstream_swap_block": None, "wnear_mint_block": None},
+              {"receipt_id": "e3", "own_swap_block": None, "wnear_in_block": None, "wnear_in_from": None, "upstream_swap_block": None, "wnear_mint_block": 70},
+              {"receipt_id": "e4", "own_swap_block": None, "wnear_in_block": None, "wnear_in_from": None, "upstream_swap_block": None, "wnear_mint_block": None}]
+    g = tmp_path / "l3_buyback_wnear_origin.csv"; pd.DataFrame(origin).to_csv(g, index=False)
+    monkeypatch.setattr(bridge, "WNEAR_ORIGIN", g)
+    out = bridge.full_attribution(None, path=f)
+    c = out["wnear_origin"]["classes"]
+    assert [c[k]["receipts"] for k in ("own_exchange", "transfer_from_account_that_exchanged", "transfer_without_observed_exchange", "deposit_from_outside", "none_observed")] == [1, 1, 1, 1, 1]
+    assert out["wnear_origin"]["exchange_observed_within_one_hop"]["receipts"] == 2 and out["wnear_origin"]["exchange_observed_within_one_hop"]["near_share"] == pytest.approx(0.4)
+    assert "Second pass" in out["reading"] and "one hop upstream" in out["reading"]

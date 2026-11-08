@@ -82,6 +82,7 @@ The build reads committed snapshots. Full SHA-256 hashes cover raw files, block 
 | data/bigquery/l2_full_days_valued_2.csv | 993 | `abc5f230f68af9401be8dc4745cb1c772718e94bc9de4604f411a87630df2b73` |
 | data/bigquery/l2_valuation_check_day.csv | 3051516 | `4f3152bba6dbb56f678f1d61ade6d58ffd3e443ccc8186569de434a255dc8452` |
 | data/bigquery/l3_buyback_attribution.csv | 930114 | `8a894762795f68d12a1b59b7b88463a81cec299a9ecc1d5a9a2efa67af5e935c` |
+| data/bigquery/l3_buyback_wnear_origin.csv | 709207 | `cfe983f831cd431ed49e9108ceaf4f30a1609408208e2f68159d6804ca449b5b` |
 | data/bigquery/q0_freshness.csv | 54 | `a1ca057dcca29f6f450af346ca031159afda6ca38ca9478938c851d5af10e779` |
 | data/blocks/buyback_trace.json | 53154 | `0d8693da1e245ba6e046e72d681c4ae5d1099e2ad3540f4d099d82a91a67433a` |
 | data/blocks/buyback_trace_extension.json | 16564 | `f5c037cb4d41bc8e1bce603a9b9fa3724c4f047e104c320a4bc823b8f15fddfd` |
@@ -104,7 +105,6 @@ The build reads committed snapshots. Full SHA-256 hashes cover raw files, block 
 | data/derived/models/qaa_causal_model.json | 4950 | `5e4f03b366c5f749bb24f7bdec07e3a8e3f41f726356526a69286791350e3f44` |
 | sql/l1_account_month_actions.sql | 929 | `2d6af7cffda32de111da4ac9ffe7affc2587263503e03d070d54473a8ada37ef` |
 | sql/l1_account_month_features.sql | 2011 | `a237053b0e3d20adb1046bee96053111983c113995cb37fb00053fedc04de18f` |
-| sql/l1_full_account_month_features.sql | 2091 | `c614a1f4cd356f67d31e71d68a4812dbd7610370b203497e0a58e2a9f1d8d053` |
 | sql/l1_full_month_summary.sql | 2200 | `131b4755f824dd831569cfbd2b6803444bae9ea5c19aff2f9d90678e44f3c47a` |
 | sql/l1_full_month_summary_2.sql | 2193 | `ce23de7c998b898c551fda4b7deede717c24eff5071311f19c642056e574db98` |
 | sql/l2_full_days_valued.sql | 4796 | `f8d5cafbac7f4a1ba456687012a761aa77dacd587b8e243e3032051059264ec1` |
@@ -112,6 +112,7 @@ The build reads committed snapshots. Full SHA-256 hashes cover raw files, block 
 | sql/l2_intents_events.sql | 983 | `1544a88a7d4dd2743ae0b9551f49ed815d867102025a4170ccb25ca7e3dd16e4` |
 | sql/l2_valuation_check_day.sql | 4315 | `079937c03cad6e0f01e803cb110105a7c6809828b11b01295a3083222ca81b03` |
 | sql/l3_buyback_attribution.sql | 5271 | `21f6b0818d6b5ac9288c6fecfb93238f39ab6f1c29d2ec1a66b0e69d83de6951` |
+| sql/l3_buyback_wnear_origin.sql | 5391 | `ea33ed4127c58060eb071bbcc43140324ef65b84c9e4451d5296c9251fcc3570` |
 | sql/q0_freshness.sql | 368 | `29492fc001b12e9d736265d2a9bba64ee8c3fe0bb9f36deee12535961d444462` |
 | sql/q1_daily_txns_signers.sql | 372 | `1a2e57e1d1acce072b849310140cb2ebca76ec6022c32f05496155eb9b18a749` |
 | sql/q2_top_contracts_daily.sql | 685 | `4a3fef7d7484974d7c70bb08da70dcc56f301563a6072a552bedb7c98066e9ff` |

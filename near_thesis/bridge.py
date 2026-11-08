@@ -23,14 +23,33 @@ from .http import load_raw
 TRACE = DATA / "blocks" / "buyback_trace.json"
 TRACE_EXT = DATA / "blocks" / "buyback_trace_extension.json"
 ATTRIBUTION = DATA / "bigquery" / "l3_buyback_attribution.csv"
+WNEAR_ORIGIN = DATA / "bigquery" / "l3_buyback_wnear_origin.csv"
 ATTRIBUTION_RULE = {
     "declared": "2026-11-08, before the query ran",
     "population": "every native_withdraw log of intents.near whose receiver is the buyback wallet on the days with inbound receipts (2026-04-23 to 2026-11-06), from the NEAR public BigQuery dataset",
     "exchange": "the latest token_diff of the same Intents-side account that bought wrap.near, at or before the withdrawal block, searching back one day of blocks",
     "origin": "a bridge deposit (mt_mint) or an internal transfer (mt_transfer) of an asset sold in that exchange to the same account, within one day before the exchange",
+    "second_pass": ("declared after the first pass showed withdrawals without an own exchange and before running: for every withdrawal, an internal transfer of "
+                    "wrap.near into the withdrawing account (with its source account and whether that source bought wrap.near before the transfer, one hop upstream) "
+                    "or a deposit of wrap.near from outside (mt_mint), within one day of blocks"),
     "what_it_establishes": ("the withdrawal and the exchange are observed on-chain for every receipt they cover; the origin shows how the sold asset reached the account; "
                             "whether the operator intended the withdrawal as a buyback remains an interpretation of the flows"),
 }
+
+
+def _classify_wnear_origin(a: pd.DataFrame, origin_path=None) -> pd.DataFrame | None:
+    """Join the second pass and classify every withdrawal by how the wrap.near reached the account."""
+    origin_path = WNEAR_ORIGIN if origin_path is None else origin_path
+    if not origin_path.exists():
+        return None
+    o = pd.read_csv(origin_path)
+    m = a.merge(o[["receipt_id", "own_swap_block", "wnear_in_block", "wnear_in_from", "upstream_swap_block", "wnear_mint_block"]], on="receipt_id", how="left")
+    own = m["swap_block"].notna() | m["own_swap_block"].notna()
+    up = ~own & m["upstream_swap_block"].notna()
+    tr = ~own & ~up & m["wnear_in_block"].notna()
+    mint = ~own & ~up & ~tr & m["wnear_mint_block"].notna()
+    m["wnear_origin_class"] = np.select([own, up, tr, mint], ["own_exchange", "transfer_from_account_that_exchanged", "transfer_without_observed_exchange", "deposit_from_outside"], "none_observed")
+    return m
 
 
 def full_attribution(txns: list[dict] | None = None, path=ATTRIBUTION) -> dict | None:
@@ -69,10 +88,37 @@ def full_attribution(txns: list[dict] | None = None, path=ATTRIBUTION) -> dict |
                                                            "snapshot_receipts_unmatched": int(len(snap) - matched), "bigquery_withdrawals_unmatched": int(n - matched),
                                                            "near_ratio_bigquery_over_snapshot": float(a["amount_near"].sum() / snap_near) if snap_near else None,
                                                            "note": "ids differ by construction (log-emitting receipt versus the child transfer receipt); matching is on UTC day and exact amount"}
+    m = _classify_wnear_origin(a)
+    if m is not None:
+        classes = ["own_exchange", "transfer_from_account_that_exchanged", "transfer_without_observed_exchange", "deposit_from_outside", "none_observed"]
+        by = m.groupby("wnear_origin_class").agg(receipts=("receipt_id", "size"), near=("amount_near", "sum"))
+        tot_near = m["amount_near"].sum()
+        exch = m["wnear_origin_class"].isin(["own_exchange", "transfer_from_account_that_exchanged"])
+        out["wnear_origin"] = {"rule": ATTRIBUTION_RULE["second_pass"],
+                               "classes": {c: {"receipts": int(by["receipts"].get(c, 0)), "receipt_share": float(by["receipts"].get(c, 0) / n) if n else None,
+                                               "near": float(by["near"].get(c, 0.0)), "near_share": float(by["near"].get(c, 0.0) / tot_near) if tot_near else None} for c in classes},
+                               "exchange_observed_within_one_hop": {"receipts": int(exch.sum()), "receipt_share": float(exch.mean()) if n else None,
+                                                                    "near_share": float(m.loc[exch, "amount_near"].sum() / tot_near) if tot_near else None},
+                               "distinct_source_accounts_of_transfers": int(m["wnear_in_from"].nunique()),
+                               "top_source_accounts_by_near": m[m["wnear_in_from"].notna()].groupby("wnear_in_from")["amount_near"].sum().sort_values(ascending=False).head(5).round(0).to_dict()}
+        solvers_file = MODELS / "intents_solvers.csv"
+        if solvers_file.exists():
+            solvers = set(pd.read_csv(solvers_file)["account"].astype(str)) if "account" in pd.read_csv(solvers_file, nrows=1).columns else set()
+            src = m[m["wnear_in_from"].notna()]
+            out["wnear_origin"]["transfers_from_l2_solver_accounts"] = {"receipts": int(src["wnear_in_from"].isin(solvers).sum()),
+                                                                        "near_share_of_transfers": float(src.loc[src["wnear_in_from"].isin(solvers), "amount_near"].sum() / src["amount_near"].sum()) if len(src) and src["amount_near"].sum() > 0 else None,
+                                                                        "what": "source accounts that the L2 layer identifies independently as solvers (market makers) from the sampled token_diff events"}
     out["reading"] = (f"of {n:,} withdrawals ({out['near_total']:,.0f} NEAR) the funding exchange is observed for {out['exchange_observed']:,} ({out['exchange_observed_share']:.0%} of receipts, "
                       f"{out['exchange_observed_near_share']:.0%} of the NEAR); the sold asset reached the account by a bridge deposit in {out['origin_deposit_observed']:,} cases and by an internal "
                       f"transfer in {out['origin_transfer_in_observed']:,}. Exchange and origin are observed where they appear; the remaining receipts have no wrap.near purchase by the same account "
                       "in the day before the withdrawal, so for them the economic operation stays unobserved")
+    if m is not None:
+        wo = out["wnear_origin"]; c = wo["classes"]
+        out["reading"] += (f". Second pass: counting the account that transferred the wrap.near in and bought it itself (one hop upstream), the exchange is observed for "
+                           f"{wo['exchange_observed_within_one_hop']['receipts']:,} withdrawals ({wo['exchange_observed_within_one_hop']['receipt_share']:.0%} of receipts, {wo['exchange_observed_within_one_hop']['near_share']:.0%} of the NEAR); "
+                           f"{c['transfer_without_observed_exchange']['receipts']:,} ({c['transfer_without_observed_exchange']['near_share']:.0%} of the NEAR) received the wrap.near by internal transfer from {wo['distinct_source_accounts_of_transfers']} source accounts with no observed purchase of their own, "
+                           + (f"of which the accounts the L2 layer identifies as solvers account for {wo['transfers_from_l2_solver_accounts']['near_share_of_transfers']:.0%} of that NEAR (a counterparty paying wrap.near directly; its counter-leg is not identified here), " if wo.get("transfers_from_l2_solver_accounts") and wo["transfers_from_l2_solver_accounts"]["near_share_of_transfers"] is not None else "")
+                           + f"{c['deposit_from_outside']['receipts']:,} received it as a deposit from outside, and {c['none_observed']['receipts']:,} ({c['none_observed']['near_share']:.0%} of the NEAR) show none of these in the day before")
     return out
 
 

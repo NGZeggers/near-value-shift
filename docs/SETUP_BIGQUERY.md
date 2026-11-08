@@ -58,9 +58,10 @@ Every query was dry-run first; the runner passes `maximum_bytes_billed` to Googl
 | `l2_valuation_check_day.sql` | `l2_valuation_check_day.csv` (2025-11-14, per execution block) | 6 GB |
 | `l1_full_month_summary.sql` (finer classes, re-aggregated from the result table) | `l1_full_month_summary.csv` | 4 GB |
 | `l3_buyback_attribution.sql` | `l3_buyback_attribution.csv` (3,197 withdrawals, one pass) | 287 GB |
+| `l3_buyback_wnear_origin.sql` | `l3_buyback_wnear_origin.csv` (how the wrap.near reached each account) | 287 GB |
 | materialization attempt of the buyback logs | failed on the sandbox storage quota, no charge | counted by Google as 0 |
 
-Month total: 718.6 GB billed over 15 queries, 0.65 TiB of the 1 TiB free tier (`data/bigquery/usage_2026-11-08.json`). The project is a sandbox
+Month total: 1,006 GB billed over 17 queries, 0.92 TiB of the 1 TiB free tier (`data/bigquery/usage_2026-11-08.json`). The project is a sandbox
 without a billing account, so nothing can be charged; queries fail once the free tier is used.
 
 Lesson: aggregate inside BigQuery. A per-account or per-log result is tens of millions of rows; downloading it through the REST API takes
