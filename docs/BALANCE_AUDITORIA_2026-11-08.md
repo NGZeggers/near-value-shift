@@ -1,6 +1,6 @@
 # Balance frente a la auditoría: qué cumplió esta ronda y qué no
 
-Fecha: 2026-11-08. Base: `8ed6826`. Nota del auditor de producto antes de esta ronda: **96/100** (séptima revisión). Documentos relacionados: respuesta pasada a pasada en [`AUDIT_RESPONSE_2026-11-06.md`](AUDIT_RESPONSE_2026-11-06.md); qué falta y qué datos lo cierran en [`PENDIENTES_AL_100.md`](PENDIENTES_AL_100.md).
+Fecha: 2026-11-08 UTC (noche del 7 de noviembre en horario de México; los commits llevan la zona -06:00, de ahí la aparente diferencia de un día con la revisión del compañero). Base: `8ed6826`. Nota del auditor de producto antes de esta ronda: **96/100** (séptima revisión). Documentos relacionados: respuesta pasada a pasada en [`AUDIT_RESPONSE_2026-11-06.md`](AUDIT_RESPONSE_2026-11-06.md); qué falta y qué datos lo cierran en [`PENDIENTES_AL_100.md`](PENDIENTES_AL_100.md).
 
 ## Lo que pedía la auditoría para subir de 96
 

@@ -386,8 +386,8 @@ def systematic_day(prices: dict, llama: pd.Series, events=None, manifest=None, i
         either_includes = out["reference_inside_ci95"] or bool(out["reference_inside_ci95_bootstrap"])
         out["reading"] = (f"on this day the even {man['step']}-block systematic sample estimates {r:.2f} of the reference with a 95% design interval of {lo:.2f} to {hi:.2f} "
                           f"(percentile bootstrap {blo:.2f} to {bhi:.2f}; volume is concentrated in few blocks, so the normal design interval is approximate and both readings are given); "
-                          + ("both intervals exclude parity, providing evidence against a purely sampling explanation conditional on the design and error estimator; definition (what the reference counts, "
-                             "one- or two-sided notional, confidential intents) or a difference in reconstruction or pricing" if both_exclude else
+                          + ("both intervals exclude parity, which is evidence against a purely sampling explanation of this day's gap, conditional on the design and the error estimator; "
+                             "what remains is definitional (what the reference counts, one- or two-sided notional, confidential intents) or a difference in reconstruction or pricing" if both_exclude else
                              "at least one interval includes parity, so for this day the gap to the reference is compatible with sampling error under our definition" if either_includes else
                              "the two intervals disagree about parity; the sampling error alone cannot be ruled out or confirmed")
                           + "; one day cannot establish the global total")
