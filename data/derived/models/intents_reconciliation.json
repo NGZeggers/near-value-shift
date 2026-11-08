@@ -202,7 +202,7 @@
    "unexplained_factor_to_parity": 1.4043025830760694,
    "unexplained_factor_after_confidential_and_intraday": 1.298190363905104,
    "two_sided_and_intraday_overshoot": true,
-   "reading": "Complete days from BigQuery settle the definitional component: twice our half-gross volume equals the reference on the median day (1.00; within 5% of parity on 39 of 46 days), so the reference counts both sides of each swap. The sampled estimator's remaining gap to the complete days (pooled 0.55) is the expansion error of the two-window design, measured rather than inferred from the intraday factor. From September 2026 the complete-day ratio falls below one half; that part stays unexplained (confidential intents or flows outside the public logs). The declared estimator and its failed tolerance check stay as declared.",
+   "reading": "Complete days from BigQuery identify the definitional component on the days they cover: twice our half-gross volume equals the reference on the median day (1.00; within 5% of parity on 39 of 46 days), strong empirical support for a two-sided reference on those days, not its published definition. The sampled estimator's remaining gap to the complete days (pooled 0.55) is the expansion error of the two-window design, measured rather than inferred from the intraday factor. On the four days from September 2026 twice our volume is 0.63 to 0.85 of the reference; candidate explanations (confidential intents, unpriced legs, a change in what the reference counts) are listed with the complete days and none is demonstrated here. The declared estimator and its failed tolerance check stay as declared.",
    "two_sided_reading_on_complete_days": {
     "median_day": 1.0020162409771292,
     "days_within_5pct_of_parity": 39,
@@ -1497,13 +1497,32 @@
   "by_period": {
    "before_2026-09": {
     "days": 42,
-    "median_ratio": 0.5014091622435373
+    "median_ratio": 0.5014091622435373,
+    "two_sided_days_within_5pct": 39
    },
    "from_2026-09": {
     "days": 4,
-    "median_ratio": 0.3260252928788727
+    "median_ratio": 0.3260252928788727,
+    "two_sided_ratios_by_day": [
+     {
+      "day": "2026-09-10",
+      "two_sided_ratio": 0.850564358503404
+     },
+     {
+      "day": "2026-09-25",
+      "two_sided_ratio": 0.6705415555316508
+     },
+     {
+      "day": "2026-10-10",
+      "two_sided_ratio": 0.6335596159838399
+     },
+     {
+      "day": "2026-10-25",
+      "two_sided_ratio": 0.6321107097127664
+     }
+    ]
    },
-   "reading": "the complete-day ratio is stable near one half until August 2026 and lower from September 2026; the later gap is not explained by the two-sided definition and stays open (confidential intents or other flows the public logs do not carry)"
+   "reading": "the two-sided reading holds on the days before September 2026 and not on the four days from September 2026, where twice our volume is 0.63 to 0.85 of the reference; candidate explanations, none demonstrated here: confidential intents (volume the reference counts and the public logs do not carry; their share was growing in 2026), legs this pipeline leaves unpriced, or a change in what the reference counts; settling it needs the reference's own definition or its per-day breakdown, neither public"
   },
   "pooled_ratio_complete_to_reference": 0.4582481487477946,
   "ratio_complete_to_reference_median": 0.5010081204885646,
@@ -1517,7 +1536,7 @@
    1.340778304866024
   ],
   "sampled_over_complete_pooled": 0.5510939929216894,
-  "reading": "the SQL valuation reproduces the Python valuation of the 4,662 locally held blocks of 2025-11-14 (SQL/Python 1.000); with every block of 46 sample days read, our complete-day volume is 0.46 of the reference pooled (median day 0.50); no sampling error remains in this comparison, so this ratio is the definitional and reconstruction gap itself. Twice our half-gross volume is 1.00 of the reference on the median day and within 5% of parity on 39 of 46 days: the reference behaves as a two-sided (full gross) notional, which resolves the one- or two-sided question empirically for those days; from September 2026 the median ratio falls to 0.33, a gap the definition does not explain. The two-window expansion gives 0.55 of the complete day pooled (median 0.29): the measured expansion error of the declared estimator"
+  "reading": "the SQL valuation reproduces the Python valuation of the 4,662 locally held blocks of 2025-11-14 (SQL/Python 1.000); with every block of 46 sample days read, our complete-day volume is 0.46 of the reference pooled (median day 0.50); no sampling error remains in this comparison, so this ratio is the definitional and reconstruction gap itself. Twice our half-gross volume is 1.00 of the reference on the median day and within 5% of parity on 39 of 46 days: strong empirical support, on those days, for the reference being a two-sided (full gross) notional; it is not the reference's published definition, and the equivalence is not uniform over the period: on the 4 days from September 2026 twice our volume is 0.85, 0.67, 0.63, 0.63 of the reference, a gap the definition does not explain and that stays open. The two-window expansion gives 0.55 of the complete day pooled (median 0.29): the measured expansion error of the declared estimator"
  },
  "trace_examples": [
   "simple_two_party_fully_priced",

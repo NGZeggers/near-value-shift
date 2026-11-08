@@ -51,7 +51,7 @@
    "status": "observed (receipts, valued at the daily NEAR price); attribution to executed purchases inferred",
    "source": "https://api.nearblocks.io/v1/account/buybacks.multisignature.near/txns?per_page=250 (paginated)",
    "share_of_previous": 0.5942361692841919,
-   "note": "3081 inbound transfers from intents.near from 2026-03-18 to 2026-11-01; a further 510,068 NEAR arrived from the other revenue wallets (treasury moves, excluded here as the adapter excludes them) and 8,293 NEAR from other accounts. Trace of a pre-declared sample (45 of 3197 receipts, every 80th plus the five largest): 45 match a dip4 native_withdraw of wrapped NEAR from 16 distinct Intents-side accounts; for 16 the funding swap (token_diff of the same account, 16 buying wrap.near) is in the same blocks, for the other 29 it is outside the blocks read and the purchase is not observed. A second pre-declared pass over those found the funding swap within 200 blocks before the withdrawal for 12 more (28 of 45 in total). Population from BigQuery: of 3,197 withdrawals (1,695,932 NEAR) the funding exchange is observed for 1,926 (60% of receipts, 69% of the NEAR); the sold asset reached the account by a bridge deposit in 0 cases and by an internal transfer in 1,925. Exchange and origin are observed where they appear; the remaining receipts have no wrap.near purchase by the same account in the day before the withdrawal, so for them the economic operation stays unobserved. Second pass: counting the account that transferred the wrap.near in and bought it itself (one hop upstream), the exchange is observed for 1,926 withdrawals (60% of receipts, 69% of the NEAR); 1,271 (31% of the NEAR) received the wrap.near by internal transfer from 88 source accounts with no observed purchase of their own, of which the accounts the L2 layer identifies as solvers account for 59% of that NEAR (a counterparty paying wrap.near directly; its counter-leg is not identified here), 0 received it as a deposit from outside, and 0 (0% of the NEAR) show none of these in the day before. Receipts excluded: 0 failed, 0 without an explicit status. The wallet was created 2026-03-18, after the adapter's buyback start 2026-02-23, so labelled revenue before that date cannot be matched to this wallet"
+   "note": "3081 inbound transfers from intents.near from 2026-03-18 to 2026-11-01; a further 510,068 NEAR arrived from the other revenue wallets (treasury moves, excluded here as the adapter excludes them) and 8,293 NEAR from other accounts. Trace of a pre-declared sample (45 of 3197 receipts, every 80th plus the five largest): 45 match a dip4 native_withdraw of wrapped NEAR from 16 distinct Intents-side accounts; for 16 the funding swap (token_diff of the same account, 16 buying wrap.near) is in the same blocks, for the other 29 it is outside the blocks read and the purchase is not observed. A second pre-declared pass over those found the funding swap within 200 blocks before the withdrawal for 12 more (28 of 45 in total). Population from BigQuery: of 3,197 withdrawals (1,695,932 NEAR) a compatible exchange by the same account is observed for 1,926 (60% of receipts, 69% of the NEAR), in 1,124 of them inside the same receipt as the withdrawal; the sold asset reached the account by a bridge deposit in 0 cases and by an internal transfer in 1,925. These are observed events compatible with funding the withdrawal; the allocation of those exact funds to each withdrawal is not reconciled (amounts per leg, prior balances and intra-block order are not tracked) and stays inferred. Second pass: every withdrawal has some compatible prior flow of wrap.near observed; counting the account that transferred the wrap.near in and bought it itself (one hop upstream), a compatible exchange is observed for 1,926 withdrawals (60% of receipts, 69% of the NEAR); 1,271 (31% of the NEAR) received wrap.near by internal transfer from 88 source accounts with no observed purchase of their own, of which the accounts the L2 layer identifies as solvers account for 59% of that NEAR (a counterparty paying wrap.near directly; its counter-leg is not identified here), 0 received it as a deposit from outside, and 0 (0% of the NEAR) show none of these in the day before; transfer amounts are not kept, so a compatible flow is not a reconciled funding of the withdrawal. Receipts excluded: 0 failed, 0 without an explicit status. The wallet was created 2026-03-18, after the adapter's buyback start 2026-02-23, so labelled revenue before that date cannot be matched to this wallet"
   },
   {
    "step": 6,
@@ -176,13 +176,15 @@
     "exchange": "the latest token_diff of the same Intents-side account that bought wrap.near, at or before the withdrawal block, searching back one day of blocks",
     "origin": "a bridge deposit (mt_mint) or an internal transfer (mt_transfer) of an asset sold in that exchange to the same account, within one day before the exchange",
     "second_pass": "declared after the first pass showed withdrawals without an own exchange and before running: for every withdrawal, an internal transfer of wrap.near into the withdrawing account (with its source account and whether that source bought wrap.near before the transfer, one hop upstream) or a deposit of wrap.near from outside (mt_mint), within one day of blocks",
-    "what_it_establishes": "the withdrawal and the exchange are observed on-chain for every receipt they cover; the origin shows how the sold asset reached the account; whether the operator intended the withdrawal as a buyback remains an interpretation of the flows"
+    "what_it_establishes": "the withdrawal is observed for every receipt; the exchange and the transfers are observed events that are compatible with funding the withdrawal (same account, at or before the withdrawal, within the declared range), not a demonstrated allocation of those exact funds: balances are fungible, amounts per leg and prior balances are not reconciled here, and joins by block height do not fix the order of events inside a block. The strongest case is the exchange carried by the same receipt as the withdrawal. Whether the operator intended the withdrawal as a buyback remains an interpretation"
    },
    "withdrawals": 3197,
    "near_total": 1695932.414753386,
    "distinct_intents_accounts": 1273,
    "exchange_observed": 1926,
    "exchange_observed_share": 0.6024397873005943,
+   "exchange_in_same_receipt_as_withdrawal": 1124,
+   "exchange_kind": "compatible prior event of the same account (latest wrap.near purchase at or before the withdrawal), not a demonstrated allocation of those funds",
    "exchange_observed_near_share": 0.6873975446487456,
    "blocks_withdrawal_minus_swap": {
     "median": 0.0,
@@ -199,15 +201,17 @@
     "nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near": 75,
     "nep141:aaaaaa20d9e0e2461697782ef11675f668207961.factory.bridge.near": 69
    },
-   "kind": "observed (public logs); intention inferred",
+   "kind": "events observed (public logs); allocation of funds to each withdrawal inferred; intention inferred",
    "reconciliation_with_nearblocks_snapshot": {
     "snapshot_receipts": 3197,
     "snapshot_near": 1695932.414753386,
     "matched_on_day_and_amount": 3197,
+    "ambiguous_snapshot_receipts": 0,
     "snapshot_receipts_unmatched": 0,
     "bigquery_withdrawals_unmatched": 0,
     "near_ratio_bigquery_over_snapshot": 1.0,
-    "note": "ids differ by construction (log-emitting receipt versus the child transfer receipt); matching is on UTC day and exact amount"
+    "precision": "the NearBlocks snapshot stores deposits as floating-point numbers, so amounts are compared at float64 precision (relative 2^-52) and the match is approximate; BigQuery amounts are exact integers",
+    "kind": "approximate reconciliation by day and amount; not an exact link between the log-emitting receipt and the child transfer receipt (their ids differ by construction)"
    },
    "wnear_origin": {
     "rule": "declared after the first pass showed withdrawals without an own exchange and before running: for every withdrawal, an internal transfer of wrap.near into the withdrawing account (with its source account and whether that source bought wrap.near before the transfer, one hop upstream) or a deposit of wrap.near from outside (mt_mint), within one day of blocks",
@@ -262,7 +266,7 @@
      "what": "source accounts that the L2 layer identifies independently as solvers (market makers) from the sampled token_diff events"
     }
    },
-   "reading": "of 3,197 withdrawals (1,695,932 NEAR) the funding exchange is observed for 1,926 (60% of receipts, 69% of the NEAR); the sold asset reached the account by a bridge deposit in 0 cases and by an internal transfer in 1,925. Exchange and origin are observed where they appear; the remaining receipts have no wrap.near purchase by the same account in the day before the withdrawal, so for them the economic operation stays unobserved. Second pass: counting the account that transferred the wrap.near in and bought it itself (one hop upstream), the exchange is observed for 1,926 withdrawals (60% of receipts, 69% of the NEAR); 1,271 (31% of the NEAR) received the wrap.near by internal transfer from 88 source accounts with no observed purchase of their own, of which the accounts the L2 layer identifies as solvers account for 59% of that NEAR (a counterparty paying wrap.near directly; its counter-leg is not identified here), 0 received it as a deposit from outside, and 0 (0% of the NEAR) show none of these in the day before"
+   "reading": "of 3,197 withdrawals (1,695,932 NEAR) a compatible exchange by the same account is observed for 1,926 (60% of receipts, 69% of the NEAR), in 1,124 of them inside the same receipt as the withdrawal; the sold asset reached the account by a bridge deposit in 0 cases and by an internal transfer in 1,925. These are observed events compatible with funding the withdrawal; the allocation of those exact funds to each withdrawal is not reconciled (amounts per leg, prior balances and intra-block order are not tracked) and stays inferred. Second pass: every withdrawal has some compatible prior flow of wrap.near observed; counting the account that transferred the wrap.near in and bought it itself (one hop upstream), a compatible exchange is observed for 1,926 withdrawals (60% of receipts, 69% of the NEAR); 1,271 (31% of the NEAR) received wrap.near by internal transfer from 88 source accounts with no observed purchase of their own, of which the accounts the L2 layer identifies as solvers account for 59% of that NEAR (a counterparty paying wrap.near directly; its counter-leg is not identified here), 0 received it as a deposit from outside, and 0 (0% of the NEAR) show none of these in the day before; transfer amounts are not kept, so a compatible flow is not a reconciled funding of the withdrawal"
   },
   "funding_swap_found_within_extension": 12,
   "funding_swap_observed_total": 28,

@@ -335,12 +335,15 @@ def sensitivity(df: pd.DataFrame, x: pd.DataFrame, labels: np.ndarray, monthly: 
                               "bias of the share is still not identified")
     refits = json.loads(REFITS.read_text()) if REFITS.exists() else None
     full_months = monthly_validation_from_full(df, quality) if sampled else None
+    if full_months and full_months.get("status", "").startswith("rejected"):
+        full_months_rejected, full_months = full_months, None
     not_done = ["external human/bot labels (none available)"] + ([] if full_months else ["a fuller observation of whole months (the within-day inclusion measurement covers six days)"]) + ["a clustering refit on full-month features (the committed window-based assignment stays the baseline)"]
     if not refits:
         not_done.insert(0, "refits with other clustering hyper-parameters (make qaa-refits writes them as a committed sensitivity artifact)")
     return {"latest_month": str(last.date())[:7], "criteria": criteria, "label_threshold_variants_default_share": variants,
             "noise_bounds_default_share": {"noise_excluded": lower, "noise_included": upper},
-            "name_only_baseline": name_only, "inclusion_probability_weighting": freq, "inclusion_from_intraday_days": incl, "full_month_validation": full_months, "by_window_hour": by_hour,
+            "name_only_baseline": name_only, "inclusion_probability_weighting": freq, "inclusion_from_intraday_days": incl,
+            "full_month_validation": full_months if full_months else locals().get("full_months_rejected"), "by_window_hour": by_hour,
             "model_agreement": agreement, "refits": refits, "scope": scope,
             "not_done": not_done}
 
@@ -445,9 +448,20 @@ def monthly_validation_from_full(df_sampled: pd.DataFrame, quality: pd.Series, f
     files = sorted(BQ_DIR.glob("l1_full_month_summary*.csv")) if files is None else list(files)
     if not files:
         return None
-    full = pd.concat([pd.read_csv(f, parse_dates=["month"]) for f in files], ignore_index=True)
-    full["month"] = full["month"].dt.to_period("M").dt.to_timestamp()
+    parts = []
+    for f in files:
+        d = pd.read_csv(f, parse_dates=["month"])
+        d["month"] = d["month"].dt.to_period("M").dt.to_timestamp()
+        d["source_file"] = f.name
+        parts.append(d)
+    full = pd.concat(parts, ignore_index=True)
     full["name_class"] = full["name_class"].fillna("other")
+    # The extracts partition the months between files; the same (month, name class) in two files is a refresh error, never a sum.
+    dup = full[full.duplicated(["month", "name_class"], keep=False)]
+    if len(dup):
+        months = sorted({str(m.date())[:7] for m in dup["month"]})
+        return {"rule": FULL_MONTHS_RULE, "files": [f.name for f in files], "status": "rejected: overlapping months across extracts", "overlapping_months": months,
+                "reading": "the monthly extracts overlap; the validation is not computed until the files partition the months (re-run only the file that covers them)"}
     tot = full.groupby("month").agg(accounts=("accounts", "sum"), single=("single_tx_accounts", "sum"), multi=("multi_receiver_accounts", "sum"), txns=("txns", "sum"))
     miniapp = ["tg", "sweat", "kaiching"]          # name patterns of mini-app sub-accounts; the full months showed millions of .users.kaiching signers
     low = full[full["name_class"].isin(miniapp)].groupby("month")["accounts"].sum().reindex(tot.index).fillna(0)

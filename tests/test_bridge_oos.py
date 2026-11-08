@@ -289,3 +289,20 @@ def test_second_pass_classifies_how_wnear_reached_the_account(tmp_path, monkeypa
     assert [c[k]["receipts"] for k in ("own_exchange", "transfer_from_account_that_exchanged", "transfer_without_observed_exchange", "deposit_from_outside", "none_observed")] == [1, 1, 1, 1, 1]
     assert out["wnear_origin"]["exchange_observed_within_one_hop"]["receipts"] == 2 and out["wnear_origin"]["exchange_observed_within_one_hop"]["near_share"] == pytest.approx(0.4)
     assert "Second pass" in out["reading"] and "one hop upstream" in out["reading"]
+
+
+def test_snapshot_match_is_approximate_and_flags_large_integer_collisions(tmp_path):
+    """Two withdrawals one yoctoNEAR apart collapse to the same float: the match must count the ambiguity, not claim exactness."""
+    ts = int(pd.Timestamp("2026-05-01T10:00:00Z").timestamp() * 10**9)
+    rows = [{"block_date": "2026-05-01", "block_height": 100 + i, "receipt_id": f"e{i}", "intents_account": "a", "amount_yocto": y, "intent_hash": None,
+             "swap_block": None, "swap_receipt": None, "sold": None, "bought": None, "blocks_withdrawal_minus_swap": None,
+             "deposit_block": None, "blocks_swap_minus_deposit": None, "transfer_in_block": None, "blocks_swap_minus_transfer_in": None}
+            for i, y in enumerate(["1000000000000000000000001", "1000000000000000000000002"])]
+    f = tmp_path / "l3_buyback_attribution.csv"; pd.DataFrame(rows).to_csv(f, index=False)
+    txns = [{"receipt_id": "c1", "predecessor_account_id": "intents.near", "block_timestamp": ts, "actions": [{"action": "TRANSFER", "deposit": 1e24}]},
+            {"receipt_id": "c2", "predecessor_account_id": "intents.near", "block_timestamp": ts, "actions": [{"action": "TRANSFER", "deposit": 1e24}]}]
+    out = bridge.full_attribution(txns, path=f)
+    rec = out["reconciliation_with_nearblocks_snapshot"]
+    assert out["near_total"] == pytest.approx(2.0) and rec["matched_on_day_and_amount"] == 2 and rec["ambiguous_snapshot_receipts"] >= 1
+    assert "approximate" in rec["kind"] and "float64" in rec["precision"]
+    assert "compatible" in out["exchange_kind"] and "inferred" in out["kind"]

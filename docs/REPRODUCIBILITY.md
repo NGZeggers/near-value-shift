@@ -105,8 +105,9 @@ The build reads committed snapshots. Full SHA-256 hashes cover raw files, block 
 | data/derived/models/qaa_causal_model.json | 4950 | `5e4f03b366c5f749bb24f7bdec07e3a8e3f41f726356526a69286791350e3f44` |
 | sql/l1_account_month_actions.sql | 929 | `2d6af7cffda32de111da4ac9ffe7affc2587263503e03d070d54473a8ada37ef` |
 | sql/l1_account_month_features.sql | 2011 | `a237053b0e3d20adb1046bee96053111983c113995cb37fb00053fedc04de18f` |
-| sql/l1_full_month_summary.sql | 2200 | `131b4755f824dd831569cfbd2b6803444bae9ea5c19aff2f9d90678e44f3c47a` |
+| sql/l1_full_month_summary.sql | 2455 | `8654e4935e33811a70a5f76049e4c9df2095e7c975dc92501f458da38b9b105c` |
 | sql/l1_full_month_summary_2.sql | 2193 | `ce23de7c998b898c551fda4b7deede717c24eff5071311f19c642056e574db98` |
+| sql/l1_full_month_summary_from_result_table.sql | 1459 | `dd16f15a8fef0c6fe7240b7809fc1a275dcf7ab98ae60876efc854755ee8edd7` |
 | sql/l2_full_days_valued.sql | 4796 | `f8d5cafbac7f4a1ba456687012a761aa77dacd587b8e243e3032051059264ec1` |
 | sql/l2_full_days_valued_2.sql | 4563 | `e878f4f54712ea996f51f32eccd6a8abd916152e3e5469c95f77743b4f8a0c3b` |
 | sql/l2_intents_events.sql | 983 | `1544a88a7d4dd2743ae0b9551f49ed815d867102025a4170ccb25ca7e3dd16e4` |

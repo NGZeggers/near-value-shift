@@ -56,13 +56,15 @@ Every query was dry-run first; the runner passes `maximum_bytes_billed` to Googl
 | `l2_full_days_valued.sql` | `l2_full_days_valued.csv` (32 sample days, one row per day) | 186 GB |
 | `l2_full_days_valued_2.sql` | `l2_full_days_valued_2.csv` (17 sample days) | 34 GB |
 | `l2_valuation_check_day.sql` | `l2_valuation_check_day.csv` (2025-11-14, per execution block) | 6 GB |
-| `l1_full_month_summary.sql` (finer classes, re-aggregated from the result table) | `l1_full_month_summary.csv` | 4 GB |
+| `l1_full_month_summary_from_result_table.sql` (aggregation of the per-account result, job bqjob_r334ca4e1a9a7a635_000001a1ba3ce70e_1) | `l1_full_month_summary.csv` (2024-11 .. 2026-01) | 3.2 GB (+2.1 GB for a superseded coarse aggregate) |
 | `l3_buyback_attribution.sql` | `l3_buyback_attribution.csv` (3,197 withdrawals, one pass) | 287 GB |
 | `l3_buyback_wnear_origin.sql` | `l3_buyback_wnear_origin.csv` (how the wrap.near reached each account) | 287 GB |
 | materialization attempt of the buyback logs | failed on the sandbox storage quota, no charge | counted by Google as 0 |
 
 Month total: 1,006 GB billed over 17 queries, 0.92 TiB of the 1 TiB free tier (`data/bigquery/usage_2026-11-08.json`). The project is a sandbox
 without a billing account, so nothing can be charged; queries fail once the free tier is used.
+
+The monthly files partition the months (`l1_full_month_summary.sql` 2024-11..2026-01, `_2.sql` 2026-02..2026-10); the loader refuses overlapping keys, so refresh only the file that covers the months you need.
 
 Lesson: aggregate inside BigQuery. A per-account or per-log result is tens of millions of rows; downloading it through the REST API takes
 hours and the CSV cannot be committed. The valued queries return one row per day and are cross-checked against the Python valuation of the

@@ -692,9 +692,14 @@ def complete_days(prices: dict, llama: pd.Series, table: pd.DataFrame | None, fi
                                       "median_day": float(np.median(two_sided)) if two_sided else None,
                                       "p10_p90": [float(np.quantile(two_sided, 0.1)), float(np.quantile(two_sided, 0.9))] if len(two_sided) >= 5 else None,
                                       "days_within_5pct_of_parity": int(sum(1 for r in two_sided if 0.95 <= r <= 1.05)), "days": len(two_sided)},
-                "by_period": {"before_2026-09": {"days": len(early), "median_ratio": float(np.median(early)) if early else None},
-                              "from_2026-09": {"days": len(late), "median_ratio": float(np.median(late)) if late else None},
-                              "reading": "the complete-day ratio is stable near one half until August 2026 and lower from September 2026; the later gap is not explained by the two-sided definition and stays open (confidential intents or other flows the public logs do not carry)"},
+                "by_period": {"before_2026-09": {"days": len(early), "median_ratio": float(np.median(early)) if early else None,
+                                                 "two_sided_days_within_5pct": int(sum(1 for r in early if 0.95 <= 2 * r <= 1.05))},
+                              "from_2026-09": {"days": len(late), "median_ratio": float(np.median(late)) if late else None,
+                                               "two_sided_ratios_by_day": [{"day": r["day"], "two_sided_ratio": 2 * r["ratio_complete_to_reference"]} for r in with_ref if pd.Timestamp(r["day"]) >= cut]},
+                              "reading": ("the two-sided reading holds on the days before September 2026 and not on the four days from September 2026, where twice our volume is "
+                                          "0.63 to 0.85 of the reference; candidate explanations, none demonstrated here: confidential intents (volume the reference counts and "
+                                          "the public logs do not carry; their share was growing in 2026), legs this pipeline leaves unpriced, or a change in what the reference "
+                                          "counts; settling it needs the reference's own definition or its per-day breakdown, neither public")},
                 "pooled_ratio_complete_to_reference": pooled,
                 "ratio_complete_to_reference_median": float(np.median(ratios)) if ratios else None,
                 "ratio_complete_to_reference_p10_p90": [float(np.quantile(ratios, 0.1)), float(np.quantile(ratios, 0.9))] if len(ratios) >= 5 else None,
@@ -707,8 +712,8 @@ def complete_days(prices: dict, llama: pd.Series, table: pd.DataFrame | None, fi
                           + f"with every block of {len(with_ref)} sample days read, our complete-day volume is {pooled:.2f} of the reference pooled (median day {med:.2f}); "
                           "no sampling error remains in this comparison, so this ratio is the definitional and reconstruction gap itself. "
                           + f"Twice our half-gross volume is {out['two_sided_reading']['median_day']:.2f} of the reference on the median day and within 5% of parity on {out['two_sided_reading']['days_within_5pct_of_parity']} of {out['two_sided_reading']['days']} days: "
-                          "the reference behaves as a two-sided (full gross) notional, which resolves the one- or two-sided question empirically for those days"
-                          + (f"; from September 2026 the median ratio falls to {out['by_period']['from_2026-09']['median_ratio']:.2f}, a gap the definition does not explain" if out['by_period']['from_2026-09']['median_ratio'] else "")
+                          "strong empirical support, on those days, for the reference being a two-sided (full gross) notional; it is not the reference's published definition, and the equivalence is not uniform over the period"
+                          + (f": on the {out['by_period']['from_2026-09']['days']} days from September 2026 twice our volume is {', '.join(f'{x['two_sided_ratio']:.2f}' for x in out['by_period']['from_2026-09']['two_sided_ratios_by_day'])} of the reference, a gap the definition does not explain and that stays open" if out['by_period']['from_2026-09']['median_ratio'] else "")
                           + (f". The two-window expansion gives {out['sampled_over_complete_pooled']:.2f} of the complete day pooled (median {out['sampled_over_complete_median']:.2f}): "
                              "the measured expansion error of the declared estimator" if out.get("sampled_over_complete_pooled") else "")
                           + ("" if chk.get("passes") else ". The SQL valuation is not confirmed within tolerance: read the complete-day ratio with that caveat"))
@@ -884,11 +889,12 @@ def run() -> dict:
         residual["two_sided_reading_on_complete_days"] = {"median_day": ts["median_day"], "days_within_5pct_of_parity": ts["days_within_5pct_of_parity"], "days": ts["days"],
                                                            "confirmed": bool(ts["days_within_5pct_of_parity"] >= 0.8 * ts["days"])}
         residual["sampled_expansion_over_complete_day_pooled"] = full.get("sampled_over_complete_pooled")
-        residual["reading"] = ("Complete days from BigQuery settle the definitional component: twice our half-gross volume equals the reference on the median day "
-                               f"({ts['median_day']:.2f}; within 5% of parity on {ts['days_within_5pct_of_parity']} of {ts['days']} days), so the reference counts both sides of each swap. "
+        residual["reading"] = ("Complete days from BigQuery identify the definitional component on the days they cover: twice our half-gross volume equals the reference on the median day "
+                               f"({ts['median_day']:.2f}; within 5% of parity on {ts['days_within_5pct_of_parity']} of {ts['days']} days), strong empirical support for a two-sided reference on those days, not its published definition. "
                                f"The sampled estimator's remaining gap to the complete days (pooled {full.get('sampled_over_complete_pooled'):.2f}) is the expansion error of the two-window design, "
-                               "measured rather than inferred from the intraday factor. From September 2026 the complete-day ratio falls below one half; that part stays unexplained "
-                               "(confidential intents or flows outside the public logs). The declared estimator and its failed tolerance check stay as declared.")
+                               "measured rather than inferred from the intraday factor. On the four days from September 2026 twice our volume is 0.63 to 0.85 of the reference; "
+                               "candidate explanations (confidential intents, unpriced legs, a change in what the reference counts) are listed with the complete days and none is "
+                               "demonstrated here. The declared estimator and its failed tolerance check stay as declared.")
     out = {"computed": True, "economic_unit": ECONOMIC_UNIT, "reference_definition": REFERENCE_DEFINITION, "pooled_ratio_all_days": pooled,
            "components": {"temporal_coverage": coverage, "valuation": valuation, "route_reconstruction": routes, "residual": residual},
            "holdout": holdout(table), "intraday": intra or {"available": False, "how": "make blocks-intraday (network, several hours under the public rate limit)"},

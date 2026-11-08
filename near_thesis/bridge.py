@@ -32,9 +32,31 @@ ATTRIBUTION_RULE = {
     "second_pass": ("declared after the first pass showed withdrawals without an own exchange and before running: for every withdrawal, an internal transfer of "
                     "wrap.near into the withdrawing account (with its source account and whether that source bought wrap.near before the transfer, one hop upstream) "
                     "or a deposit of wrap.near from outside (mt_mint), within one day of blocks"),
-    "what_it_establishes": ("the withdrawal and the exchange are observed on-chain for every receipt they cover; the origin shows how the sold asset reached the account; "
-                            "whether the operator intended the withdrawal as a buyback remains an interpretation of the flows"),
+    "what_it_establishes": ("the withdrawal is observed for every receipt; the exchange and the transfers are observed events that are compatible with funding the withdrawal "
+                            "(same account, at or before the withdrawal, within the declared range), not a demonstrated allocation of those exact funds: balances are fungible, "
+                            "amounts per leg and prior balances are not reconciled here, and joins by block height do not fix the order of events inside a block. The strongest "
+                            "case is the exchange carried by the same receipt as the withdrawal. Whether the operator intended the withdrawal as a buyback remains an interpretation"),
 }
+AMOUNT_MATCH_TOLERANCE = "the NearBlocks snapshot stores deposits as floating-point numbers, so amounts are compared at float64 precision (relative 2^-52) and the match is approximate; BigQuery amounts are exact integers"
+
+
+def _match_snapshot(a: pd.DataFrame, snap: list[dict]) -> dict:
+    """Approximate one-to-one reconciliation by UTC day and amount at float precision, with ambiguity counted, never assumed exact."""
+    import math
+    bq = [(str(pd.Timestamp(d).date()), int(y)) for d, y in zip(a["block_date"], a["amount_yocto"])]
+    used = [False] * len(bq)
+    matched = ambiguous = 0
+    for t in snap:
+        day = pd.Timestamp(int(t["block_timestamp"]) // 10**9, unit="s").strftime("%Y-%m-%d")
+        amt = float(sum(float(x["deposit"]) for x in t.get("actions", []) if x.get("action") == "TRANSFER"))
+        tol = max(1.0, abs(amt) * 2 ** -52)
+        cands = [i for i, (d, y) in enumerate(bq) if d == day and not used[i] and abs(float(y) - amt) <= tol]
+        if len(cands) > 1:
+            ambiguous += 1
+        if cands:
+            used[cands[0]] = True
+            matched += 1
+    return {"matched_on_day_and_amount": matched, "ambiguous_snapshot_receipts": ambiguous}
 
 
 def _classify_wnear_origin(a: pd.DataFrame, origin_path=None) -> pd.DataFrame | None:
@@ -56,14 +78,17 @@ def full_attribution(txns: list[dict] | None = None, path=ATTRIBUTION) -> dict |
     """Population-level attribution of the buyback inflows from the BigQuery extract, reconciled with the NearBlocks receipt snapshot."""
     if not path.exists():
         return None
-    a = pd.read_csv(path)
-    a["amount_near"] = a["amount_yocto"].astype(float) / 1e24
+    a = pd.read_csv(path, dtype={"amount_yocto": str})
+    a["amount_near"] = [int(y) / 1e24 for y in a["amount_yocto"]]          # exact integers kept in amount_yocto; NEAR only for display
     n = len(a)
     swap = a["swap_block"].notna()
+    same_receipt = swap & (a["swap_receipt"] == a["receipt_id"])
     dep = a["deposit_block"].notna(); tr = a["transfer_in_block"].notna()
     out = {"rule": ATTRIBUTION_RULE, "withdrawals": int(n), "near_total": float(a["amount_near"].sum()),
            "distinct_intents_accounts": int(a["intents_account"].nunique()),
            "exchange_observed": int(swap.sum()), "exchange_observed_share": float(swap.mean()) if n else None,
+           "exchange_in_same_receipt_as_withdrawal": int(same_receipt.sum()),
+           "exchange_kind": "compatible prior event of the same account (latest wrap.near purchase at or before the withdrawal), not a demonstrated allocation of those funds",
            "exchange_observed_near_share": float(a.loc[swap, "amount_near"].sum() / a["amount_near"].sum()) if n and a["amount_near"].sum() > 0 else None,
            "blocks_withdrawal_minus_swap": {"median": float(a.loc[swap, "blocks_withdrawal_minus_swap"].median()) if swap.any() else None,
                                             "p90": float(a.loc[swap, "blocks_withdrawal_minus_swap"].quantile(0.9)) if swap.any() else None,
@@ -71,23 +96,20 @@ def full_attribution(txns: list[dict] | None = None, path=ATTRIBUTION) -> dict |
            "origin_deposit_observed": int(dep.sum()), "origin_transfer_in_observed": int((tr & ~dep).sum()),
            "origin_observed_share_of_exchanges": float(((dep | tr) & swap).sum() / swap.sum()) if swap.any() else None,
            "sold_assets_top": a.loc[swap, "sold"].value_counts().head(5).to_dict(),
-           "kind": "observed (public logs); intention inferred"}
+           "kind": "events observed (public logs); allocation of funds to each withdrawal inferred; intention inferred"}
     if txns is not None:
         snap = [t for t in txns if t.get("predecessor_account_id") == "intents.near"]
         snap_near = sum(float(x["deposit"]) for t in snap for x in t.get("actions", []) if x.get("action") == "TRANSFER") / 1e24
         # The BigQuery row carries the receipt that emitted the native_withdraw log (the execute_intents call); the snapshot carries the
         # child TRANSFER receipt that credited the wallet, so ids never coincide. Match on (day, amount) instead.
-        from collections import Counter
-        def _day(t):
-            return pd.Timestamp(int(t["block_timestamp"]) // 10**9, unit="s").strftime("%Y-%m-%d")
-        snap_keys = Counter((_day(t), str(int(sum(float(x["deposit"]) for x in t.get("actions", []) if x.get("action") == "TRANSFER")))) for t in snap)
-        bq_keys = Counter((str(pd.Timestamp(d).date()), str(int(float(y)))) for d, y in zip(a["block_date"], a["amount_yocto"]))
-        matched = sum((snap_keys & bq_keys).values())
+        mm = _match_snapshot(a, snap)
+        matched = mm["matched_on_day_and_amount"]
         out["reconciliation_with_nearblocks_snapshot"] = {"snapshot_receipts": len(snap), "snapshot_near": snap_near,
-                                                           "matched_on_day_and_amount": int(matched),
+                                                           "matched_on_day_and_amount": int(matched), "ambiguous_snapshot_receipts": int(mm["ambiguous_snapshot_receipts"]),
                                                            "snapshot_receipts_unmatched": int(len(snap) - matched), "bigquery_withdrawals_unmatched": int(n - matched),
                                                            "near_ratio_bigquery_over_snapshot": float(a["amount_near"].sum() / snap_near) if snap_near else None,
-                                                           "note": "ids differ by construction (log-emitting receipt versus the child transfer receipt); matching is on UTC day and exact amount"}
+                                                           "precision": AMOUNT_MATCH_TOLERANCE,
+                                                           "kind": "approximate reconciliation by day and amount; not an exact link between the log-emitting receipt and the child transfer receipt (their ids differ by construction)"}
     m = _classify_wnear_origin(a)
     if m is not None:
         classes = ["own_exchange", "transfer_from_account_that_exchanged", "transfer_without_observed_exchange", "deposit_from_outside", "none_observed"]
@@ -108,17 +130,18 @@ def full_attribution(txns: list[dict] | None = None, path=ATTRIBUTION) -> dict |
             out["wnear_origin"]["transfers_from_l2_solver_accounts"] = {"receipts": int(src["wnear_in_from"].isin(solvers).sum()),
                                                                         "near_share_of_transfers": float(src.loc[src["wnear_in_from"].isin(solvers), "amount_near"].sum() / src["amount_near"].sum()) if len(src) and src["amount_near"].sum() > 0 else None,
                                                                         "what": "source accounts that the L2 layer identifies independently as solvers (market makers) from the sampled token_diff events"}
-    out["reading"] = (f"of {n:,} withdrawals ({out['near_total']:,.0f} NEAR) the funding exchange is observed for {out['exchange_observed']:,} ({out['exchange_observed_share']:.0%} of receipts, "
-                      f"{out['exchange_observed_near_share']:.0%} of the NEAR); the sold asset reached the account by a bridge deposit in {out['origin_deposit_observed']:,} cases and by an internal "
-                      f"transfer in {out['origin_transfer_in_observed']:,}. Exchange and origin are observed where they appear; the remaining receipts have no wrap.near purchase by the same account "
-                      "in the day before the withdrawal, so for them the economic operation stays unobserved")
+    out["reading"] = (f"of {n:,} withdrawals ({out['near_total']:,.0f} NEAR) a compatible exchange by the same account is observed for {out['exchange_observed']:,} ({out['exchange_observed_share']:.0%} of receipts, "
+                      f"{out['exchange_observed_near_share']:.0%} of the NEAR), in {out['exchange_in_same_receipt_as_withdrawal']:,} of them inside the same receipt as the withdrawal; the sold asset reached the account "
+                      f"by a bridge deposit in {out['origin_deposit_observed']:,} cases and by an internal transfer in {out['origin_transfer_in_observed']:,}. These are observed events compatible with funding the "
+                      "withdrawal; the allocation of those exact funds to each withdrawal is not reconciled (amounts per leg, prior balances and intra-block order are not tracked) and stays inferred")
     if m is not None:
         wo = out["wnear_origin"]; c = wo["classes"]
-        out["reading"] += (f". Second pass: counting the account that transferred the wrap.near in and bought it itself (one hop upstream), the exchange is observed for "
+        out["reading"] += (f". Second pass: every withdrawal has some compatible prior flow of wrap.near observed; counting the account that transferred the wrap.near in and bought it itself (one hop upstream), a compatible exchange is observed for "
                            f"{wo['exchange_observed_within_one_hop']['receipts']:,} withdrawals ({wo['exchange_observed_within_one_hop']['receipt_share']:.0%} of receipts, {wo['exchange_observed_within_one_hop']['near_share']:.0%} of the NEAR); "
-                           f"{c['transfer_without_observed_exchange']['receipts']:,} ({c['transfer_without_observed_exchange']['near_share']:.0%} of the NEAR) received the wrap.near by internal transfer from {wo['distinct_source_accounts_of_transfers']} source accounts with no observed purchase of their own, "
+                           f"{c['transfer_without_observed_exchange']['receipts']:,} ({c['transfer_without_observed_exchange']['near_share']:.0%} of the NEAR) received wrap.near by internal transfer from {wo['distinct_source_accounts_of_transfers']} source accounts with no observed purchase of their own, "
                            + (f"of which the accounts the L2 layer identifies as solvers account for {wo['transfers_from_l2_solver_accounts']['near_share_of_transfers']:.0%} of that NEAR (a counterparty paying wrap.near directly; its counter-leg is not identified here), " if wo.get("transfers_from_l2_solver_accounts") and wo["transfers_from_l2_solver_accounts"]["near_share_of_transfers"] is not None else "")
-                           + f"{c['deposit_from_outside']['receipts']:,} received it as a deposit from outside, and {c['none_observed']['receipts']:,} ({c['none_observed']['near_share']:.0%} of the NEAR) show none of these in the day before")
+                           + f"{c['deposit_from_outside']['receipts']:,} received it as a deposit from outside, and {c['none_observed']['receipts']:,} ({c['none_observed']['near_share']:.0%} of the NEAR) show none of these in the day before; "
+                           "transfer amounts are not kept, so a compatible flow is not a reconciled funding of the withdrawal")
     return out
 
 

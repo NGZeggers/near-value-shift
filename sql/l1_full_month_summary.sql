@@ -1,13 +1,15 @@
 -- L1 full months, aggregated. Name classes: tg, sweat, kaiching (mini-app sub-accounts), implicit, eth_implicit, named, other. Per (month, name class): accounts active in the month, accounts with a single transaction, accounts with at
 -- least two distinct receivers, accounts that called intents.near, transactions, mean active days and median transactions per account.
 -- Reads every transaction of the month from the NEAR public dataset; the output is a few hundred rows, so it is committed as is.
--- Provenance of the committed file: months 2024-11 .. 2026-01 were aggregated on 2026-11-08 from the anonymous result table of job
--- 45b1ab3e-56b1-438b-9ec1-87e1eb6149fa (the per-account query, 148.2 GB) with job bqjob_rd2d6ce2d35cfb27_000001a1ba2e09e2_1 (4 GB);
--- months 2026-02 .. 2026-10 come from l1_full_month_summary_2.sql. Re-running this file recomputes the whole range (about 170 GB).
+-- Partition: this file covers 2024-11 .. 2026-01 and l1_full_month_summary_2.sql covers 2026-02 .. 2026-10; the two are disjoint by construction
+-- and the loader rejects any (month, name_class) key present in more than one file. Provenance of the committed l1_full_month_summary.csv:
+-- it was not produced by this file but by l1_full_month_summary_from_result_table.sql, the aggregation of the per-account result of job
+-- 45b1ab3e-56b1-438b-9ec1-87e1eb6149fa (148.2 GB) run as job bqjob_r334ca4e1a9a7a635_000001a1ba3ce70e_1 (see the meta file). Re-running this
+-- file reconstructs the same aggregate directly from the public table (about 150 GB).
 WITH tx AS (
   SELECT DATE_TRUNC(block_date, MONTH) AS month, block_date, signer_account_id AS account, receiver_account_id AS receiver
   FROM `bigquery-public-data.crypto_near_mainnet_us.transactions`
-  WHERE block_date BETWEEN '2024-11-01' AND '2026-10-31'
+  WHERE block_date BETWEEN '2024-11-01' AND '2026-01-31'
 ),
 per_account AS (
   SELECT month, account, COUNT(*) AS txns, COUNT(DISTINCT block_date) AS active_days, COUNT(DISTINCT receiver) AS distinct_receivers,
