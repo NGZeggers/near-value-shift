@@ -1,0 +1,14 @@
+........................................................................ [ 35%]
+........................................................................ [ 70%]
+...........................................................              [100%]
+=============================== warnings summary ===============================
+tests/test_phase2_regressions.py::test_truncated_event_must_not_produce_partial_metrics
+  /home/ttech-main/hackathons-review/repo/near_thesis/intents.py:353: RuntimeWarning: Rejected 1 malformed token_diff items
+    legs = batches_from_events(raw)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.3-final-0 ________________
+
+Coverage JSON written to file /tmp/near-fixes-coverage.json
+203 passed, 1 warning in 6.17s

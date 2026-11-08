@@ -1,9 +1,9 @@
 :root {
   color-scheme: light;
-  --page: #f9f9f7; --surface-1: #fcfcfb; --surface-2: #f2f1ed; --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
+  --page: #f9f9f7; --surface-1: #fcfcfb; --surface-2: #f2f1ed; --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #66645e;
   --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10); --deemph: #c3c2b7;
-  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4; --series-6: #008300;
-  --good: #006300; --bad: #d03b3b; --neutral-mid: #f0efec;
+  --series-1: #1c61af; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #895600; --series-5: #e87ba4; --series-6: #008300;
+  --good: #006300; --bad: #a92727; --neutral-mid: #f0efec;
   --accent: var(--series-1); --accent-soft: rgba(42,120,214,0.10); --good-soft: rgba(0,99,0,0.08); --bad-soft: rgba(208,59,59,0.08);
   --shadow: 0 1px 2px rgba(11,11,11,0.04), 0 8px 24px rgba(11,11,11,0.06);
   --display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, "Times New Roman", serif;
@@ -14,19 +14,19 @@
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
     color-scheme: dark;
-    --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232322; --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
+    --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232322; --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #aaa89f;
     --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --deemph: #52514e;
-    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #008300;
-    --good: #0ca30c; --bad: #d03b3b; --neutral-mid: #383835;
+    --series-1: #68a9f5; --series-2: #d95926; --series-3: #199e70; --series-4: #e4b448; --series-5: #d55181; --series-6: #008300;
+    --good: #43c743; --bad: #ff7777; --neutral-mid: #383835;
     --accent-soft: rgba(57,135,229,0.16); --good-soft: rgba(12,163,12,0.12); --bad-soft: rgba(208,59,59,0.14); --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232322; --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
+  --page: #0d0d0d; --surface-1: #1a1a19; --surface-2: #232322; --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #aaa89f;
   --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --deemph: #52514e;
-  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181; --series-6: #008300;
-  --good: #0ca30c; --bad: #d03b3b; --neutral-mid: #383835;
+  --series-1: #68a9f5; --series-2: #d95926; --series-3: #199e70; --series-4: #e4b448; --series-5: #d55181; --series-6: #008300;
+  --good: #43c743; --bad: #ff7777; --neutral-mid: #383835;
   --accent-soft: rgba(57,135,229,0.16); --good-soft: rgba(12,163,12,0.12); --bad-soft: rgba(208,59,59,0.14); --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
 }
 * { box-sizing: border-box; }
@@ -99,7 +99,7 @@ h2 { font-family: var(--display); font-weight: 500; font-size: 26px; letter-spac
 .argument .sec-q { margin-bottom: 14px; }
 .scrolly { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 28px; align-items: start; }
 .steps { list-style: none; counter-reset: step; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
-.steps li { counter-increment: step; position: relative; padding: 14px 16px 14px 52px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-1); opacity: 0.6; transition: opacity 200ms ease, border-color 200ms ease, box-shadow 200ms ease; scroll-margin-top: 90px; }
+.steps li { counter-increment: step; position: relative; padding: 14px 16px 14px 52px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-1); opacity: 1; transition: opacity 200ms ease, border-color 200ms ease, box-shadow 200ms ease; scroll-margin-top: 90px; }
 .steps li.active { opacity: 1; border-color: var(--accent); box-shadow: var(--shadow); }
 .steps li::before { content: counter(step); position: absolute; left: 16px; top: 15px; width: 26px; height: 26px; border-radius: 50%; background: var(--axis); color: var(--page); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; transition: background 200ms ease; }
 .steps li.active::before { background: var(--accent); color: #fff; }
@@ -115,7 +115,7 @@ h2 { font-family: var(--display); font-weight: 500; font-size: 26px; letter-spac
 
 /* section heads */
 .sec-head { margin: 44px 0 14px; padding-top: 12px; scroll-margin-top: 20px; }
-.sec-head .num { font-family: var(--display); font-size: 44px; line-height: 1; color: var(--deemph); display: block; margin-bottom: -6px; }
+.sec-head .num { font-family: var(--display); font-size: 44px; line-height: 1; color: var(--text-secondary); display: block; margin-bottom: -6px; }
 .sec-head h2 { margin: 0 0 2px; }
 .sec-q { margin: 0; color: var(--text-secondary); font-style: italic; font-size: 14.5px; }
 .sec-intro { margin: 8px 0 0; max-width: 85ch; font-size: 16px; }

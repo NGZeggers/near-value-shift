@@ -12,3 +12,5 @@ site/*.html
 data/derived/features_built_at.txt
 data/blocks/cache/
 data/blocks/*.tmp
+
+.coverage

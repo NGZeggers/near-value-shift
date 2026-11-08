@@ -1,0 +1,27 @@
+uv run near-thesis features
+daily: 2,131 rows 2021-01-01 -> 2026-11-01
+monthly: 71 rows; peers: 8 chains
+uv run near-thesis models
+/home/ttech-main/hackathons-review/repo/.venv/lib/python3.12/site-packages/statsmodels/tsa/base/tsa_model.py:480: ValueWarning: A date index has been provided, but it has no associated frequency information and so will be ignored when e.g., forecasting.
+  self._init_dates(dates, freq)
+L1: hdbscan on 32,173 account-months -> 22 clusters, QAA for 24 months
+L2: 7,227 events on 49 days -> 9 solver accounts, priced share 100%
+reconcile: 49 days, pooled ratio 0.253, holdout validation days outside the declared tolerance: the on-chain estimate does not reproduce the reference level
+L3: breaks for 8 series, VAR/Granger for 7 metrics, Johansen for 7
+L4: 24 IC tests, 3 significant by block bootstrap; out of sample: no usage metric passes the declared familywise out-of-sample criterion; peers ranked; scenarios drawn
+bridge: 6 steps, net yield base -1.00%, dominant assumption issuance
+uv run near-thesis charts
+charts: 25 specs, 6 KPIs -> site/data.json (388 KB)
+uv run near-thesis thesis
+thesis: THESIS.md, reconciliation, provenance and metric docs regenerated
+uv run near-thesis site
+site: site/index.html (438 KB)
+uv run python -c "from near_thesis import notebook; notebook.run()"
+notebook: notebooks/walkthrough.ipynb
+uv run jupyter nbconvert --to html --execute --ExecutePreprocessor.timeout=600 --output-dir site notebooks/walkthrough.ipynb
+[NbConvertApp] Converting notebook notebooks/walkthrough.ipynb to html
+[IPKernelApp] WARNING | Kernel is running over TCP without encryption. All communication (including code and outputs) is sent in plain text and is susceptible to eavesdropping. Use IPC transport or launch with kernel manager-provisioned CurveZMQ keys to enable transport encryption.
+[NbConvertApp] WARNING | Alternative text is missing on 3 image(s).
+[NbConvertApp] Writing 587893 bytes to site/walkthrough.html
+uv run python -c "from near_thesis import notebook; notebook.finalize_html()"
+uv run python -c "import json; from near_thesis.onchain import payload; from near_thesis.config import DERIVED; (DERIVED / 'onchain_index.json').write_text(json.dumps(payload(), indent=1))"

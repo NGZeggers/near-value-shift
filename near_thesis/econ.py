@@ -12,6 +12,7 @@ Every test reports the sample window and the number of observations, so a reader
 from __future__ import annotations
 
 import json
+from .serialization import dumps as json_dumps
 import math
 import warnings
 
@@ -50,6 +51,8 @@ def detect_breaks(s: pd.Series, *, min_size: int = 90, smooth: int = 7, pen_mult
     x = _logs(s.rolling(smooth, min_periods=1).mean()).dropna()
     if len(x) < 3 * min_size:
         return {"n": int(len(x)), "breaks": [], "note": "series too short"}
+    if x.nunique() < 2 or not np.isfinite(x.std()) or x.std() == 0:
+        return {"n": int(len(x)), "breaks": [], "note": "constant or nonfinite series; breaks not identified"}
     z = ((x - x.mean()) / x.std()).to_numpy().reshape(-1, 1)
     n = len(z)
     pen = pen_mult * math.log(n)  # on a standardized signal, sigma^2 = 1
@@ -146,9 +149,16 @@ def johansen(d: pd.DataFrame, metric: str, start: str | None) -> dict:
         return {"metric": metric, "n_weeks": int(len(lw)), "note": "fewer than 40 weekly observations"}
     integration = {c: {"level": adf(lw[c]), "difference": adf(lw[c].diff())} for c in cols}
     integration_ok = all(not r["level"].get("stationary_5pct", True) and r["difference"].get("stationary_5pct", False) for r in integration.values())
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        jr = coint_johansen(lw, det_order=0, k_ar_diff=2)
+    if not integration_ok or any(lw[c].nunique() < 2 for c in cols):
+        return {"metric": metric, "n_weeks": int(len(lw)), "integration_checks": integration,
+                "inference_valid": False, "cointegrated_5pct": None, "note": "inconclusive: I(1) prerequisites not established or constant series"}
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            jr = coint_johansen(lw, det_order=0, k_ar_diff=2)
+    except np.linalg.LinAlgError:
+        return {"metric": metric, "n_weeks": int(len(lw)), "integration_checks": integration,
+                "inference_valid": False, "cointegrated_5pct": None, "note": "singular estimator; cointegration not identified"}
     trace0, trace1 = float(jr.lr1[0]), float(jr.lr1[1])
     cv0, cv1 = jr.cvt[0], jr.cvt[1]  # 90, 95, 99
     rank = 0 if trace0 <= cv0[1] else 1 if trace1 <= cv1[1] else 2
@@ -190,13 +200,13 @@ def run() -> dict:
     starts = {m: ("2024-12-01" if m == "intents_volume_usd" else "2023-01-01" if m == "near_app_fees_usd" else None) for m in metrics}
 
     breaks = {m: detect_breaks(d[m]) for m in metrics + [PRICE]}
-    (MODELS / "breaks.json").write_text(json.dumps(breaks, indent=1))
+    (MODELS / "breaks.json").write_text(json_dumps(breaks, indent=1))
 
     stat = {}
     for m in metrics + [PRICE]:
         wk = d[[m]].resample("W-SUN").mean()[m]
         stat[m] = {"log_level_weekly": adf(_logs(wk)), "dlog_weekly": adf(_logs(wk).diff())}
-    (MODELS / "stationarity.json").write_text(json.dumps(stat, indent=1))
+    (MODELS / "stationarity.json").write_text(json_dumps(stat, indent=1))
 
     vg = [var_granger(d, m, starts[m]) for m in metrics]
     cells = [(r, field) for r in vg if r.get("inference_valid") for field in ["usage_granger_causes_price", "price_granger_causes_usage"]]
@@ -204,10 +214,10 @@ def run() -> dict:
         adjusted = multipletests([r[f]["p_value"] for r, f in cells], method="holm")[1]
         for (r, f), p in zip(cells, adjusted):
             r[f]["p_value_holm"] = float(p)
-    (MODELS / "var_granger.json").write_text(json.dumps(vg, indent=1))
+    (MODELS / "var_granger.json").write_text(json_dumps(vg, indent=1))
 
     jo = [johansen(d, m, starts[m]) for m in metrics]
-    (MODELS / "johansen.json").write_text(json.dumps(jo, indent=1))
+    (MODELS / "johansen.json").write_text(json_dumps(jo, indent=1))
 
     rolling_corr(d).to_csv(MODELS / "rolling_corr.csv")
     yearly_corr(d).to_csv(MODELS / "yearly_corr.csv", index=False)

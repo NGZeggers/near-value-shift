@@ -1,0 +1,42 @@
+[
+  {
+    "page": "dashboard",
+    "theme": "light",
+    "width": 1440,
+    "violations": [],
+    "incomplete_rules": [
+      [
+        "color-contrast",
+        335
+      ]
+    ]
+  },
+  {
+    "page": "dashboard",
+    "theme": "dark",
+    "width": 1440,
+    "violations": [],
+    "incomplete_rules": [
+      [
+        "color-contrast",
+        335
+      ]
+    ]
+  },
+  {
+    "page": "dashboard",
+    "theme": "light",
+    "width": 375,
+    "violations": [],
+    "incomplete_rules": [
+      [
+        "color-contrast",
+        403
+      ]
+    ]
+  },
+  {
+    "page": "notebook",
+    "violations": []
+  }
+]

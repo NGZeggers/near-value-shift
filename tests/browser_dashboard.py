@@ -4,6 +4,8 @@ import json
 import os
 import tempfile
 import threading
+from unittest.mock import patch
+from near_thesis import site
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
@@ -12,6 +14,16 @@ ROOT = Path(os.environ.get('NEAR_AUDIT_ROOT', Path(__file__).resolve().parents[1
 OUT = Path(os.environ['NEAR_AUDIT_OUTPUT']) if 'NEAR_AUDIT_OUTPUT' in os.environ else Path(tempfile.mkdtemp(prefix='near-audit-browser-'))
 OUT.mkdir(parents=True, exist_ok=True)
 results = []
+
+def render_spec(specification):
+    """Exercise the real serializer and HTML assembler for each hostile fixture."""
+    with tempfile.TemporaryDirectory() as folder:
+        target=Path(folder)
+        (target/'data.json').write_text(json.dumps(specification))
+        with patch.object(site,'SITE',target):
+            site.run()
+        return (target/'index.html').read_text()
+
 
 def record(name, ok, detail=None):
     results.append(dict(name=name, passed=bool(ok), detail=detail))
@@ -110,18 +122,18 @@ with sync_playwright() as p:
     malicious['charts'][0]['title'] = hostile
     malicious['charts'][0]['sentence'] = hostile
     malicious['charts'][0]['series'][0]['name'] = hostile
-    safe_html = html.replace((ROOT/'site/data.json').read_text().replace('</', '<\\/'), json.dumps(malicious).replace('</', '<\\/'))
+    safe_html = render_spec(malicious)
     page.set_content(safe_html)
     record('hostile_text_not_executed', page.evaluate('window.__audit_xss === undefined') and page.locator('section.card h3').first.text_content() == hostile)
     zero = json.loads(json.dumps(spec))
     zero['charts'] = [dict(spec['charts'][0], y_log=False, y_domain=None, annotations=[], series=[{'name':'zero', 'points':[['2026-01-01',0],['2026-01-02',0]]}])]
-    zero_html = html.replace((ROOT/'site/data.json').read_text().replace('</', '<\\/'), json.dumps(zero).replace('</', '<\\/'))
+    zero_html = render_spec(zero)
     page.set_content(zero_html)
     record('zero_series_has_valid_geometry', geometry() == 0, geometry())
     for label, values, logarithmic in [('flat_negative', [-4,-4], False), ('zero_log', [0,0], True)]:
         zero['charts'][0]['y_log'] = logarithmic
         zero['charts'][0]['series'][0]['points'] = [['2026-01-01', values[0]], ['2026-01-02', values[1]]]
-        edge_html = html.replace((ROOT/'site/data.json').read_text().replace('</', '<\\/'), json.dumps(zero).replace('</', '<\\/'))
+        edge_html = render_spec(zero)
         page.set_content(edge_html)
         record(label+'_has_valid_geometry', geometry() == 0, geometry())
 

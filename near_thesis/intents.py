@@ -21,6 +21,7 @@ Outputs (data/derived/models/): intents_daily.csv, intents_monthly.csv, intents_
 from __future__ import annotations
 
 import json
+from .serialization import dumps as json_dumps
 import math
 import re
 import warnings
@@ -103,6 +104,14 @@ def batches_from_events(df: pd.DataFrame) -> pd.DataFrame:
     rows = []
     rejected = 0
     for r in df.itertuples(index=False):
+        if isinstance(r.log, str) and r.log.startswith('EVENT_JSON:'):
+            try:
+                declared = json.loads(r.log[len('EVENT_JSON:'):])
+                if not isinstance(declared, dict):
+                    raise ValueError('event must be an object')
+            except (ValueError, TypeError):
+                rejected += 1
+                continue
         ev = parse_event(r.log)
         if not ev or ev.get("event") != "token_diff":
             continue
@@ -288,7 +297,7 @@ def _unavailable(reason: str, *, source: str | None = None, **details) -> dict:
                  'intents_solvers.csv', 'intents_solver_sensitivity.json']:
         (MODELS / name).unlink(missing_ok=True)
     status = {'computed': False, 'source': source, 'reason': reason, **details}
-    (MODELS / 'intents_status.json').write_text(json.dumps(status, indent=1) + '\n')
+    (MODELS / 'intents_status.json').write_text(json_dumps(status, indent=1) + '\n')
     print(f'L2: not computed ({reason})')
     return status
 
@@ -302,7 +311,28 @@ def run() -> dict:
         f, source = sampled, "neardata block sample"
     else:
         return _unavailable('No on-chain extract; run make blocks or optional make bq')
-    raw = pd.read_csv(f)
+    if source != 'bigquery':
+        report_path = f.parent / 'event_verification.json'
+        if report_path.exists():
+            import hashlib
+            try:
+                report = json.loads(report_path.read_text())
+                if report.get('output_sha256') != hashlib.sha256(f.read_bytes()).hexdigest():
+                    raise ValueError('receipt attestation hash mismatch')
+            except (ValueError, TypeError, AttributeError) as exc:
+                return _unavailable(f'Invalid receipt attestation: {exc}', source=source)
+    try:
+        raw = pd.read_csv(f)
+    except (pd.errors.EmptyDataError, pd.errors.ParserError) as exc:
+        return _unavailable(f'Invalid event extract: {exc}', source=source)
+    required = {'block_date', 'receipt_id', 'log'}
+    if not required.issubset(raw.columns):
+        return _unavailable('Event extract missing required columns.', source=source)
+    # Identical logs cannot be counted twice. Without log indices, rejecting an
+    # ambiguous duplicate is safer than collapsing potentially distinct events.
+    identity = [c for c in ['block_date', 'receipt_id', 'log'] if c in raw]
+    if identity and raw.duplicated(identity).any():
+        return _unavailable('Duplicate event identities; refusing ambiguous volume.', source=source)
     from .blocks import SUCCESS_STATUSES
     if 'execution_status' not in raw:
         return _unavailable('Legacy extract has no execution status. Run near-thesis verify-events before using L2.',
@@ -370,7 +400,7 @@ def run() -> dict:
             dm = daily_metrics(legs, rr, events, prices)
             sensitivity.append({"min_batch_share": share, "solver_accounts": int(rr.loc[rr.is_solver, "account"].nunique()),
                                 "mean_hhi": float(dm.hhi_solver.mean())})
-    (MODELS / "intents_solver_sensitivity.json").write_text(json.dumps(sensitivity, indent=1) + "\n")
+    (MODELS / "intents_solver_sensitivity.json").write_text(json_dumps(sensitivity, indent=1) + "\n")
     status = {"computed": True, "source": source, "coverage": coverage, "ratio_to_defillama": ratio, "sample_tail": tail, "sampled_days": int(daily["date"].nunique()), "days_with_token_diff": int(legs.block_date.nunique()), "events": int(len(raw)), "token_diff_legs": int(len(legs)),
               'execution_status_verified': True, 'failed_events_excluded': failed_events,
               'pricing_policy': 'exact case-sensitive registry asset identifiers; unknown assets unpriced',
@@ -384,6 +414,6 @@ def run() -> dict:
                               "mode": "absolute or (batch share >= 2%, batches >= 5, counterparties >= 5)" if source != "bigquery" else "absolute only",
                               "users": "observed unique accounts in windows; never expanded to daily unique users",
                               "intervals": "conditional day bootstrap; excludes intraday, routing and price uncertainty; not a population confidence guarantee"}}
-    (MODELS / "intents_status.json").write_text(json.dumps(status, indent=1, default=str))
+    (MODELS / "intents_status.json").write_text(json_dumps(status, indent=1, default=str))
     print(f"L2: {len(raw):,} events on {status['sampled_days']} days -> {len(solvers)} solver accounts, priced share {status['priced_batch_share_mean']:.0%}")
     return status

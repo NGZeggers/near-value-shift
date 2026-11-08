@@ -12,6 +12,7 @@ Nothing here is a forecast. The three scenarios are illustrative and every assum
 from __future__ import annotations
 
 import json
+from .serialization import dumps as json_dumps
 
 import numpy as np
 import pandas as pd
@@ -231,6 +232,6 @@ def run() -> dict:
                                        "a fall in volume or capture, or an allocation decision away from buybacks, removes the accrual entirely"),
            "status_legend": {"observed": "read from a public source and reproducible from the committed snapshot", "classified": "a rule applied by the data provider",
                              "inferred": "computed from observed items under a stated assumption", "unavailable": "not obtainable without credentials or absent on-chain"}}
-    (MODELS / "value_bridge.json").write_text(json.dumps(out, indent=1, default=lambda v: None if (isinstance(v, float) and np.isnan(v)) else str(v)))
+    (MODELS / "value_bridge.json").write_text(json_dumps(out, indent=1, default=lambda v: None if (isinstance(v, float) and np.isnan(v)) else str(v)))
     print(f"bridge: {len(steps)} steps, net yield base {scen['base']['net_yield_on_mcap']:+.2%}, dominant assumption {out['dominant_assumption']['dominant']}")
     return out

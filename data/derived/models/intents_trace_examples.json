@@ -620,7 +620,7 @@
   "legs": [
    {
     "account": "solver-eth.near",
-    "intent_hash": NaN,
+    "intent_hash": null,
     "asset_id": "nep141:eth-0x514910771af9ca656af840dff83e8264ecf986ca.omft.near",
     "symbol": "link",
     "decimals": 18,
@@ -630,7 +630,7 @@
    },
    {
     "account": "solver-eth.near",
-    "intent_hash": NaN,
+    "intent_hash": null,
     "asset_id": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near",
     "symbol": "usdc",
     "decimals": 6,
@@ -640,7 +640,7 @@
    },
    {
     "account": "king04.near",
-    "intent_hash": NaN,
+    "intent_hash": null,
     "asset_id": "nep141:eth-0x514910771af9ca656af840dff83e8264ecf986ca.omft.near",
     "symbol": "link",
     "decimals": 18,
@@ -650,7 +650,7 @@
    },
    {
     "account": "king04.near",
-    "intent_hash": NaN,
+    "intent_hash": null,
     "asset_id": "nep141:eth-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.omft.near",
     "symbol": "usdc",
     "decimals": 6,

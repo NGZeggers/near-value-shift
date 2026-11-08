@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from .serialization import dumps as json_dumps
 import pathlib
 
 import numpy as np
@@ -154,11 +155,11 @@ def _pairs(sig: pd.Series, fwd: pd.Series) -> pd.DataFrame:
 
 def _calibration_hash(cal: pd.DataFrame) -> str:
     rows = [(str(t.date()), round(float(a), 10), round(float(b), 10)) for t, a, b in zip(cal.index, cal["sig"], cal["fwd"])]
-    return hashlib.sha256(json.dumps(rows).encode()).hexdigest()
+    return hashlib.sha256(json_dumps(rows).encode()).hexdigest()
 
 
 def protocol_hash() -> str:
-    return hashlib.sha256(json.dumps({k: OOS_PROTOCOL[k] for k in PROSPECTIVE_PROTOCOL_FIELDS}, sort_keys=True).encode()).hexdigest()
+    return hashlib.sha256(json_dumps({k: OOS_PROTOCOL[k] for k in PROSPECTIVE_PROTOCOL_FIELDS}, sort_keys=True).encode()).hexdigest()
 
 
 def _draft_plan(df: pd.DataFrame, h: int) -> dict:
@@ -224,7 +225,7 @@ def freeze_prospective_plan(w: pd.DataFrame, frozen_on: str, path=PROSPECTIVE_FR
                      "target is realized, under the frozen sign and the familywise criterion; this file is loaded by later builds and never recomputed"),
             "tests": tests}
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(plan, indent=1))
+    path.write_text(json_dumps(plan, indent=1))
     return plan
 
 
@@ -398,13 +399,13 @@ def scenarios(n: int = 20000) -> dict:
 def run() -> dict:
     w = _weekly()
     ic = ic_table(w)
-    (MODELS / "signal_ic.json").write_text(json.dumps(ic, indent=1))
+    (MODELS / "signal_ic.json").write_text(json_dumps(ic, indent=1))
     oos = oos_table(w)
-    (MODELS / "signal_oos.json").write_text(json.dumps(oos, indent=1, default=str))
+    (MODELS / "signal_oos.json").write_text(json_dumps(oos, indent=1, default=str))
     pv = peer_valuation()
-    (MODELS / "peer_valuation.json").write_text(json.dumps(pv, indent=1))
+    (MODELS / "peer_valuation.json").write_text(json_dumps(pv, indent=1))
     sc = scenarios()
-    (MODELS / "scenarios.json").write_text(json.dumps(sc, indent=1))
+    (MODELS / "scenarios.json").write_text(json_dumps(sc, indent=1))
     sig = [r for r in ic if r.get("significant_bootstrap")]
     print(f"L4: {len(ic)} IC tests, {len(sig)} significant by block bootstrap; out of sample: {oos['summary']['conclusion']}; peers ranked; scenarios drawn")
     return {"ic": ic, "oos": oos, "peers": pv, "scenarios": sc}

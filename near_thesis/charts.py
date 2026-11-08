@@ -8,6 +8,7 @@ annotations[{date, label}], source, query, note.
 from __future__ import annotations
 
 import json
+from .serialization import dumps as json_dumps
 from datetime import datetime, timezone
 
 import numpy as np
@@ -21,10 +22,10 @@ SQL_NOTE = "SQL in sql/; run with `make bq`"
 
 
 def _pts(s: pd.Series, *, freq: str | None = None, how: str = "mean", round_to: int = 2) -> list:
-    s = s.dropna()
+    s = s.replace([np.inf, -np.inf], np.nan).dropna()
     if freq:
         s = getattr(s.resample(freq), how)()
-        s = s.dropna()
+        s = s.replace([np.inf, -np.inf], np.nan).dropna()
     return [[str(i.date()), round(float(v), round_to)] for i, v in s.items()]
 
 
@@ -168,7 +169,7 @@ def build() -> dict:
         "Exploratory Spearman association; overlapping returns and multiple tests limit inference. QAA is trained only on past calibration months and released after month-end. This is not a trading backtest.",
         "ranked", [{"name": "IC (12w, vs BTC)", "points": [[_label(r["metric"]), round(r["spearman_ic"], 2)] for r in ic if r.get("horizon_weeks") == 12 and r.get("benchmark") == "btc" and "spearman_ic" in r]}],
         unit="Spearman IC", y_domain=[-1, 1], source="data/derived/daily.csv", query="near_thesis/signal.py ic_table",
-        note="95% block-bootstrap intervals: " + json.dumps({_label(r["metric"]): r["ci95_block_bootstrap"] for r in ic if r.get("horizon_weeks") == 12 and r.get("benchmark") == "btc" and "spearman_ic" in r})))
+        note="95% block-bootstrap intervals: " + json_dumps({_label(r["metric"]): r["ci95_block_bootstrap"] for r in ic if r.get("horizon_weeks") == 12 and r.get("benchmark") == "btc" and "spearman_ic" in r})))
 
     # ---- Section 5: peers
     p = peers.set_index("chain")
@@ -280,7 +281,7 @@ def oos_specs() -> list[dict]:
         "Two naive predictors (NEAR momentum, BTC trend) are evaluated the same way as references; Intents volume and QAA are not evaluable for lack of calibration weeks.",
         "ranked", [{"name": "evaluation IC (signed)", "points": [[_label(r["predictor"]) if r["kind"] == "usage" else r["predictor"].replace("_", " "), round(r["ic_evaluation_signed"], 2)] for r in rows]}],
         unit="Spearman IC", y_domain=[-1, 1], source="data/derived/daily.csv; near_thesis/signal.py oos_table", query="signal_oos.json tests[] where horizon_weeks=12 and benchmark=btc",
-        note="95% block-bootstrap intervals: " + json.dumps({(_label(r["predictor"]) if r["kind"] == "usage" else r["predictor"]): [round(x, 2) for x in r["ci95_block_bootstrap"]] for r in rows}))]
+        note="95% block-bootstrap intervals: " + json_dumps({(_label(r["predictor"]) if r["kind"] == "usage" else r["predictor"]): [round(x, 2) for x in r["ci95_block_bootstrap"]] for r in rows}))]
 
 
 def _indexed(m: pd.DataFrame) -> list[tuple[str, list]]:
@@ -296,5 +297,5 @@ def _indexed(m: pd.DataFrame) -> list[tuple[str, list]]:
 
 def run() -> None:
     spec = build()
-    (SITE / "data.json").write_text(json.dumps(spec, separators=(",", ":"), allow_nan=False))
+    (SITE / "data.json").write_text(json_dumps(spec, separators=(",", ":"), allow_nan=False))
     print(f"charts: {len(spec['charts'])} specs, {len(spec['kpis'])} KPIs -> site/data.json ({(SITE / 'data.json').stat().st_size / 1024:,.0f} KB)")

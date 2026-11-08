@@ -1,7 +1,7 @@
 name: build
 on:
   push:
-    branches: [main]
+    branches: [main, near_hackaton]
   pull_request:
   workflow_dispatch:
 
@@ -28,7 +28,7 @@ jobs:
         with:
           path: site
   deploy:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.repository == 'NGZeggers/near-value-shift' && github.ref == 'refs/heads/main'
     needs: build
     permissions:
       pages: write

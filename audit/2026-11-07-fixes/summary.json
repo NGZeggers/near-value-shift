@@ -1,0 +1,14 @@
+{
+  "base": "a9ad733c9a32c362483a5ce7dae5154296cdb433",
+  "pytest_passed": 203,
+  "pytest_failed": 0,
+  "original_audit_cases_passed": 53,
+  "browser_passed": 47,
+  "browser_hardening_passed": 4,
+  "axe_views": 4,
+  "axe_violations": 0,
+  "input_files_unchanged": 204,
+  "offline_external_attempt_logs_present": [],
+  "reproducibility": "passed against corrected independent snapshot; HEAD differs intentionally until commit",
+  "cryptographic_execution_proof": false
+}

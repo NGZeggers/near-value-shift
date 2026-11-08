@@ -1,0 +1,397 @@
+........................................................................ [ 40%]
+.......................................................FFF.FFFFFFFFFF... [ 80%]
+....................................                                     [100%]
+=================================== FAILURES ===================================
+___________________ test_duplicate_logs_cannot_double_volume ___________________
+
+l2 = (PosixPath('/tmp/pytest-of-ttech-main/pytest-19/test_duplicate_logs_cannot_dou0'), PosixPath('/tmp/pytest-of-ttech-mai...l2_intents_events.csv'),    block_date  ... execution_status
+0  2026-06-01  ...    SUCCESS_VALUE
+
+[1 rows x 5 columns])
+
+    def test_duplicate_logs_cannot_double_volume(l2):
+        root,path,frame=l2
+        assert intents.run()['computed']
+        original=pd.read_csv(root/'models/intents_daily.csv').volume_priced_usd.sum()
+        pd.concat([frame,frame],ignore_index=True).to_csv(path,index=False)
+        status=intents.run()
+>       assert not status['computed'] or pd.read_csv(root/'models/intents_daily.csv').volume_priced_usd.sum()==original
+E       AssertionError: assert (not True or np.float64(2.0) == np.float64(1.0))
+E        +  where np.float64(2.0) = sum()
+E        +    where sum = 0    2.0\nName: volume_priced_usd, dtype: float64.sum
+E        +      where 0    2.0\nName: volume_priced_usd, dtype: float64 =          date  batches  ...  top5_solver_share  withdraw_events\n0  2026-06-01        1  ...                NaN                0\n\n[1 rows x 15 columns].volume_priced_usd
+E        +        where          date  batches  ...  top5_solver_share  withdraw_events\n0  2026-06-01        1  ...                NaN                0\n\n[1 rows x 15 columns] = <function read_csv at 0x710103cc6160>((PosixPath('/tmp/pytest-of-ttech-main/pytest-19/test_duplicate_logs_cannot_dou0') / 'models/intents_daily.csv'))
+E        +          where <function read_csv at 0x710103cc6160> = pd.read_csv
+
+audit/2026-11-06-phase2/phase2_checks.py:40: AssertionError
+----------------------------- Captured stdout call -----------------------------
+L2: 1 events on 1 days -> 0 solver accounts, priced share 100%
+L2: 2 events on 1 days -> 0 solver accounts, priced share 100%
+____________ test_truncated_event_must_not_produce_partial_metrics _____________
+
+l2 = (PosixPath('/tmp/pytest-of-ttech-main/pytest-19/test_truncated_event_must_not_0'), PosixPath('/tmp/pytest-of-ttech-mai...l2_intents_events.csv'),    block_date  ... execution_status
+0  2026-06-01  ...    SUCCESS_VALUE
+
+[1 rows x 5 columns])
+
+    def test_truncated_event_must_not_produce_partial_metrics(l2):
+        root,path,frame=l2
+        corrupt=frame.copy()
+        corrupt['receipt_id']='bad'
+        corrupt['log']='EVENT_JSON:{"standard":"dip4","event":"token_diff","data":['
+        pd.concat([frame,corrupt],ignore_index=True).to_csv(path,index=False)
+>       assert intents.run()['computed'] is False
+E       assert True is False
+
+audit/2026-11-06-phase2/phase2_checks.py:49: AssertionError
+----------------------------- Captured stdout call -----------------------------
+L2: 2 events on 1 days -> 0 solver accounts, priced share 100%
+__________ test_success_column_cannot_override_mismatched_attestation __________
+
+l2 = (PosixPath('/tmp/pytest-of-ttech-main/pytest-19/test_success_column_cannot_ove0'), PosixPath('/tmp/pytest-of-ttech-mai...ock_height      block_timestamp
+0  2026-06-01          r  ...             7  1780272000000000000
+
+[1 rows x 9 columns])
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7100bfbe6120>
+
+    def test_success_column_cannot_override_mismatched_attestation(l2,monkeypatch):
+        root,path,frame=l2
+        frame['window_day']='2026-06-01'
+        frame['window_hour']=3
+        frame['block_height']=7
+        frame['block_timestamp']=1780272000000000000
+        frame.to_csv(root/'blocks/intents_events_sampled.csv',index=False)
+        path.unlink()
+        monkeypatch.setattr(blocks,'BLOCKS',root/'blocks')
+        pd.DataFrame({'date':['2026-06-01'],'intents_volume_usd':[100.],'blocks':[100000]}).to_csv(root/'derived/daily.csv',index=False)
+        (root/'blocks/sample_manifest.json').write_text(json.dumps({'windows':[{'day':'2026-06-01','hour':3,'n':50,'fetched':50,'usable':True}]}))
+        (root/'blocks/event_verification.json').write_text(json.dumps({'blocks_checked':1,'input_events':1,
+            'accepted_events':1,'failed_events_removed':0,'input_sha256':'1'*64,'output_sha256':'0'*64}))
+        # Real attestation schema, conflicting content. This is a local integrity
+        # check; the existing committed-data CI test is a separate mitigation.
+>       assert intents.run()['computed'] is False
+E       assert True is False
+
+audit/2026-11-06-phase2/phase2_checks.py:67: AssertionError
+----------------------------- Captured stdout call -----------------------------
+L2: 1 events on 1 days -> 0 solver accounts, priced share 100%
+____________ test_offline_without_cache_preserves_existing_extracts ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-19/test_offline_without_cache_pre0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7100bfe74a70>
+
+    def test_offline_without_cache_preserves_existing_extracts(tmp_path,monkeypatch):
+        ev,tx,cache=sampler_fixture(tmp_path,monkeypatch)
+        try:
+            blocks.run(offline=True,blocks_per_window=1)
+        except ValueError:
+            pass
+>       assert ev.read_text()=='original events'
+E       AssertionError: assert 'block_date,b...tion_status\n' == 'original events'
+E         
+E         - original events
+E         + block_date,block_timestamp,receipt_id,caller,log,window_day,window_hour,block_height,execution_status
+
+audit/2026-11-06-phase2/phase2_checks.py:94: AssertionError
+----------------------------- Captured stdout call -----------------------------
+1 windows over 1 days, 0 blocks to read (offline, from cache)
+done: 0 blocks in 0s -> data/blocks/ (complete=False)
+______________ test_invalid_worker_count_cannot_truncate_extracts ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-19/test_invalid_worker_count_cann0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7100bfeee930>
+
+    def test_invalid_worker_count_cannot_truncate_extracts(tmp_path,monkeypatch):
+        ev,tx,cache=sampler_fixture(tmp_path,monkeypatch)
+        with pytest.raises(ValueError):
+            blocks.run(offline=True,blocks_per_window=1,workers=0)
+>       assert ev.read_text()=='original events'
+E       AssertionError: assert 'block_date,b...tion_status\n' == 'original events'
+E         
+E         - original events
+E         + block_date,block_timestamp,receipt_id,caller,log,window_day,window_hour,block_height,execution_status
+
+audit/2026-11-06-phase2/phase2_checks.py:102: AssertionError
+----------------------------- Captured stdout call -----------------------------
+1 windows over 1 days, 0 blocks to read (offline, from cache)
+___________ test_qaa_unavailable_cannot_feed_old_predictive_features ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-19/test_qaa_unavailable_cannot_fe0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7100bfee73e0>
+
+    def test_qaa_unavailable_cannot_feed_old_predictive_features(tmp_path,monkeypatch):
+        monkeypatch.setattr(qaa,'MODELS',tmp_path)
+        monkeypatch.setattr(qaa,'load_inputs',lambda:None)
+        monkeypatch.setattr(qaa,'load_sampled',lambda:None)
+        pd.DataFrame({'month':['2026-01-01'],'available_at':['2026-02-01'],'qaa':[123.]}).to_csv(tmp_path/'qaa_causal_monthly.csv',index=False)
+        assert qaa.run()['computed'] is False
+        result=qaa.available_series(pd.date_range('2026-02-01',periods=5))
+>       assert result is None or result.isna().all()
+E       assert (2026-02-01    123.0\n2026-02-02    123.0\n2026-02-03    123.0\n2026-02-04    123.0\n2026-02-05    123.0\nFreq: D, Name: qaa, dtype: float64 is None or np.False_)
+E        +  where np.False_ = all()
+E        +    where all = 2026-02-01    False\n2026-02-02    False\n2026-02-03    False\n2026-02-04    False\n2026-02-05    False\nFreq: D, Name: qaa, dtype: bool.all
+E        +      where 2026-02-01    False\n2026-02-02    False\n2026-02-03    False\n2026-02-04    False\n2026-02-05    False\nFreq: D, Name: qaa, dtype: bool = isna()
+E        +        where isna = 2026-02-01    123.0\n2026-02-02    123.0\n2026-02-03    123.0\n2026-02-04    123.0\n2026-02-05    123.0\nFreq: D, Name: qaa, dtype: float64.isna
+
+audit/2026-11-06-phase2/phase2_checks.py:113: AssertionError
+----------------------------- Captured stdout call -----------------------------
+L1: not computed (no on-chain extract)
+__ test_publisher_uses_actual_latest_complete_month[2026-03-31-2026-03-12.0] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-19/test_publisher_uses_actual_lat0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7100bfee4380>
+cutoff = '2026-03-31', expected_month = '2026-03', expected_qaa = 12.0
+
+    @pytest.mark.parametrize('cutoff,expected_month,expected_qaa',[
+        ('2026-03-31','2026-03',12.),('2026-03-01','2026-02',8.)])
+    def test_publisher_uses_actual_latest_complete_month(tmp_path,monkeypatch,cutoff,expected_month,expected_qaa):
+        monkeypatch.setattr(onchain,'DERIVED',tmp_path)
+        monkeypatch.setattr(onchain,'MODELS',tmp_path)
+        monkeypatch.setattr(onchain,'ROOT',tmp_path)
+        monkeypatch.setattr(onchain,'raw_manifest',lambda:[])
+        (tmp_path/'THESIS.md').write_text('test')
+        (tmp_path/'signal_ic.json').write_text('[]')
+        pd.DataFrame({'date':[str((pd.Timestamp(cutoff)-pd.Timedelta(days=1)).date()),cutoff]}).to_csv(tmp_path/'daily.csv',index=False)
+        pd.DataFrame({'month':['2026-02-01','2026-03-01'],'active_accounts':[10.,20.],
+            'intents_volume_usd':[100.,200.],'usd_per_txn':[1.,2.]}).to_csv(tmp_path/'monthly.csv',index=False)
+        pd.DataFrame({'month':['2026-02-01','2026-03-01'],'qaa':[8.,12.]}).to_csv(tmp_path/'qaa_monthly.csv',index=False)
+        result=onchain.payload()
+>       assert result['month']==expected_month
+E       AssertionError: assert '2026-02' == '2026-03'
+E         
+E         - 2026-03
+E         ?       ^
+E         + 2026-02
+E         ?       ^
+
+audit/2026-11-06-phase2/phase2_checks.py:130: AssertionError
+___ test_publisher_uses_actual_latest_complete_month[2026-03-01-2026-02-8.0] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-19/test_publisher_uses_actual_lat1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7100bfbe5a90>
+cutoff = '2026-03-01', expected_month = '2026-02', expected_qaa = 8.0
+
+    @pytest.mark.parametrize('cutoff,expected_month,expected_qaa',[
+        ('2026-03-31','2026-03',12.),('2026-03-01','2026-02',8.)])
+    def test_publisher_uses_actual_latest_complete_month(tmp_path,monkeypatch,cutoff,expected_month,expected_qaa):
+        monkeypatch.setattr(onchain,'DERIVED',tmp_path)
+        monkeypatch.setattr(onchain,'MODELS',tmp_path)
+        monkeypatch.setattr(onchain,'ROOT',tmp_path)
+        monkeypatch.setattr(onchain,'raw_manifest',lambda:[])
+        (tmp_path/'THESIS.md').write_text('test')
+        (tmp_path/'signal_ic.json').write_text('[]')
+        pd.DataFrame({'date':[str((pd.Timestamp(cutoff)-pd.Timedelta(days=1)).date()),cutoff]}).to_csv(tmp_path/'daily.csv',index=False)
+        pd.DataFrame({'month':['2026-02-01','2026-03-01'],'active_accounts':[10.,20.],
+            'intents_volume_usd':[100.,200.],'usd_per_txn':[1.,2.]}).to_csv(tmp_path/'monthly.csv',index=False)
+        pd.DataFrame({'month':['2026-02-01','2026-03-01'],'qaa':[8.,12.]}).to_csv(tmp_path/'qaa_monthly.csv',index=False)
+        result=onchain.payload()
+        assert result['month']==expected_month
+>       assert result['qaa']==expected_qaa
+E       assert 12 == 8.0
+
+audit/2026-11-06-phase2/phase2_checks.py:131: AssertionError
+____________ test_constant_series_breaks_are_inconclusive_not_crash ____________
+
+    def test_constant_series_breaks_are_inconclusive_not_crash():
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+>           result=econ.detect_breaks(pd.Series(1.,index=pd.date_range('2024-01-01',periods=400)))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+audit/2026-11-06-phase2/phase2_checks.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+near_thesis/econ.py:56: in detect_breaks
+    idx = rpt.Pelt(model="l2", min_size=min_size, jump=1).fit(z).predict(pen=pen)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../phase2-20261106/.venv/lib/python3.12/site-packages/ruptures/detection/pelt.py:131: in predict
+    partition = self._seg(pen)
+                ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <ruptures.detection.pelt.Pelt object at 0x7100bfbe4f50>
+pen = 17.974393641323946
+
+    def _seg(self, pen):
+        """Computes the segmentation for a given penalty using PELT (or a list
+        of penalties).
+    
+        Args:
+            penalty (float): penalty value
+    
+        Returns:
+            dict: partition dict {(start, end): cost value,...}
+        """
+        # initialization
+        # partitions[t] contains the optimal partition of signal[0:t]
+        partitions = dict()  # this dict will be recursively filled
+        partitions[0] = {(0, 0): 0}
+        admissible = []
+    
+        # Recursion
+        ind = [k for k in range(0, self.n_samples, self.jump) if k >= self.min_size]
+        ind += [self.n_samples]
+        for bkp in ind:
+            # adding a point to the admissible set from the previous loop.
+            new_adm_pt = floor((bkp - self.min_size) / self.jump)
+            new_adm_pt *= self.jump
+            admissible.append(new_adm_pt)
+    
+            subproblems = list()
+            for t in admissible:
+                # left partition
+                try:
+                    tmp_partition = partitions[t].copy()
+                except KeyError:  # no partition of 0:t exists
+                    continue
+                # we update with the right partition
+                tmp_partition.update({(t, bkp): self.cost.error(t, bkp) + pen})
+                subproblems.append(tmp_partition)
+    
+            # finding the optimal partition
+>           partitions[bkp] = min(subproblems, key=lambda d: sum(d.values()))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           ValueError: min() iterable argument is empty
+
+../phase2-20261106/.venv/lib/python3.12/site-packages/ruptures/detection/pelt.py:76: ValueError
+___________ test_constant_series_johansen_is_inconclusive_not_crash ____________
+
+    def test_constant_series_johansen_is_inconclusive_not_crash():
+        d=pd.DataFrame({'near_price':1.,'usage':1.},index=pd.date_range('2024-01-01',periods=800))
+>       result=econ.johansen(d,'usage',None)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+audit/2026-11-06-phase2/phase2_checks.py:143: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+near_thesis/econ.py:151: in johansen
+    jr = coint_johansen(lw, det_order=0, k_ar_diff=2)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../phase2-20261106/.venv/lib/python3.12/site-packages/statsmodels/tsa/vector_ar/vecm.py:690: in coint_johansen
+    sig = np.dot(sk0, np.dot(inv(s00), sk0.T))
+                             ^^^^^^^^
+../phase2-20261106/.venv/lib/python3.12/site-packages/numpy/linalg/_linalg.py:659: in inv
+    ainv = _umath_linalg.inv(a, signature=signature)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+err = 'invalid value', flag = 8
+
+    def _raise_linalgerror_singular(err, flag):
+>       raise LinAlgError("Singular matrix")
+E       numpy.linalg.LinAlgError: Singular matrix
+
+../phase2-20261106/.venv/lib/python3.12/site-packages/numpy/linalg/_linalg.py:144: LinAlgError
+_________________ test_infinite_chart_points_cannot_break_json _________________
+
+    def test_infinite_chart_points_cannot_break_json():
+        series=pd.Series([1.,np.inf],index=pd.date_range('2026-01-01',periods=2))
+        points=charts._pts(series)
+>       json.dumps(points,allow_nan=False)
+
+audit/2026-11-06-phase2/phase2_checks.py:150: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/usr/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.encoder.JSONEncoder object at 0x71014f1bc920>
+o = [['2026-01-01', 1.0], ['2026-01-02', inf]], _one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+>       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: inf
+
+/usr/lib/python3.12/json/encoder.py:258: ValueError
+____________ test_committed_analytical_json_is_standards_compliant _____________
+
+    def test_committed_analytical_json_is_standards_compliant():
+        def reject(value):raise ValueError('Non-JSON constant: '+value)
+        failures=[]
+        for path in Path('data/derived').rglob('*.json'):
+            try:json.loads(path.read_text(),parse_constant=reject)
+            except ValueError:failures.append(str(path))
+>       assert not failures,failures
+E       AssertionError: ['data/derived/models/peer_valuation.json', 'data/derived/models/intents_trace_examples.json']
+E       assert not ['data/derived/models/peer_valuation.json', 'data/derived/models/intents_trace_examples.json']
+
+audit/2026-11-06-phase2/phase2_checks.py:159: AssertionError
+________________ test_unknown_fetch_source_cannot_claim_success ________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7100bfbe5010>
+
+    def test_unknown_fetch_source_cannot_claim_success(monkeypatch):
+>       with pytest.raises((SystemExit,ValueError)):
+E       Failed: DID NOT RAISE any of (SystemExit, ValueError)
+
+audit/2026-11-06-phase2/phase2_checks.py:163: Failed
+=========================== short test summary info ============================
+FAILED audit/2026-11-06-phase2/phase2_checks.py::test_duplicate_logs_cannot_double_volume
+FAILED audit/2026-11-06-phase2/phase2_checks.py::test_truncated_event_must_not_produce_partial_metrics
+FAILED audit/2026-11-06-phase2/phase2_checks.py::test_success_column_cannot_override_mismatched_attestation
+FAILED audit/2026-11-06-phase2/phase2_checks.py::test_offline_without_cache_preserves_existing_extracts
+FAILED audit/2026-11-06-phase2/phase2_checks.py::test_invalid_worker_count_cannot_truncate_extracts
+FAILED audit/2026-11-06-phase2/phase2_checks.py::test_qaa_unavailable_cannot_feed_old_predictive_features
+FAILED audit/2026-11-06-phase2/phase2_checks.py::test_publisher_uses_actual_latest_complete_month[2026-03-31-2026-03-12.0]
+FAILED audit/2026-11-06-phase2/phase2_checks.py::test_publisher_uses_actual_latest_complete_month[2026-03-01-2026-02-8.0]
+FAILED audit/2026-11-06-phase2/phase2_checks.py::test_constant_series_breaks_are_inconclusive_not_crash
+FAILED audit/2026-11-06-phase2/phase2_checks.py::test_constant_series_johansen_is_inconclusive_not_crash
+FAILED audit/2026-11-06-phase2/phase2_checks.py::test_infinite_chart_points_cannot_break_json
+FAILED audit/2026-11-06-phase2/phase2_checks.py::test_committed_analytical_json_is_standards_compliant
+FAILED audit/2026-11-06-phase2/phase2_checks.py::test_unknown_fetch_source_cannot_claim_success
+13 failed, 167 passed in 4.85s

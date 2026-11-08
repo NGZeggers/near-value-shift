@@ -45,6 +45,7 @@ def test_johansen_full_rank_is_not_reported_as_absence(monkeypatch):
     from types import SimpleNamespace
     idx = pd.date_range('2024-01-01', periods=800)
     d = pd.DataFrame({'near_price':np.arange(800)+10., 'usage':np.arange(800)+20.}, index=idx)
+    monkeypatch.setattr(econ, 'adf', lambda s: {'stationary_5pct': bool(s.isna().any())})
     monkeypatch.setattr(econ, 'coint_johansen', lambda *a,**k: SimpleNamespace(lr1=np.array([25.,6.]), cvt=np.array([[10,15,20],[2,3.8,5]])))
     r = econ.johansen(d, 'usage', None)
     assert r['rank_5pct'] == 2

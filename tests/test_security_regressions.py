@@ -126,4 +126,4 @@ def test_site_escapes_script_termination(tmp_path, monkeypatch):
     site.run()
     html = (tmp_path/'index.html').read_text()
     assert payload not in html
-    assert '<\\/script>' in html
+    assert '\\u003c/script\\u003e' in html

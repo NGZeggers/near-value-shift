@@ -1,0 +1,24 @@
+[
+  {
+    "name": "direct_close",
+    "passed": true,
+    "cards": 25,
+    "javascript_errors": []
+  },
+  {
+    "name": "comment_script",
+    "passed": true,
+    "cards": 25,
+    "javascript_errors": []
+  },
+  {
+    "name": "unicode",
+    "passed": true,
+    "cards": 25,
+    "javascript_errors": []
+  },
+  {
+    "name": "nonfinite_input_rejected_before_page_replace",
+    "passed": true
+  }
+]

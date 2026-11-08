@@ -25,7 +25,7 @@ Las tres son validaciones de evidencia, no fallos de código. El auditor advirti
 | Mismo día con dos ventanas fijas / 24 ventanas horarias | 0.36 / 0.33 |
 | Concentración | el 1 % de los bloques muestreados concentra el 90 % del volumen |
 
-Lectura: los tres diseños coinciden y ambos intervalos excluyen la paridad. Para ese día, la brecha frente a la referencia no es error de muestreo; es definicional (qué cuenta la referencia, uno o dos lados, *confidential intents*) o de reconstrucción y precios. Un día no establece el total global.
+Lectura: los tres diseños coinciden y ambos intervalos excluyen la paridad. Para ese día, los intervalos aportan evidencia contra una explicación puramente muestral, condicionada al diseño y al estimador de error; quedan abiertas diferencias de definición (qué cuenta la referencia, uno o dos lados, *confidential intents*) o de reconstrucción y precios. Un día no establece el total global.
 
 ### Búsqueda del swap de financiación de las recompras a 200 bloques
 
@@ -36,7 +36,7 @@ Lectura: los tres diseños coinciden y ambos intervalos excluyen la paridad. Par
 | Swap encontrado | 12, los doce comprando wrap.near, a 4–141 bloques del retiro |
 | Intercambio observado en total | 28 de 45 recibos muestreados |
 
-Para los 17 restantes el swap es anterior a los cuatro minutos leídos. Retiro desde Intents observado en los 45; intercambio en 28; origen del activo vendido sin trazar.
+Para los 17 restantes no se observó un swap en el rango leído; su existencia y ubicación temporal quedan sin determinar. Retiro desde Intents observado en los 45; intercambio en 28; origen del activo vendido sin trazar.
 
 ## Qué cumplió respecto a la auditoría
 

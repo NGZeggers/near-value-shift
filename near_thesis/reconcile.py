@@ -18,6 +18,7 @@ intents_trace_examples.json.
 from __future__ import annotations
 
 import json
+from .serialization import dumps as json_dumps
 
 import numpy as np
 import pandas as pd
@@ -385,7 +386,7 @@ def systematic_day(prices: dict, llama: pd.Series, events=None, manifest=None, i
         either_includes = out["reference_inside_ci95"] or bool(out["reference_inside_ci95_bootstrap"])
         out["reading"] = (f"on this day the even {man['step']}-block systematic sample estimates {r:.2f} of the reference with a 95% design interval of {lo:.2f} to {hi:.2f} "
                           f"(percentile bootstrap {blo:.2f} to {bhi:.2f}; volume is concentrated in few blocks, so the normal design interval is approximate and both readings are given); "
-                          + ("both intervals exclude parity, so for this day the gap is not sampling error: it is definitional (what the reference counts, "
+                          + ("both intervals exclude parity, providing evidence against a purely sampling explanation conditional on the design and error estimator; definition (what the reference counts, "
                              "one- or two-sided notional, confidential intents) or a difference in reconstruction or pricing" if both_exclude else
                              "at least one interval includes parity, so for this day the gap to the reference is compatible with sampling error under our definition" if either_includes else
                              "the two intervals disagree about parity; the sampling error alone cannot be ruled out or confirmed")
@@ -490,7 +491,7 @@ def run() -> dict:
         (MODELS / name).unlink(missing_ok=True)
     if not ins.get("computed") or ins.get("source") != "neardata block sample":
         out = {"computed": False, "reason": "reconciliation needs the computed block-sample L2 layer", "economic_unit": ECONOMIC_UNIT}
-        (MODELS / "intents_reconciliation.json").write_text(json.dumps(out, indent=1))
+        (MODELS / "intents_reconciliation.json").write_text(json_dumps(out, indent=1))
         print("reconcile: not computed")
         return out
     raw = pd.read_csv(DATA / "blocks" / "intents_events_sampled.csv")
@@ -508,7 +509,7 @@ def run() -> dict:
     table.to_csv(MODELS / "intents_reconciliation_daily.csv", index=False)
     ef = intents.expansion_factors(raw)
     examples = trace_examples(legs, raw, ef)
-    (MODELS / "intents_trace_examples.json").write_text(json.dumps(examples, indent=1, default=str))
+    (MODELS / "intents_trace_examples.json").write_text(json_dumps(examples, indent=1, default=str))
     with_ref = table[table["reference_usd"] > 0]
     pooled = _pooled(with_ref["volume_expanded_usd"].to_numpy(dtype=float), with_ref["reference_usd"].to_numpy(dtype=float))
     w03, w15 = with_ref["window03_sampled_usd"], with_ref["window15_sampled_usd"]
@@ -565,6 +566,6 @@ def run() -> dict:
                                  "a reference of independent origin: every public series found (DefiLlama, revenue.near.org, near-intents.org) derives from NEAR's own metrics datasets; the only independent indexer found (Flipside ez_intents) requires an account",
                                  "the published definition of volume_amount_usd in dune.near.dataset_near_intents_metrics (one- or two-sided)",
                                  "the share of confidential intents in the comparison period (only a cumulative share from a secondary source is available)"]}
-    (MODELS / "intents_reconciliation.json").write_text(json.dumps(out, indent=1, default=str))
+    (MODELS / "intents_reconciliation.json").write_text(json_dumps(out, indent=1, default=str))
     print(f"reconcile: {len(table)} days, pooled ratio {ratio:.3f}, holdout {out['holdout']['verdict']}" if ratio else "reconcile: no reference days")
     return out

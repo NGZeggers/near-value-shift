@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from .serialization import dumps as json_dumps
 import os
 
 import numpy as np
@@ -179,7 +180,7 @@ def label_clusters(df: pd.DataFrame, x: pd.DataFrame, labels: np.ndarray, *, hea
 
 def _input_hash(x: pd.DataFrame) -> str:
     """Canonical decimal serialization retains exponents, schema, row keys and method version."""
-    h = hashlib.sha256(json.dumps([METHOD_VERSION, list(x.columns), [str(i) for i in x.index]], separators=(",", ":")).encode())
+    h = hashlib.sha256(json_dumps([METHOD_VERSION, list(x.columns), [str(i) for i in x.index]], separators=(",", ":")).encode())
     for row in x.to_numpy(dtype=float):
         h.update((",".join(format(float(v), ".6g") if v else "0" for v in row) + "\n").encode())
     return h.hexdigest()
@@ -205,7 +206,7 @@ def causal_monthly(df: pd.DataFrame, x: pd.DataFrame, *, sampled: bool, calibrat
     if saved.get("labels") and any(v in LEGACY_LABELS for v in saved["labels"].values()):
         # identity-sounding names were retired; the frozen parameters are unchanged
         saved["labels"] = {k: LEGACY_LABELS.get(v, v) for k, v in saved["labels"].items()}
-        path.write_text(json.dumps(saved, indent=1) + "\n")
+        path.write_text(json_dumps(saved, indent=1) + "\n")
     if saved.get("calibration_sha256") != key or os.getenv("QAA_REFIT"):
         scaler = RobustScaler().fit(x.loc[train, NUMERIC])
         z = np.hstack([scaler.transform(x.loc[train, NUMERIC]), x.loc[train, [f"name_{c}" for c in NAME_CLASSES]].to_numpy()])
@@ -221,8 +222,8 @@ def causal_monthly(df: pd.DataFrame, x: pd.DataFrame, *, sampled: bool, calibrat
                  "means": model.means_.tolist(), "variances": model.covariances_.tolist(), "weights": model.weights_.tolist(),
                  "labels": {str(int(r.cluster)): r.label for r in prof.itertuples()}, "k": model.n_components}
         # Serialize before inference, so persisted parameter precision is exactly what predictions use.
-        saved = json.loads(json.dumps(saved, default=lambda v: int(v)))
-        path.write_text(json.dumps(saved, indent=1) + "\n")
+        saved = json.loads(json_dumps(saved, default=lambda v: int(v)))
+        path.write_text(json_dumps(saved, indent=1) + "\n")
     pred = df.loc[~train].copy()
     xp = x.loc[~train]
     z = np.hstack([(xp[NUMERIC].to_numpy() - np.array(saved["center"])) / np.array(saved["scale"]),
@@ -483,7 +484,7 @@ def run_refits() -> dict:
     prev = pd.read_csv(MODELS / "qaa_assignments.csv", parse_dates=["month"])
     committed = df[["month", "account"]].merge(prev, on=["month", "account"], how="left")["cluster"].to_numpy()
     res = refit_variants(df, x, committed, pd.DatetimeIndex(sorted(df["month"].unique())))
-    REFITS.write_text(json.dumps(res, indent=1, default=str) + "\n")
+    REFITS.write_text(json_dumps(res, indent=1, default=str) + "\n")
     print(f"qaa refits: {len(res['variants'])} variants; latest default share range {res['default_share_range'][0]:.1%}-{res['default_share_range'][1]:.1%} -> {REFITS}")
     return res
 
@@ -511,6 +512,13 @@ def examples(df: pd.DataFrame, x: pd.DataFrame, per_group: int = 3) -> list[dict
 
 def available_series(index: pd.DatetimeIndex) -> pd.Series | None:
     """Only the frozen, out-of-calibration QAA is allowed in predictive models."""
+    status_path = MODELS / 'qaa_status.json'
+    if status_path.exists():
+        try:
+            if not json.loads(status_path.read_text()).get('computed', False):
+                return None
+        except (ValueError, AttributeError):
+            return None
     f = MODELS / "qaa_causal_monthly.csv"
     if not f.exists():
         return None
@@ -527,8 +535,10 @@ def run() -> dict:
         df = load_sampled()
         source = "neardata block sample"
     if df is None:
+        for name in ['qaa_causal_monthly.csv', 'qaa_monthly.csv', 'qaa_clusters.csv', 'qaa_anchor_profiles.csv', 'qaa_sensitivity.json', 'qaa_examples.json']:
+            (MODELS / name).unlink(missing_ok=True)
         status = {"computed": False, "reason": "no data/bigquery/l1_*.csv (make bq) and no data/blocks/tx_sampled.csv (make blocks)."}
-        (MODELS / "qaa_status.json").write_text(json.dumps(status, indent=1))
+        (MODELS / "qaa_status.json").write_text(json_dumps(status, indent=1))
         print("L1: not computed (no on-chain extract)")
         return status
     if source != "bigquery":
@@ -554,7 +564,7 @@ def run() -> dict:
     else:
         labels, info = fit_clusters(x)
         pd.DataFrame({"month": df["month"].to_numpy(), "account": df["account"].to_numpy(), "cluster": labels,
-                      "input_sha256": input_key, "fit_info": json.dumps(info, default=str)}).to_csv(assign_path, index=False)
+                      "input_sha256": input_key, "fit_info": json_dumps(info, default=str)}).to_csv(assign_path, index=False)
     prof = label_clusters(df, x, labels)
     df = df.assign(cluster=labels).merge(prof[["cluster", "label"]], on="cluster", how="left")
     monthly = df.groupby("month").agg(active_accounts_bq=("account", "nunique"))
@@ -577,14 +587,14 @@ def run() -> dict:
     pd.crosstab(pd.Series(anchors, name="anchor_proxy"), df["label"]).to_csv(MODELS / "qaa_anchor_profiles.csv")
     causal = causal_monthly(df, x, sampled=source != "bigquery")
     sens = sensitivity(df, x, labels, monthly, sampled=source != "bigquery")
-    (MODELS / "qaa_sensitivity.json").write_text(json.dumps(sens, indent=1, default=str) + "\n")
-    (MODELS / "qaa_examples.json").write_text(json.dumps(examples(df, x), indent=1, default=str) + "\n")
+    (MODELS / "qaa_sensitivity.json").write_text(json_dumps(sens, indent=1, default=str) + "\n")
+    (MODELS / "qaa_examples.json").write_text(json_dumps(examples(df, x), indent=1, default=str) + "\n")
     status = {"computed": True, "source": source, **info, "months": int(monthly.shape[0]),
               "labels": prof.set_index("cluster")["label"].to_dict(), "quality_labels": sorted(QUALITY),
               "group_definitions": GROUP_DEFINITIONS, "criteria": CRITERIA,
               "method_version": METHOD_VERSION, "causal": causal,
               "scope": sens["scope"],
               "validation": "silhouette is geometric separation; group names describe behavior, not verified identity; see qaa_sensitivity.json"}
-    (MODELS / "qaa_status.json").write_text(json.dumps(status, indent=1, default=str))
+    (MODELS / "qaa_status.json").write_text(json_dumps(status, indent=1, default=str))
     print(f"L1: {info['algorithm']} on {info['n']:,} account-months -> {len(prof)} clusters, QAA for {len(monthly)} months")
     return status

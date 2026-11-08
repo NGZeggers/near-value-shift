@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+from .serialization import dumps as json_dumps
 import os
 from datetime import datetime, timezone
 
@@ -25,9 +26,13 @@ SOCIAL = {"testnet": ("v1.social08.testnet", "https://rpc.testnet.near.org"), "m
 def payload() -> dict:
     d = pd.read_csv(DERIVED / "daily.csv", parse_dates=["date"]).set_index("date")
     m = pd.read_csv(DERIVED / "monthly.csv", parse_dates=["month"]).set_index("month")
-    full = m[m.index < m.index.max()].iloc[-1]
+    eligible = m[m.index + pd.offsets.MonthEnd(0) <= d.index.max()]
+    if eligible.empty:
+        raise ValueError('No complete month available for publication')
+    full = eligible.sort_index().iloc[-1]
     qaa = MODELS / "qaa_monthly.csv"
-    q = pd.read_csv(qaa, parse_dates=["month"]).set_index("month").iloc[-1] if qaa.exists() else None
+    qm = pd.read_csv(qaa, parse_dates=["month"]).set_index("month") if qaa.exists() else pd.DataFrame()
+    q = qm.loc[full.name] if full.name in qm.index else None
     ic = {r["metric"]: r["spearman_ic"] for r in json.loads((MODELS / "signal_ic.json").read_text()) if r.get("horizon_weeks") == 12 and r.get("benchmark") == "btc" and "spearman_ic" in r}
     return {
         "as_of": str(d.index.max().date()),
@@ -38,7 +43,7 @@ def payload() -> dict:
         "usd_per_txn": round(float(full["usd_per_txn"]), 2),
         "ic_intents_12w_vs_btc": round(ic.get("intents_volume_usd", float("nan")), 3) if "intents_volume_usd" in ic else None,
         "thesis_sha256": hashlib.sha256((ROOT / "THESIS.md").read_bytes()).hexdigest(),
-        "raw_manifest_sha256": hashlib.sha256(json.dumps([r["sha256"] for r in raw_manifest()]).encode()).hexdigest(),
+        "raw_manifest_sha256": hashlib.sha256(json_dumps([r["sha256"] for r in raw_manifest()]).encode()).hexdigest(),
         "repo": REPO_URL,
     }
 
@@ -53,9 +58,9 @@ async def publish(dry_run: bool = True, *, account_id: str | None = None, networ
     if not dry_run and not (account_id and key):
         raise SystemExit("An account and NEAR_PRIVATE_KEY are required")
     index = payload()
-    (DERIVED / "onchain_index.json").write_text(json.dumps(index, indent=1))  # what the chain would hold; diffable in git
-    data = {account_id or "<account>": {"near_thesis": {"index": json.dumps(dict(index, published_at=datetime.now(timezone.utc).isoformat(timespec="seconds")))}}}
-    print(json.dumps(data, indent=1))
+    (DERIVED / "onchain_index.json").write_text(json_dumps(index, indent=1))  # what the chain would hold; diffable in git
+    data = {account_id or "<account>": {"near_thesis": {"index": json_dumps(dict(index, published_at=datetime.now(timezone.utc).isoformat(timespec="seconds")))}}}
+    print(json_dumps(data, indent=1))
     if dry_run:
         print(f"dry run: would call {contract}.set on {network} from {account_id} (saved data/derived/onchain_index.json)")
         return data
@@ -76,7 +81,7 @@ def read_index(account_id: str, network: str = "testnet") -> dict | None:
     import requests
 
     contract, rpc = SOCIAL[network]
-    args = base64.b64encode(json.dumps({"keys": [f"{account_id}/near_thesis/index"]}).encode()).decode()
+    args = base64.b64encode(json_dumps({"keys": [f"{account_id}/near_thesis/index"]}).encode()).decode()
     body = {"jsonrpc": "2.0", "id": "1", "method": "query",
             "params": {"request_type": "call_function", "finality": "final", "account_id": contract, "method_name": "get", "args_base64": args}}
     r = requests.post(rpc, json=body, timeout=30); r.raise_for_status()
@@ -101,7 +106,7 @@ def verify(account_id: str | None = None, network: str | None = None) -> bool:
     local = payload()
     mismatches = [k for k, v in local.items() if chain.get(k) != v]
     same = not mismatches
-    print(json.dumps({"network": network, "account": account_id, "published_at": chain.get("published_at"), "as_of_chain": chain.get("as_of"),
+    print(json_dumps({"network": network, "account": account_id, "published_at": chain.get("published_at"), "as_of_chain": chain.get("as_of"),
                       "as_of_local": local["as_of"], "index_matches": same, "mismatched_fields": mismatches, "chain": chain}, indent=1))
     return same
 

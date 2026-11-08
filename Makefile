@@ -37,6 +37,7 @@ site:             ## assemble the static dashboard in site/
 notebook:         ## regenerate notebooks/walkthrough.ipynb and execute it to site/walkthrough.html
 	$(PY) python -c "from near_thesis import notebook; notebook.run()"
 	$(PY) jupyter nbconvert --to html --execute --ExecutePreprocessor.timeout=600 --output-dir site notebooks/walkthrough.ipynb
+	$(PY) python -c "from near_thesis import notebook; notebook.finalize_html()"
 
 index:            ## local index only; no RPC call, signing or keys
 	$(PY) python -c "import json; from near_thesis.onchain import payload; from near_thesis.config import DERIVED; (DERIVED / 'onchain_index.json').write_text(json.dumps(payload(), indent=1))"

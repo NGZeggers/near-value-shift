@@ -27,7 +27,7 @@ Every chart has its source. One command rebuilds the results. Demo attached. #NE
 
 ## Final submission information still supplied by the team
 
-Project and lead names, contact email, team-size category, mainnet payout account, actual X demo-post URL, and agreement to the official contact notice. Never put keys or personal submission payloads in Git. The final payload must be reviewed before it is submitted; a submission cannot be edited afterward.
+Project and lead names, contact email, team-size category, mainnet payout account, actual X demo-post URL, and agreement to the official contact notice. Never put keys or personal submission payloads in Git. The final payload must be reviewed before it is submitted; a submission cannot be edited directly afterward; corrections require the human-reviewed [change request](https://nearhackathon.com/request-changes), not a second submission.
 
 ## Publication and submission handoff
 

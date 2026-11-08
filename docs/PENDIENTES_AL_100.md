@@ -46,8 +46,8 @@ El hackatón no ofrece ninguna base de datos (su `HACKATHON.md` solo lista RPC p
 
 ## Completado con la API pública (declarado antes de leer, 2026-11-07; resultados 2026-11-08)
 
-- **Muestra sistemática del día 2025-11-14:** 3,489 de 3,496 bloques (cada 40.º, ~2.5 % del día). Ratio 0.31 frente a la referencia, intervalo de diseño 0.13–0.48, bootstrap 0.15–0.49; los otros dos diseños del mismo día dan 0.36 y 0.33. Ambos intervalos excluyen la paridad: para ese día la brecha no es error de muestreo sino definicional o de reconstrucción/precios. El 1 % de los bloques concentra el 90 % del volumen muestreado. Un día no establece el total global.
-- **Búsqueda del swap de financiación a 200 bloques:** 12 de 29 encontrados (a 4–141 bloques del retiro); intercambio observado en 28 de 45 recibos muestreados. Los 17 restantes preceden a los cuatro minutos leídos. Origen de fondos sin trazar.
+- **Muestra sistemática del día 2025-11-14:** 3,489 de 3,496 bloques (cada 40.º, ~2.5 % del día). Ratio 0.31 frente a la referencia, intervalo de diseño 0.13–0.48, bootstrap 0.15–0.49; los otros dos diseños del mismo día dan 0.36 y 0.33. Ambos intervalos excluyen la paridad: para ese día los intervalos aportan evidencia contra una explicación puramente muestral, condicionada al diseño y al estimador de error; definición, reconstrucción y precios siguen abiertos. El 1 % de los bloques concentra el 90 % del volumen muestreado. Un día no establece el total global.
+- **Búsqueda del swap de financiación a 200 bloques:** 12 de 29 encontrados (a 4–141 bloques del retiro); intercambio observado en 28 de 45 recibos muestreados. En los 17 restantes no se observó el swap en el rango leído; su ubicación temporal queda sin determinar. Origen de fondos sin trazar.
 
 Con esto la API pública está agotada para los tres frentes: lo que sigue requiere BigQuery.
 

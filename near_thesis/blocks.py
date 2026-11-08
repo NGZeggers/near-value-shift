@@ -296,7 +296,7 @@ def usable_windows() -> set[tuple[str, int]] | None:
 
 
 def write_manifest(P: list[dict], fetched: dict, blocks_per_window: int, day_step: int, windows: tuple[int, ...], missing: int, requested: int) -> dict:
-    """Manifest with per-window fetched counts; written during the run so a partial sample is usable (and resumable)."""
+    """Publish per-window fetched counts after the staged sample passes usability checks."""
     wins = [dict(w, n=blocks_per_window, fetched=fetched.get(i, 0), usable=fetched.get(i, 0) >= min_usable(blocks_per_window)) for i, w in enumerate(P)]
     got = sum(fetched.values())
     man = {"fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": NEARDATA, "windows": wins,
@@ -307,7 +307,12 @@ def write_manifest(P: list[dict], fetched: dict, blocks_per_window: int, day_ste
 
 
 def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_window: int = 50, workers: int = 2, offline: bool = False) -> dict:
-    """offline=True rebuilds the CSVs and the manifest from the cache only (no network): the state of a partial run."""
+    """Stage a usable sample before replacing existing CSVs; offline uses verified caches only."""
+    for name, value in [('day_step', day_step), ('blocks_per_window', blocks_per_window), ('workers', workers)]:
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise ValueError(f"{name} must be a positive integer")
+    if not windows or any(isinstance(h, bool) or not isinstance(h, int) or not 0 <= h < 24 for h in windows):
+        raise ValueError("windows must contain UTC hours in [0, 23]")
     BLOCKS.mkdir(parents=True, exist_ok=True)
     plan_file = BLOCKS / "sample_plan.json"
     if plan_file.exists():
@@ -325,11 +330,15 @@ def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_windo
         # no cache upgrade via HTTP, even after the schema migration.
         for _, height in heights:
             fetch_block(height, offline=True)
+    if not heights:
+        raise ValueError("No blocks available; existing extracts preserved")
     requested = len(P) * blocks_per_window
     print(f"{len(P)} windows over {len({w['day'] for w in P})} days, {len(heights)} blocks to read" + (" (offline, from cache)" if offline else ""))
     t0 = time.time(); done = 0; missing = 0; fetched: dict[int, int] = {}
     ev_path, tx_path = BLOCKS / "intents_events_sampled.csv", BLOCKS / "tx_sampled.csv"
-    with ev_path.open("w", newline="") as fe, tx_path.open("w", newline="") as ft:
+    # Staging preserves the previous extracts if acquisition or validation fails.
+    ev_tmp, tx_tmp = ev_path.with_suffix('.csv.tmp'), tx_path.with_suffix('.csv.tmp')
+    with ev_tmp.open("w", newline="") as fe, tx_tmp.open("w", newline="") as ft:
         we, wt = csv.writer(fe), csv.writer(ft)
         we.writerow(["block_date", "block_timestamp", "receipt_id", "caller", "log", "window_day", "window_hour", "block_height", 'execution_status'])
         wt.writerow(["block_date", "window_day", "window_hour", "block_height", "block_timestamp", "signer", "receiver", "action_kind", "method", "deposit"])
@@ -350,9 +359,15 @@ def run(day_step: int = 15, windows: tuple[int, ...] = (3, 15), blocks_per_windo
                         wt.writerow([day, w["day"], w["hour"], b["height"], b["ts"], s_, r, kind, m, dep])
                 if done % 100 == 0:
                     fe.flush(); ft.flush()
-                    write_manifest(P, fetched, blocks_per_window, day_step, windows, missing, requested)
                     el = time.time() - t0
                     print(f"  {done}/{len(heights)} blocks, {missing} missing, {el:,.0f}s, rate {_rate[0]:.2f}/s, eta {(len(heights) - done) / max(done / el, 1e-9) / 60:,.0f} min", flush=True)
+    if any(fetched.get(i, 0) < min_usable(blocks_per_window) for i in range(len(P))):
+        raise ValueError("Insufficient usable blocks; existing extracts preserved")
+    ev_tmp.replace(ev_path)
+    tx_tmp.replace(tx_path)
+    # The previous receipt attestation describes different bytes; native successful
+    # execution statuses are retained in the new extract instead.
+    (BLOCKS / 'event_verification.json').unlink(missing_ok=True)
     man = write_manifest(P, fetched, blocks_per_window, day_step, windows, missing, requested)
     print(f"done: {sum(fetched.values())} blocks in {time.time() - t0:,.0f}s -> data/blocks/ (complete={man['complete']})")
     return man
@@ -403,6 +418,10 @@ def run_intraday(days: list[str] | None = None, blocks_per_window: int = 50, wor
                  plan_path: Path | None = None, events_path: Path | None = None, manifest_path: Path | None = None, selection_rule: str | None = None) -> dict:
     """Fetch every hourly window of the selected days (resumable through the shared block cache) and write
     data/blocks/intraday_events.csv plus intraday_manifest.json. Acquisition only: no reconciliation happens here."""
+    if isinstance(workers, bool) or not isinstance(workers, int) or workers <= 0:
+        raise ValueError('workers must be a positive integer')
+    if isinstance(blocks_per_window, bool) or not isinstance(blocks_per_window, int) or blocks_per_window <= 0:
+        raise ValueError('blocks_per_window must be a positive integer')
     plan_path = INTRADAY_PLAN if plan_path is None else plan_path
     events_path = INTRADAY_EVENTS if events_path is None else events_path
     manifest_path = INTRADAY_MANIFEST if manifest_path is None else manifest_path
@@ -440,6 +459,8 @@ def run_intraday(days: list[str] | None = None, blocks_per_window: int = 50, wor
                 if done % 100 == 0:
                     el = time.time() - t0
                     print(f"  {done}/{len(heights)} blocks, {missing} missing, {el:,.0f}s, rate {_rate[0]:.2f}/s, eta {(len(heights) - done) / max(done / el, 1e-9) / 60:,.0f} min", flush=True)
+    if not P or any(fetched.get(i, 0) < min_usable(blocks_per_window) for i in range(len(P))):
+        raise ValueError('Insufficient usable intraday blocks; existing extract preserved')
     tmp.replace(events_path)
     wins = [dict(w, fetched=fetched.get(i, 0), usable=fetched.get(i, 0) >= min_usable(blocks_per_window)) for i, w in enumerate(P)]
     man = {"fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": NEARDATA, "days": sorted(set(days)),
@@ -753,6 +774,10 @@ SYSTEMATIC_RULE = {
 
 def run_systematic_day(day: str = SYSTEMATIC_DAY, step: int = SYSTEMATIC_STEP, offline: bool = False) -> dict:
     import random
+    if isinstance(step, bool) or not isinstance(step, int) or step <= 0:
+        raise ValueError('step must be a positive integer')
+    if offline and not SYSTEMATIC_MANIFEST.exists():
+        raise ValueError('Offline systematic extraction requires an existing manifest')
     plan = json.loads(INTRADAY_VALIDATION_PLAN.read_text())
     h0 = next(w["start_height"] for w in plan if w["day"] == day and int(w["hour"]) == 0)
     nxt = (datetime.fromisoformat(day) + timedelta(days=1)).replace(tzinfo=timezone.utc)
@@ -782,6 +807,8 @@ def run_systematic_day(day: str = SYSTEMATIC_DAY, step: int = SYSTEMATIC_STEP, o
             if i % 100 == 0:
                 el = time.time() - t0
                 print(f"  {i}/{len(heights)} blocks, {missing} missing, {el:,.0f}s, eta {(len(heights) - i) / max(i / el, 1e-9) / 60:,.0f} min", flush=True)
+    if not heights or fetched == 0:
+        raise ValueError('No systematic blocks fetched; existing extract preserved')
     tmp.replace(SYSTEMATIC_EVENTS)
     man = {"fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": NEARDATA, "rule": SYSTEMATIC_RULE, "day": day, "step": step,
            "offset": offset, "start_height": h0, "end_height": h_end, "blocks_in_day": h_end - h0, "blocks_requested": len(heights),

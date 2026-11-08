@@ -1,0 +1,8 @@
+.....................................................                    [100%]
+=============================== warnings summary ===============================
+audit/2026-11-06-phase2/phase2_checks.py::test_truncated_event_must_not_produce_partial_metrics
+  /home/ttech-main/hackathons-review/remote-a9ad733/near_thesis/intents.py:353: RuntimeWarning: Rejected 1 malformed token_diff items
+    legs = batches_from_events(raw)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+53 passed, 1 warning in 1.99s

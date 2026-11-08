@@ -750,7 +750,7 @@
    "twenty_four_hourly_windows_ratio": 0.3307836473428638,
    "blocks_observed_24_windows": 1194
   },
-  "reading": "on this day the even 40-block systematic sample estimates 0.31 of the reference with a 95% design interval of 0.13 to 0.48 (percentile bootstrap 0.15 to 0.49; volume is concentrated in few blocks, so the normal design interval is approximate and both readings are given); both intervals exclude parity, so for this day the gap is not sampling error: it is definitional (what the reference counts, one- or two-sided notional, confidential intents) or a difference in reconstruction or pricing; one day cannot establish the global total"
+  "reading": "on this day the even 40-block systematic sample estimates 0.31 of the reference with a 95% design interval of 0.13 to 0.48 (percentile bootstrap 0.15 to 0.49; volume is concentrated in few blocks, so the normal design interval is approximate and both readings are given); both intervals exclude parity, providing evidence against a purely sampling explanation conditional on the design and error estimator; definition (what the reference counts, one- or two-sided notional, confidential intents) or a difference in reconstruction or pricing; one day cannot establish the global total"
  },
  "trace_examples": [
   "simple_two_party_fully_priced",
