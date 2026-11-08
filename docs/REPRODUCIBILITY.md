@@ -77,7 +77,7 @@ The build reads committed snapshots. Full SHA-256 hashes cover raw files, block 
 | File | Bytes | SHA-256 |
 |---|---|---|
 | data/blocks/buyback_trace.json | 53154 | `0d8693da1e245ba6e046e72d681c4ae5d1099e2ad3540f4d099d82a91a67433a` |
-| data/blocks/buyback_trace_extension.json | 14592 | `c74da3f66b8285a9b0a98ca22b26a68eced8c162b59be36cfa87a5ccf90aa461` |
+| data/blocks/buyback_trace_extension.json | 16564 | `f5c037cb4d41bc8e1bce603a9b9fa3724c4f047e104c320a4bc823b8f15fddfd` |
 | data/blocks/event_verification.json | 334 | `22a626709daebc13b1ec3eb2664eb91c4932d276b299bbebb599df83f13c1ece` |
 | data/blocks/intents_events_sampled.csv | 4383281 | `c9aeb3830f15e2e597b431d67a7314c82be01dd0a4e89f851b06baa7614bb111` |
 | data/blocks/intraday_events.csv | 4540589 | `a00304f64fe688ca145ce750a1ea34ea2eb4e0ca4073f4845caea4e57dbdcf8c` |

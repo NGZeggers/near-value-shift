@@ -44,10 +44,12 @@ El hackatón no ofrece ninguna base de datos (su `HACKATHON.md` solo lista RPC p
 - **Qué lo cierra con BigQuery:** consulta sobre `execution_outcomes` de `intents.near` filtrando logs `native_withdraw` con `receiver_id = buybacks.multisignature.near` (todos los retiros, no una muestra) y, para cada cuenta Intents origen, sus `token_diff` anteriores (el intercambio) y sus `mt_mint`/depósitos (origen de fondos). Nueva SQL por escribir, filtrada por `block_date` en los días de los recibos. Con eso la atribución pasa de inferida a observada para la parte que los logs cubran, y lo no cubierto se cuantifica.
 - **Lo que ni BigQuery cierra:** la intención (que el retiro sea "recompra" en sentido económico) sigue siendo una interpretación; se mantiene la separación entre retiro observado y recompra inferida.
 
-## En adquisición con la API pública (declarado antes de leer, 2026-11-07)
+## Completado con la API pública (declarado antes de leer, 2026-11-07; resultados 2026-11-08)
 
-- **Muestra sistemática del día 2025-11-14:** cada 40.º bloque de 00:00 a 24:00 UTC (3,496 bloques, ~2.5 % del día), estimador de diseño con error estándar por diferencias sucesivas (`reconcile.systematic_day`). Separa error de muestreo de brecha definicional para ese día. Al terminar: `make build`, fila en `docs/AUDIT_RESPONSE_2026-11-06.md`, commit.
-- **Búsqueda del swap de financiación a 200 bloques** para los 23 recibos sin swap a 40 bloques (`run_buyback_trace_extension(back=200)`), en cola tras la anterior.
+- **Muestra sistemática del día 2025-11-14:** 3,489 de 3,496 bloques (cada 40.º, ~2.5 % del día). Ratio 0.31 frente a la referencia, intervalo de diseño 0.13–0.48, bootstrap 0.15–0.49; los otros dos diseños del mismo día dan 0.36 y 0.33. Ambos intervalos excluyen la paridad: para ese día la brecha no es error de muestreo sino definicional o de reconstrucción/precios. El 1 % de los bloques concentra el 90 % del volumen muestreado. Un día no establece el total global.
+- **Búsqueda del swap de financiación a 200 bloques:** 12 de 29 encontrados (a 4–141 bloques del retiro); intercambio observado en 28 de 45 recibos muestreados. Los 17 restantes preceden a los cuatro minutos leídos. Origen de fondos sin trazar.
+
+Con esto la API pública está agotada para los tres frentes: lo que sigue requiere BigQuery.
 
 ## Lo que no se cierra con datos
 
