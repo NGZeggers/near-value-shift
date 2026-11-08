@@ -232,3 +232,13 @@ Resultado: ninguna métrica de uso supera el criterio declarado; el veredicto lo
 ### Verificación de esta pasada
 
 - `make build` completo; `make test`: 206 pruebas aprobadas (3 nuevas); comprobaciones de navegador: 47 de 47; `make check-generated`: coincidente tras el commit.
+
+---
+
+## Décima pasada: diagnóstico ausente no puede respaldar el estimador (96/100, base `03ef578`)
+
+| Punto | Estado | Qué se hizo y dónde verificarlo |
+| --- | --- | --- |
+| Lectura con diagnóstico ausente afirmaba soporte | Hecho | `reconcile.systematic_day`: cuando no hay población de prueba (`coverage_diagnostic = None`) y ambos intervalos excluyen la paridad, la lectura dice que el estimador de error no pudo comprobarse, que la evidencia contra el muestreo vale solo bajo los supuestos declarados y que la brecha no se atribuye. La explicación positiva exige ahora diagnóstico disponible y aprobado además del resto de condiciones. Prueba `test_systematic_day_unchecked_estimator_never_claims_support` reproduce el caso del auditor (volumen positivo, intervalos que excluyen la referencia, diagnóstico ausente) y comprueba a la vez el estado y el texto. Los artefactos reales no cambian: el diagnóstico existe y falla, y la abstención ya se producía. |
+
+- `make build` completo; `make test`: 207 pruebas aprobadas (1 nueva); `make check-generated`: coincidente tras el commit.

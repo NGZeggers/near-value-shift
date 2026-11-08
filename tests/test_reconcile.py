@@ -306,3 +306,28 @@ def test_systematic_coverage_simulation_fails_only_at_the_step():
     sim = reconcile.systematic_coverage_simulation(step=40, N=140_000, phases=20, seed=1)
     assert sim["periodic_at_step"]["normal_interval_coverage"] == 0 and sim["periodic_at_step"]["bootstrap_coverage"] == 0
     assert sim["concentrated_iid"]["normal_interval_coverage"] >= 0.8 and sim["periodic_off_step"]["normal_interval_coverage"] >= 0.8
+
+
+
+def test_systematic_day_unchecked_estimator_never_claims_support(tmp_path, monkeypatch):
+    """Both intervals exclude the reference and no proxy population exists: the status is unchecked and the text must not claim support."""
+    monkeypatch.setattr(intents, "_REGISTRY", {"usdc": ("usdc", 6, "usd-coin")})
+    day = "2025-11-14"
+    heights = list(range(1000, 1000 + 40 * 10, 40))
+    rows = []
+    for i, h in enumerate(heights):
+        usd = 100 if i % 2 == 0 else 90                                      # steady volume: a tight interval far from the reference
+        log = json.dumps({"standard": "dip4", "event": "token_diff", "data": [
+            {"account_id": "u", "intent_hash": f"u{i}", "diff": {"usdc": str(-usd * 10**6), "zzz": "1"}},
+            {"account_id": "mm", "intent_hash": f"m{i}", "diff": {"usdc": str(usd * 10**6), "zzz": "-1"}}]})
+        rows.append({"block_date": day, "block_timestamp": i, "receipt_id": f"r{i}", "caller": "relay", "log": "EVENT_JSON:" + log,
+                     "window_day": day, "window_hour": i % 24, "block_height": h, "execution_status": "SUCCESS_VALUE"})
+    (tmp_path / "e.csv").write_text(pd.DataFrame(rows).to_csv(index=False))
+    man = {"day": day, "step": 40, "offset": 0, "blocks_in_day": 400, "blocks_requested": 10, "blocks_fetched": 10, "blocks_missing": 0, "complete": True,
+           "heights_sampled": heights, "heights_without_block": [], "fetch_failed": 0, "fetched_at": "x"}
+    (tmp_path / "m.json").write_text(json.dumps(man))
+    out = reconcile.systematic_day({}, pd.Series({pd.Timestamp(day): 100_000.0}), events=tmp_path / "e.csv", manifest=tmp_path / "m.json",
+                                   diagnostic_events=tmp_path / "none.csv", diagnostic_manifest=tmp_path / "none.json", simulate=False)
+    assert out["reference_inside_ci95"] is False and out["reference_inside_ci95_bootstrap"] is False
+    assert out["sampling_verdict"].startswith("unchecked")
+    assert "could not be checked" in out["reading"] and "not attributed" in out["reading"] and "diagnostic supports" not in out["reading"]

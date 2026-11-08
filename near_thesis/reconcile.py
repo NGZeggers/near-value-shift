@@ -558,6 +558,9 @@ def systematic_day(prices: dict, llama: pd.Series, events=None, manifest=None, i
                 f"(percentile bootstrap {blo:.2f} to {bhi:.2f}); both intervals are approximations under the stated assumptions and share the same unobserved blocks; ")
         if no_volume or (diag is not None and not diag_ok):
             body = ("the sampling error cannot be bounded with this design on this day (" + out["sampling_verdict"] + "), so the gap to the reference is not attributed")
+        elif both_exclude and diag is None:
+            body = ("both intervals exclude parity, but the error estimator could not be checked on a proxy population for this day (" + out["sampling_verdict"] + "); "
+                    "this is evidence against a purely sampling explanation only under the stated assumptions, and the gap to the reference is not attributed")
         elif both_exclude:
             body = ("both intervals exclude parity, which is evidence against a purely sampling explanation of this day's gap conditional on the design and on an error "
                     "estimator that the proxy-population diagnostic supports; what remains is definitional (what the reference counts, one- or two-sided notional, "
