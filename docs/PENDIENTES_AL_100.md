@@ -1,5 +1,7 @@
 # Pendientes para el 100: qué falta, qué datos lo cierran y quién lo hace
 
+**Actualización 2026-11-08:** BigQuery se configuró y se ejecutó (coste 0 USD, proyecto sandbox). Resultados en `docs/AUDIT_RESPONSE_2026-11-06.md` (undécima pasada): la referencia de volumen cuenta los dos lados de cada swap; la cuota QAA no es una cuota poblacional; el intercambio de las recompras está observado en el 60 % de los 3,197 retiros. Lo que sigue abajo describe el plan tal como se declaró antes de ejecutarlo.
+
 Estado al 2026-11-07, base `177ab32`, nota del auditor de producto **96/100**. Los tres frentes abiertos son de evidencia, no de código: el auditor ya verificó que el pipeline reconstruye, que las pruebas pasan (127) y que los artefactos regenerados coinciden. Subir más exige datos que la API pública de bloques (FastNear neardata, ~0.2 bloques/s) no puede dar en el tiempo disponible.
 
 ## La base de datos que sí existe: BigQuery público de NEAR
@@ -8,10 +10,24 @@ El hackatón no ofrece ninguna base de datos (su `HACKATHON.md` solo lista RPC p
 
 - **Dataset:** `bigquery-public-data.crypto_near_mainnet_us` (tablas `blocks`, `chunks`, `transactions`, `receipt_details`, `receipt_actions`, `execution_outcomes` con logs, `account_changes`). Fuente: NEAR Lake Indexer → Databricks → copia pública en BigQuery (repo `near/near-public-lakehouse`).
 - **Coste:** NEAR paga el almacenamiento; Google regala 1 TiB de procesamiento al mes en el sandbox, sin tarjeta.
-- **Riesgo a comprobar primero:** no está verificado que el dataset siga actualizado en 2026. `sql/q0_freshness.sql` lo dice con un dry-run gratuito; `make bq` se detiene si la última fecha supera `BQ_MAX_STALENESS_DAYS`.
+- **Frescura comprobada el 2026-11-08:** `blocks`, `transactions` y `execution_outcomes` llegan hasta el mismo día (última fecha 2026-11-08). La fecha "19 de febrero" visible en la consola es metadato de la tabla, no el último dato. `make bq` sigue deteniéndose si la última fecha supera `BQ_MAX_STALENESS_DAYS`.
 - **El repo ya está listo:** consultas en `sql/`, runner `make bq` con puerta de coste por consulta (`BQ_MAX_GB_PER_QUERY`) y por ejecución (`BQ_MAX_GB_PER_RUN`), resultados cacheados y comprometidos en `data/bigquery/` para que el jurado nunca necesite credenciales. Guía: `docs/SETUP_BIGQUERY.md`.
 
-### Pasos humanos (unos 5 minutos)
+### Estado de la adquisición (2026-11-08)
+
+Proyecto creado y autenticado. Costes medidos con dry-run antes de ejecutar (1 TiB gratis al mes; topes del runner `maximum_bytes_billed` 200 GB por consulta y 400 GB por invocación):
+
+| Consulta | Cobertura | Escaneo |
+| --- | --- | --- |
+| L1 por cuenta (primer intento) | 15 meses 2024-11..2026-01; resultado de 46 M filas, agregado en el servidor a `l1_full_month_summary.csv` | 148 GB + 4 GB |
+| `l1_full_month_summary_2.sql` | 9 meses 2026-02..2026-10, agregado por mes y clase de nombre | 20 GB |
+| `l2_full_days_valued.sql` | 32 días de muestra hasta 2026-02-12, bloques completos, valorados en SQL con la misma regla | 186 GB |
+| `l2_full_days_valued_2.sql` | 17 días de muestra restantes (2026-02-27..2026-10-25) | 34 GB |
+| `l3_buyback_withdrawals.sql` | 198 días con recibos de recompra (2026-04-23..2026-11-06), logs `native_withdraw`/`token_diff`/`mt_*` | 293 GB (pendiente de autorización) |
+
+Total si se ejecuta todo: unos 690 GB, dentro del tramo gratuito. Lección: agregar dentro de BigQuery; un resultado por cuenta o por log tiene decenas de millones de filas y no se puede descargar ni comprometer. Los extractos se guardan en `data/bigquery/l2_full_days_valued*.csv` y `l1_full_month_summary*.csv` con nombres distintos de los que activan el modo BigQuery del pipeline: el estimador declarado (muestra de bloques) y el QAA comprometido siguen siendo la base; los datos completos entran como validación (`reconcile.complete_days`, `qaa.monthly_validation_from_full`).
+
+## Pasos humanos (unos 5 minutos)
 
 1. Entrar en https://console.cloud.google.com/bigquery con una cuenta de Google, aceptar términos, **Create project** (por ejemplo `near-thesis`), anotar el **ID** del proyecto.
 2. En la terminal (o con el prefijo `!` en la sesión de Claude Code):

@@ -248,3 +248,24 @@ def test_prospective_evaluation_detects_a_changed_protocol(tmp_path, monkeypatch
     path.write_text(json.dumps(stale))
     monkeypatch.undo()
     assert flag(full)[1] is False
+
+
+def test_full_attribution_summarizes_withdrawals_and_matches_snapshot_on_day_and_amount(tmp_path):
+    rows = [{"block_date": "2026-05-01", "block_height": 100, "receipt_id": "exec1", "intents_account": "a1", "amount_yocto": str(5 * 10**24), "intent_hash": "h1",
+             "swap_block": 100, "swap_receipt": "s1", "sold": "nep141:zec.omft.near", "bought": "nep141:wrap.near", "blocks_withdrawal_minus_swap": 0,
+             "deposit_block": None, "blocks_swap_minus_deposit": None, "transfer_in_block": 90, "blocks_swap_minus_transfer_in": 10},
+            {"block_date": "2026-05-02", "block_height": 200, "receipt_id": "exec2", "intents_account": "a2", "amount_yocto": str(3 * 10**24), "intent_hash": "h2",
+             "swap_block": None, "swap_receipt": None, "sold": None, "bought": None, "blocks_withdrawal_minus_swap": None,
+             "deposit_block": None, "blocks_swap_minus_deposit": None, "transfer_in_block": None, "blocks_swap_minus_transfer_in": None}]
+    f = tmp_path / "l3_buyback_attribution.csv"
+    pd.DataFrame(rows).to_csv(f, index=False)
+    ts1 = int(pd.Timestamp("2026-05-01T10:00:00Z").timestamp() * 10**9); ts2 = int(pd.Timestamp("2026-05-02T10:00:00Z").timestamp() * 10**9)
+    txns = [{"receipt_id": "child1", "predecessor_account_id": "intents.near", "block_timestamp": ts1, "actions": [{"action": "TRANSFER", "deposit": str(5 * 10**24)}]},
+            {"receipt_id": "child2", "predecessor_account_id": "intents.near", "block_timestamp": ts2, "actions": [{"action": "TRANSFER", "deposit": str(3 * 10**24)}]},
+            {"receipt_id": "other", "predecessor_account_id": "someone.near", "block_timestamp": ts2, "actions": [{"action": "TRANSFER", "deposit": "1"}]}]
+    out = bridge.full_attribution(txns, path=f)
+    assert out["withdrawals"] == 2 and out["near_total"] == pytest.approx(8.0) and out["exchange_observed"] == 1
+    assert out["exchange_observed_near_share"] == pytest.approx(5 / 8) and out["origin_transfer_in_observed"] == 1 and out["origin_deposit_observed"] == 0
+    rec = out["reconciliation_with_nearblocks_snapshot"]
+    assert rec["matched_on_day_and_amount"] == 2 and rec["snapshot_receipts_unmatched"] == 0 and rec["near_ratio_bigquery_over_snapshot"] == pytest.approx(1.0)
+    assert "observed" in out["kind"] and bridge.full_attribution(txns, path=tmp_path / "missing.csv") is None

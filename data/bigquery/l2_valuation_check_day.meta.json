@@ -1,0 +1,10 @@
+{
+ "sql": "l2_valuation_check_day.sql",
+ "run_at": "2026-11-08T08:15:02+00:00",
+ "bytes_processed": 6264674204,
+ "bytes_billed": 6265241600,
+ "accounted_bytes": 6265241600,
+ "maximum_bytes_billed": 200000000000,
+ "rows": 62344,
+ "job_id": "62634622-e24d-4aaf-a3f9-d278133962d5"
+}

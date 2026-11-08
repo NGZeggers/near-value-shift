@@ -331,3 +331,20 @@ def test_systematic_day_unchecked_estimator_never_claims_support(tmp_path, monke
     assert out["reference_inside_ci95"] is False and out["reference_inside_ci95_bootstrap"] is False
     assert out["sampling_verdict"].startswith("unchecked")
     assert "could not be checked" in out["reading"] and "not attributed" in out["reading"] and "diagnostic supports" not in out["reading"]
+
+
+def test_complete_days_compare_full_volume_with_reference_and_sampled_expansion(tmp_path):
+    f = tmp_path / "l2_full_days_valued.csv"
+    pd.DataFrame([{"block_date": "2025-05-18", "complete_usd": 300.0, "receipts_valued": 3, "receipts_with_token_diff": 3, "legs": 6, "legs_unpriced": 0},
+                  {"block_date": "2025-06-02", "complete_usd": 100.0, "receipts_valued": 1, "receipts_with_token_diff": 1, "legs": 2, "legs_unpriced": 0}]).to_csv(f, index=False)
+    table = pd.DataFrame({"date": pd.to_datetime(["2025-05-18", "2025-06-02"]), "volume_expanded_usd": [600.0, 50.0]})
+    llama = pd.Series({pd.Timestamp("2025-05-18"): 1000.0, pd.Timestamp("2025-06-02"): 0.0})
+    check = {"day": "2025-11-14", "blocks_compared": 10, "sql_over_python_pooled": 1.001, "passes": True}
+    out = reconcile.complete_days({}, llama, table, files=[f], check=check)
+    d0 = out["days"][0]
+    assert d0["ratio_complete_to_reference"] == pytest.approx(0.3) and d0["ratio_sampled_to_complete"] == pytest.approx(2.0)
+    assert out["days_with_reference"] == 1 and out["pooled_ratio_complete_to_reference"] == pytest.approx(0.3)
+    assert out["sql_valuation_check"]["passes"] is True and "no sampling error remains" in out["reading"] and "reproduces" in out["reading"]
+    bad = reconcile.complete_days({}, llama, table, files=[f], check=dict(check, sql_over_python_pooled=3.0, passes=False))
+    assert "not confirmed" in bad["reading"]
+    assert reconcile.complete_days({}, llama, table, files=[])["status"].startswith("pending")

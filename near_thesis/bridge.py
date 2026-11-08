@@ -22,6 +22,58 @@ from .http import load_raw
 
 TRACE = DATA / "blocks" / "buyback_trace.json"
 TRACE_EXT = DATA / "blocks" / "buyback_trace_extension.json"
+ATTRIBUTION = DATA / "bigquery" / "l3_buyback_attribution.csv"
+ATTRIBUTION_RULE = {
+    "declared": "2026-11-08, before the query ran",
+    "population": "every native_withdraw log of intents.near whose receiver is the buyback wallet on the days with inbound receipts (2026-04-23 to 2026-11-06), from the NEAR public BigQuery dataset",
+    "exchange": "the latest token_diff of the same Intents-side account that bought wrap.near, at or before the withdrawal block, searching back one day of blocks",
+    "origin": "a bridge deposit (mt_mint) or an internal transfer (mt_transfer) of an asset sold in that exchange to the same account, within one day before the exchange",
+    "what_it_establishes": ("the withdrawal and the exchange are observed on-chain for every receipt they cover; the origin shows how the sold asset reached the account; "
+                            "whether the operator intended the withdrawal as a buyback remains an interpretation of the flows"),
+}
+
+
+def full_attribution(txns: list[dict] | None = None, path=ATTRIBUTION) -> dict | None:
+    """Population-level attribution of the buyback inflows from the BigQuery extract, reconciled with the NearBlocks receipt snapshot."""
+    if not path.exists():
+        return None
+    a = pd.read_csv(path)
+    a["amount_near"] = a["amount_yocto"].astype(float) / 1e24
+    n = len(a)
+    swap = a["swap_block"].notna()
+    dep = a["deposit_block"].notna(); tr = a["transfer_in_block"].notna()
+    out = {"rule": ATTRIBUTION_RULE, "withdrawals": int(n), "near_total": float(a["amount_near"].sum()),
+           "distinct_intents_accounts": int(a["intents_account"].nunique()),
+           "exchange_observed": int(swap.sum()), "exchange_observed_share": float(swap.mean()) if n else None,
+           "exchange_observed_near_share": float(a.loc[swap, "amount_near"].sum() / a["amount_near"].sum()) if n and a["amount_near"].sum() > 0 else None,
+           "blocks_withdrawal_minus_swap": {"median": float(a.loc[swap, "blocks_withdrawal_minus_swap"].median()) if swap.any() else None,
+                                            "p90": float(a.loc[swap, "blocks_withdrawal_minus_swap"].quantile(0.9)) if swap.any() else None,
+                                            "within_200_blocks": int((a.loc[swap, "blocks_withdrawal_minus_swap"] <= 200).sum())},
+           "origin_deposit_observed": int(dep.sum()), "origin_transfer_in_observed": int((tr & ~dep).sum()),
+           "origin_observed_share_of_exchanges": float(((dep | tr) & swap).sum() / swap.sum()) if swap.any() else None,
+           "sold_assets_top": a.loc[swap, "sold"].value_counts().head(5).to_dict(),
+           "kind": "observed (public logs); intention inferred"}
+    if txns is not None:
+        snap = [t for t in txns if t.get("predecessor_account_id") == "intents.near"]
+        snap_near = sum(float(x["deposit"]) for t in snap for x in t.get("actions", []) if x.get("action") == "TRANSFER") / 1e24
+        # The BigQuery row carries the receipt that emitted the native_withdraw log (the execute_intents call); the snapshot carries the
+        # child TRANSFER receipt that credited the wallet, so ids never coincide. Match on (day, amount) instead.
+        from collections import Counter
+        def _day(t):
+            return pd.Timestamp(int(t["block_timestamp"]) // 10**9, unit="s").strftime("%Y-%m-%d")
+        snap_keys = Counter((_day(t), str(int(sum(float(x["deposit"]) for x in t.get("actions", []) if x.get("action") == "TRANSFER")))) for t in snap)
+        bq_keys = Counter((str(pd.Timestamp(d).date()), str(int(float(y)))) for d, y in zip(a["block_date"], a["amount_yocto"]))
+        matched = sum((snap_keys & bq_keys).values())
+        out["reconciliation_with_nearblocks_snapshot"] = {"snapshot_receipts": len(snap), "snapshot_near": snap_near,
+                                                           "matched_on_day_and_amount": int(matched),
+                                                           "snapshot_receipts_unmatched": int(len(snap) - matched), "bigquery_withdrawals_unmatched": int(n - matched),
+                                                           "near_ratio_bigquery_over_snapshot": float(a["amount_near"].sum() / snap_near) if snap_near else None,
+                                                           "note": "ids differ by construction (log-emitting receipt versus the child transfer receipt); matching is on UTC day and exact amount"}
+    out["reading"] = (f"of {n:,} withdrawals ({out['near_total']:,.0f} NEAR) the funding exchange is observed for {out['exchange_observed']:,} ({out['exchange_observed_share']:.0%} of receipts, "
+                      f"{out['exchange_observed_near_share']:.0%} of the NEAR); the sold asset reached the account by a bridge deposit in {out['origin_deposit_observed']:,} cases and by an internal "
+                      f"transfer in {out['origin_transfer_in_observed']:,}. Exchange and origin are observed where they appear; the remaining receipts have no wrap.near purchase by the same account "
+                      "in the day before the withdrawal, so for them the economic operation stays unobserved")
+    return out
 
 
 def receipt_status(outcome: object) -> str:
@@ -125,6 +177,10 @@ def run() -> dict:
     receipts = buyback_receipts(cutoff, price)
     trace = json.loads(TRACE.read_text()) if TRACE.exists() else None
     ext = json.loads(TRACE_EXT.read_text()) if TRACE_EXT.exists() else None
+    snapshot = load_raw("nearblocks_buybacks_txns", optional=True)
+    attribution = full_attribution((snapshot or {}).get("data", {}).get("txns"))
+    if trace and attribution:
+        trace["full_attribution"] = attribution
     if trace and ext:
         trace["funding_swap_found_within_extension"] = ext["swap_found"]
         trace["funding_swap_observed_total"] = trace["with_token_diff_in_same_block"] + ext["swap_found"]
@@ -151,7 +207,8 @@ def run() -> dict:
                        f"for {trace['with_token_diff_in_same_block']} the funding swap (token_diff of the same account, {trace.get('with_wrap_near_bought_in_same_block', 0)} buying wrap.near) is in the same blocks, "
                        f"for the other {trace['sampled'] - trace['with_token_diff_in_same_block']} it is outside the blocks read and the purchase is not observed. "
                        + (f"A second pre-declared pass over those found the funding swap within {trace['extension']['blocks_back']} blocks before the withdrawal for {trace['funding_swap_found_within_extension']} more "
-                          f"({trace['funding_swap_observed_total']} of {trace['sampled']} in total); the origin of the sold asset is not traced. " if trace.get("extension") else ""))
+                          f"({trace['funding_swap_observed_total']} of {trace['sampled']} in total). " if trace.get("extension") else "")
+                       + (f"Population from BigQuery: {attribution['reading']}. " if attribution else "The origin of the sold asset is not traced. "))
         else:
             tr_note = "No receipt trace yet (make blocks-buyback-trace). "
         steps.append({"step": 5, "name": f"NEAR withdrawn from Intents into {BUYBACK_WALLET}", "short": "NEAR received by buyback wallet", "usd": bb_usd, "near": bb_near,

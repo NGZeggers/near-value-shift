@@ -440,6 +440,853 @@
   "reading": "inclusion is the share of a day's 24-window accounts that the two fixed windows observe; it rises with activity, so light accounts are under-observed and the sampled population is tilted toward frequent signers. The name-only share under the two designs shows how much the composition shifts; the weighting check tells whether the inclusion weighting used as a sensitivity moves the two-window share toward the 24-window share. Within-day inclusion on six days is an observed quantity; it does not identify the month-level bias of the QAA share, which would need a fuller observation of whole months",
   "kind": "observed (within-day, six days), used as a check of the weighting sensitivity"
  },
+ "full_month_validation": {
+  "rule": {
+   "declared": "2026-11-08, before the first full month was read from BigQuery",
+   "population": "every signer of at least one transaction in the month, from bigquery-public-data.crypto_near_mainnet_us.transactions (the committed QAA months; none chosen by result)",
+   "checks": [
+    "inclusion of the two-window design: accounts observed in the sampled windows over all accounts active in the month",
+    "composition by name class and the name-only quality share, full month against sampled windows and against the inclusion-weighted sampled share",
+    "share of accounts with a single transaction and with at least two distinct receivers, full month against sampled windows"
+   ],
+   "limits": "the behavioral clustering is not refitted on full months here: its features are defined inside 50-block windows and the committed assignment is the baseline; this validation measures the population the sampled share describes, not a new QAA level"
+  },
+  "files": [
+   "l1_full_month_summary.csv",
+   "l1_full_month_summary_2.csv"
+  ],
+  "months": [
+   {
+    "month": "2024-11",
+    "accounts_full_month": 9122234,
+    "accounts_sampled_windows": 4102,
+    "inclusion": 0.0004496705521914917,
+    "nearblocks_mean_daily_active": 909102.7666666667,
+    "full_signers_over_mean_daily_active": 10.034326518934437,
+    "name_class_full": {
+     "eth_implicit": 6.248469399052907e-06,
+     "implicit": 0.06845603829062048,
+     "kaiching": 0.8159765469730331,
+     "named": 0.011072616641932228,
+     "other": 3.288668104764688e-06,
+     "sweat": 1.644334052382344e-06,
+     "tg": 0.10448361662285795
+    },
+    "name_class_sampled": {
+     "tg": 0.712091662603608,
+     "kaiching": 0.1947830326669917,
+     "named": 0.06606533398342272,
+     "implicit": 0.025597269624573378,
+     "sweat": 0.0009751340809361287,
+     "other": 0.00048756704046806434
+    },
+    "name_only_share_full": 0.07953819207005652,
+    "name_only_share_sampled": 0.09215017064846416,
+    "name_only_share_sampled_inclusion_weighted": 0.08932343726737182,
+    "single_transaction_share_full": 0.8781432267578315,
+    "single_transaction_share_sampled": 0.9517308629936616,
+    "multi_receiver_share_full": 0.04858141108855572,
+    "multi_receiver_share_sampled": 0.012432959531935642,
+    "qaa_default_share_sampled": 0.2393954168698196
+   },
+   {
+    "month": "2024-12",
+    "accounts_full_month": 10110598,
+    "accounts_sampled_windows": 4464,
+    "inclusion": 0.00044151691126479364,
+    "nearblocks_mean_daily_active": 925074.3225806452,
+    "full_signers_over_mean_daily_active": 10.929498044865026,
+    "name_class_full": {
+     "eth_implicit": 2.967183543446194e-06,
+     "implicit": 0.0841942286697582,
+     "kaiching": 0.8111009853225298,
+     "named": 0.00957312317233857,
+     "other": 1.9781223622974625e-06,
+     "sweat": 1.483591771723097e-06,
+     "tg": 0.09512523393769587
+    },
+    "name_class_sampled": {
+     "tg": 0.7408154121863799,
+     "kaiching": 0.162410394265233,
+     "implicit": 0.049507168458781364,
+     "named": 0.04525089605734767,
+     "other": 0.0011200716845878136,
+     "sweat": 0.0008960573476702509
+    },
+    "name_only_share_full": 0.0937722971480025,
+    "name_only_share_sampled": 0.09587813620071685,
+    "name_only_share_sampled_inclusion_weighted": 0.09244932981310035,
+    "single_transaction_share_full": 0.8798569580157376,
+    "single_transaction_share_sampled": 0.9408602150537635,
+    "multi_receiver_share_full": 0.05328616566497847,
+    "multi_receiver_share_sampled": 0.019937275985663083,
+    "qaa_default_share_sampled": 0.2529121863799283
+   },
+   {
+    "month": "2025-01",
+    "accounts_full_month": 10459535,
+    "accounts_sampled_windows": 3460,
+    "inclusion": 0.0003307986444904099,
+    "nearblocks_mean_daily_active": 882524.2580645161,
+    "full_signers_over_mean_daily_active": 11.851838523893997,
+    "name_class_full": {
+     "eth_implicit": 2.0077374376585576e-06,
+     "implicit": 0.06053643876137897,
+     "kaiching": 0.851023969994842,
+     "named": 0.00551114365982809,
+     "other": 2.3041177260748206e-05,
+     "sweat": 1.4340981697561124e-06,
+     "tg": 0.08290196457108275
+    },
+    "name_class_sampled": {
+     "tg": 0.6893063583815029,
+     "kaiching": 0.21676300578034682,
+     "named": 0.04826589595375722,
+     "implicit": 0.04393063583815029,
+     "sweat": 0.0011560693641618498,
+     "other": 0.0005780346820809249
+    },
+    "name_only_share_full": 0.06607263133590546,
+    "name_only_share_sampled": 0.09277456647398843,
+    "name_only_share_sampled_inclusion_weighted": 0.08829396088663569,
+    "single_transaction_share_full": 0.9041048191912929,
+    "single_transaction_share_sampled": 0.9387283236994219,
+    "multi_receiver_share_full": 0.03773523392770329,
+    "multi_receiver_share_sampled": 0.02485549132947977,
+    "qaa_default_share_sampled": 0.3092485549132948
+   },
+   {
+    "month": "2025-02",
+    "accounts_full_month": 6522634,
+    "accounts_sampled_windows": 3848,
+    "inclusion": 0.0005899457182481801,
+    "nearblocks_mean_daily_active": 724469.5,
+    "full_signers_over_mean_daily_active": 9.003324501583572,
+    "name_class_full": {
+     "eth_implicit": 4.139432014735152e-06,
+     "implicit": 0.06439085804906423,
+     "kaiching": 0.804678754012566,
+     "named": 0.00876578388424063,
+     "other": 3.44952667894596e-05,
+     "sweat": 1.5331229684204266e-06,
+     "tg": 0.12212443623235644
+    },
+    "name_class_sampled": {
+     "tg": 0.7130977130977131,
+     "kaiching": 0.19282744282744282,
+     "named": 0.04651767151767152,
+     "implicit": 0.045997920997921,
+     "eth_implicit": 0.0005197505197505198,
+     "sweat": 0.0005197505197505198,
+     "other": 0.0005197505197505198
+    },
+    "name_only_share_full": 0.07319527663210901,
+    "name_only_share_sampled": 0.09355509355509356,
+    "name_only_share_sampled_inclusion_weighted": 0.08951832878289936,
+    "single_transaction_share_full": 0.8678918669972897,
+    "single_transaction_share_sampled": 0.9428274428274428,
+    "multi_receiver_share_full": 0.03997112209576683,
+    "multi_receiver_share_sampled": 0.019230769230769232,
+    "qaa_default_share_sampled": 0.2718295218295218
+   },
+   {
+    "month": "2025-03",
+    "accounts_full_month": 1477897,
+    "accounts_sampled_windows": 2529,
+    "inclusion": 0.0017112153282671256,
+    "nearblocks_mean_daily_active": 512144.5483870968,
+    "full_signers_over_mean_daily_active": 2.8857028834034444,
+    "name_class_full": {
+     "eth_implicit": 2.0975751354796714e-05,
+     "implicit": 0.1752902942491933,
+     "kaiching": 2.7065485619092536e-06,
+     "named": 0.30834489818979266,
+     "other": 2.9095397040524476e-05,
+     "sweat": 7.443008545250447e-06,
+     "tg": 0.5163045868555116
+    },
+    "name_class_sampled": {
+     "tg": 0.8264136022143139,
+     "implicit": 0.0881771451166469,
+     "named": 0.08145512060102808,
+     "other": 0.0019770660340055358,
+     "sweat": 0.0011862396204033216,
+     "eth_implicit": 0.00039541320680110717,
+     "kaiching": 0.00039541320680110717
+    },
+    "name_only_share_full": 0.4836852635873813,
+    "name_only_share_sampled": 0.17200474495848161,
+    "name_only_share_sampled_inclusion_weighted": 0.16406926881527972,
+    "single_transaction_share_full": 0.431929965349412,
+    "single_transaction_share_sampled": 0.8873072360616845,
+    "multi_receiver_share_full": 0.16713478679502022,
+    "multi_receiver_share_sampled": 0.04349545274812179,
+    "qaa_default_share_sampled": 0.17516805061289048
+   },
+   {
+    "month": "2025-04",
+    "accounts_full_month": 1463875,
+    "accounts_sampled_windows": 2770,
+    "inclusion": 0.001892238066774827,
+    "nearblocks_mean_daily_active": 472998.9666666667,
+    "full_signers_over_mean_daily_active": 3.0948799112950844,
+    "name_class_full": {
+     "eth_implicit": 1.9127316198445904e-05,
+     "implicit": 0.2521267184698147,
+     "kaiching": 4.098710613952694e-06,
+     "named": 0.23524891127999317,
+     "other": 0.0001045171206557937,
+     "sweat": 4.781829049611476e-06,
+     "tg": 0.5124918452736743
+    },
+    "name_class_sampled": {
+     "tg": 0.8660649819494585,
+     "named": 0.06859205776173286,
+     "implicit": 0.06173285198555957,
+     "other": 0.0021660649819494585,
+     "kaiching": 0.0007220216606498195,
+     "sweat": 0.0007220216606498195
+    },
+    "name_only_share_full": 0.48749927418666206,
+    "name_only_share_sampled": 0.13249097472924187,
+    "name_only_share_sampled_inclusion_weighted": 0.12701213620499288,
+    "single_transaction_share_full": 0.4650479036803006,
+    "single_transaction_share_sampled": 0.8985559566787004,
+    "multi_receiver_share_full": 0.19462727350354367,
+    "multi_receiver_share_sampled": 0.03790613718411552,
+    "qaa_default_share_sampled": 0.1303249097472924
+   },
+   {
+    "month": "2025-05",
+    "accounts_full_month": 1275879,
+    "accounts_sampled_windows": 1490,
+    "inclusion": 0.0011678223405197515,
+    "nearblocks_mean_daily_active": 418719.06451612903,
+    "full_signers_over_mean_daily_active": 3.0471003308015208,
+    "name_class_full": {
+     "eth_implicit": 2.4296974869874024e-05,
+     "implicit": 0.23920606891405846,
+     "kaiching": 1.567546765798324e-06,
+     "named": 0.25136788049650477,
+     "other": 1.8026787806680727e-05,
+     "sweat": 4.702640297394973e-06,
+     "tg": 0.509377456639697
+    },
+    "name_class_sampled": {
+     "tg": 0.8684563758389262,
+     "implicit": 0.06778523489932886,
+     "named": 0.059731543624161075,
+     "other": 0.0020134228187919465,
+     "kaiching": 0.0013422818791946308,
+     "sweat": 0.0006711409395973154
+    },
+    "name_only_share_full": 0.49061627317323975,
+    "name_only_share_sampled": 0.12953020134228188,
+    "name_only_share_sampled_inclusion_weighted": 0.12281144852186,
+    "single_transaction_share_full": 0.46162763083333136,
+    "single_transaction_share_sampled": 0.9201342281879195,
+    "multi_receiver_share_full": 0.14231443577329825,
+    "multi_receiver_share_sampled": 0.025503355704697986,
+    "qaa_default_share_sampled": 0.14161073825503356
+   },
+   {
+    "month": "2025-06",
+    "accounts_full_month": 768658,
+    "accounts_sampled_windows": 1115,
+    "inclusion": 0.0014505801019439075,
+    "nearblocks_mean_daily_active": 354561.2,
+    "full_signers_over_mean_daily_active": 2.1679134659968433,
+    "name_class_full": {
+     "eth_implicit": 4.033002974014451e-05,
+     "implicit": 0.16476768601900976,
+     "kaiching": 5.203874805179937e-06,
+     "named": 0.037657840027684616,
+     "other": 9.497071519453385e-05,
+     "sweat": 1.1708718311654858e-05,
+     "tg": 0.7974222606152541
+    },
+    "name_class_sampled": {
+     "tg": 0.8717488789237668,
+     "named": 0.06457399103139014,
+     "implicit": 0.059192825112107626,
+     "other": 0.0026905829596412557,
+     "kaiching": 0.0017937219730941704
+    },
+    "name_only_share_full": 0.202560826791629,
+    "name_only_share_sampled": 0.12645739910313902,
+    "name_only_share_sampled_inclusion_weighted": 0.11827695083698156,
+    "single_transaction_share_full": 0.19490072307840417,
+    "single_transaction_share_sampled": 0.9076233183856502,
+    "multi_receiver_share_full": 0.15755771747643296,
+    "multi_receiver_share_sampled": 0.028699551569506727,
+    "qaa_default_share_sampled": 0.13094170403587443
+   },
+   {
+    "month": "2025-07",
+    "accounts_full_month": 751113,
+    "accounts_sampled_windows": 1039,
+    "inclusion": 0.0013832805450045467,
+    "nearblocks_mean_daily_active": 337445.8387096774,
+    "full_signers_over_mean_daily_active": 2.2258772040932544,
+    "name_class_full": {
+     "eth_implicit": 0.0002103545005877944,
+     "implicit": 0.20597699680341042,
+     "kaiching": 5.325430394627705e-06,
+     "named": 0.045203584547198625,
+     "other": 4.127208555836472e-05,
+     "sweat": 1.3313575986569264e-05,
+     "tg": 0.7485491530568636
+    },
+    "name_class_sampled": {
+     "tg": 0.8450433108758422,
+     "implicit": 0.07603464870067372,
+     "named": 0.07218479307025986,
+     "other": 0.0028873917228103944,
+     "eth_implicit": 0.0019249278152069298,
+     "kaiching": 0.0019249278152069298
+    },
+    "name_only_share_full": 0.25143220793675514,
+    "name_only_share_sampled": 0.1530317613089509,
+    "name_only_share_sampled_inclusion_weighted": 0.14401183779699436,
+    "single_transaction_share_full": 0.20734430105723106,
+    "single_transaction_share_sampled": 0.9027911453320501,
+    "multi_receiver_share_full": 0.20424756328275506,
+    "multi_receiver_share_sampled": 0.02791145332050048,
+    "qaa_default_share_sampled": 0.1588065447545717
+   },
+   {
+    "month": "2025-08",
+    "accounts_full_month": 766535,
+    "accounts_sampled_windows": 1337,
+    "inclusion": 0.0017442125930322817,
+    "nearblocks_mean_daily_active": 331759.8064516129,
+    "full_signers_over_mean_daily_active": 2.3105119580294877,
+    "name_class_full": {
+     "eth_implicit": 0.0003470161179854801,
+     "implicit": 0.25124227856523185,
+     "kaiching": 7.827431232755191e-06,
+     "named": 0.05049606345437586,
+     "other": 0.0004122447115917734,
+     "sweat": 1.1741146849132785e-05,
+     "tg": 0.6974828285727331
+    },
+    "name_class_sampled": {
+     "tg": 0.8332086761406133,
+     "named": 0.087509349289454,
+     "implicit": 0.07329842931937172,
+     "other": 0.0029917726252804786,
+     "eth_implicit": 0.0014958863126402393,
+     "kaiching": 0.0014958863126402393
+    },
+    "name_only_share_full": 0.3024976028491849,
+    "name_only_share_sampled": 0.16529543754674644,
+    "name_only_share_sampled_inclusion_weighted": 0.15734680789106212,
+    "single_transaction_share_full": 0.21507302341054224,
+    "single_transaction_share_sampled": 0.9102468212415856,
+    "multi_receiver_share_full": 0.23092618080061575,
+    "multi_receiver_share_sampled": 0.03889304412864622,
+    "qaa_default_share_sampled": 0.14360508601346297
+   },
+   {
+    "month": "2025-09",
+    "accounts_full_month": 615785,
+    "accounts_sampled_windows": 817,
+    "inclusion": 0.0013267617756197374,
+    "nearblocks_mean_daily_active": 298197.7,
+    "full_signers_over_mean_daily_active": 2.0650226343127396,
+    "name_class_full": {
+     "eth_implicit": 5.8461963185202625e-05,
+     "implicit": 0.1698303791095918,
+     "kaiching": 6.495773687244736e-06,
+     "named": 0.053877570905429654,
+     "other": 5.6838019763391445e-05,
+     "sweat": 1.1367603952678289e-05,
+     "tg": 0.77615888662439
+    },
+    "name_class_sampled": {
+     "tg": 0.8151774785801713,
+     "named": 0.09914320685434516,
+     "implicit": 0.07711138310893513,
+     "other": 0.004895960832313341,
+     "kaiching": 0.0024479804161566705,
+     "sweat": 0.0012239902080783353
+    },
+    "name_only_share_full": 0.2238232499979701,
+    "name_only_share_sampled": 0.18115055079559364,
+    "name_only_share_sampled_inclusion_weighted": 0.17005149025273017,
+    "single_transaction_share_full": 0.18340005034224607,
+    "single_transaction_share_sampled": 0.8812729498164015,
+    "multi_receiver_share_full": 0.20982323375853584,
+    "multi_receiver_share_sampled": 0.03916768665850673,
+    "qaa_default_share_sampled": 0.18727050183598531
+   },
+   {
+    "month": "2025-10",
+    "accounts_full_month": 593043,
+    "accounts_sampled_windows": 732,
+    "inclusion": 0.0012343118458526617,
+    "nearblocks_mean_daily_active": 273738.87096774194,
+    "full_signers_over_mean_daily_active": 2.1664551983553904,
+    "name_class_full": {
+     "eth_implicit": 7.925226332660532e-05,
+     "implicit": 0.17514750195179776,
+     "kaiching": 5.058655105953531e-06,
+     "named": 0.05190348760545188,
+     "other": 6.744873474604708e-05,
+     "sweat": 2.1920838792465302e-05,
+     "tg": 0.7727753299507792
+    },
+    "name_class_sampled": {
+     "tg": 0.8333333333333334,
+     "named": 0.10382513661202186,
+     "implicit": 0.0546448087431694,
+     "other": 0.00546448087431694,
+     "kaiching": 0.00273224043715847
+    },
+    "name_only_share_full": 0.22719769055532224,
+    "name_only_share_sampled": 0.16393442622950818,
+    "name_only_share_sampled_inclusion_weighted": 0.15199938324019474,
+    "single_transaction_share_full": 0.19958586476865928,
+    "single_transaction_share_sampled": 0.8729508196721312,
+    "multi_receiver_share_full": 0.21718323966390296,
+    "multi_receiver_share_sampled": 0.04781420765027322,
+    "qaa_default_share_sampled": 0.1885245901639344
+   },
+   {
+    "month": "2025-11",
+    "accounts_full_month": 556744,
+    "accounts_sampled_windows": 581,
+    "inclusion": 0.0010435676001896742,
+    "nearblocks_mean_daily_active": 242765.4,
+    "full_signers_over_mean_daily_active": 2.2933416376468805,
+    "name_class_full": {
+     "eth_implicit": 0.00013650798212463898,
+     "implicit": 0.18442048769272773,
+     "kaiching": 7.184630638138893e-06,
+     "named": 0.046383975399824695,
+     "other": 0.0009483712442343339,
+     "sweat": 3.4126995531159745e-05,
+     "tg": 0.7680693460549193
+    },
+    "name_class_sampled": {
+     "tg": 0.7762478485370051,
+     "named": 0.15834767641996558,
+     "implicit": 0.05679862306368331,
+     "other": 0.0051635111876075735,
+     "kaiching": 0.0034423407917383822
+    },
+    "name_only_share_full": 0.23188934231891134,
+    "name_only_share_sampled": 0.22030981067125646,
+    "name_only_share_sampled_inclusion_weighted": 0.2052607675993588,
+    "single_transaction_share_full": 0.2016851551161755,
+    "single_transaction_share_sampled": 0.8623063683304647,
+    "multi_receiver_share_full": 0.21012709611598868,
+    "multi_receiver_share_sampled": 0.039586919104991396,
+    "qaa_default_share_sampled": 0.22203098106712565
+   },
+   {
+    "month": "2025-12",
+    "accounts_full_month": 915686,
+    "accounts_sampled_windows": 522,
+    "inclusion": 0.0005700644107259475,
+    "nearblocks_mean_daily_active": 226232.2258064516,
+    "full_signers_over_mean_daily_active": 4.047548914553829,
+    "name_class_full": {
+     "eth_implicit": 1.4197006397389498e-05,
+     "implicit": 0.5525343840574171,
+     "kaiching": 2.1841548303676153e-06,
+     "named": 0.028777331967508514,
+     "other": 2.184154830367615e-05,
+     "sweat": 9.828696736654268e-06,
+     "tg": 0.41864023256880634
+    },
+    "name_class_sampled": {
+     "tg": 0.7931034482758621,
+     "named": 0.10727969348659004,
+     "implicit": 0.08620689655172414,
+     "other": 0.005747126436781609,
+     "sweat": 0.0038314176245210726,
+     "kaiching": 0.0038314176245210726
+    },
+    "name_only_share_full": 0.5813477545796266,
+    "name_only_share_sampled": 0.19923371647509577,
+    "name_only_share_sampled_inclusion_weighted": 0.18375015776384243,
+    "single_transaction_share_full": 0.557162608142966,
+    "single_transaction_share_sampled": 0.8582375478927203,
+    "multi_receiver_share_full": 0.11705431774647641,
+    "multi_receiver_share_sampled": 0.040229885057471264,
+    "qaa_default_share_sampled": 0.21455938697318008
+   },
+   {
+    "month": "2026-01",
+    "accounts_full_month": 526590,
+    "accounts_sampled_windows": 488,
+    "inclusion": 0.0009267171803490382,
+    "nearblocks_mean_daily_active": 177693.1935483871,
+    "full_signers_over_mean_daily_active": 2.9634787325526113,
+    "name_class_full": {
+     "eth_implicit": 4.3677244155794834e-05,
+     "implicit": 0.21258284433809985,
+     "kaiching": 5.697031846408021e-06,
+     "named": 0.058485728935224746,
+     "other": 4.747526538673351e-05,
+     "sweat": 9.495053077346703e-06,
+     "tg": 0.7288250821322091
+    },
+    "name_class_sampled": {
+     "tg": 0.735655737704918,
+     "named": 0.1598360655737705,
+     "implicit": 0.0860655737704918,
+     "other": 0.00819672131147541,
+     "eth_implicit": 0.004098360655737705,
+     "kaiching": 0.004098360655737705,
+     "sweat": 0.0020491803278688526
+    },
+    "name_only_share_full": 0.2711597257828672,
+    "name_only_share_sampled": 0.2581967213114754,
+    "name_only_share_sampled_inclusion_weighted": 0.23745998316586434,
+    "single_transaction_share_full": 0.24212765149357185,
+    "single_transaction_share_sampled": 0.8094262295081968,
+    "multi_receiver_share_full": 0.2517404432290776,
+    "multi_receiver_share_sampled": 0.0471311475409836,
+    "qaa_default_share_sampled": 0.26844262295081966
+   },
+   {
+    "month": "2026-02",
+    "accounts_full_month": 3791961,
+    "accounts_sampled_windows": 514,
+    "inclusion": 0.00013554991731191328,
+    "nearblocks_mean_daily_active": 275969.9285714286,
+    "full_signers_over_mean_daily_active": 13.740486217571842,
+    "name_class_full": {
+     "eth_implicit": 4.4831684714056926e-06,
+     "implicit": 0.9180157707318193,
+     "kaiching": 1.5822947546137737e-06,
+     "named": 0.00440906433373128,
+     "other": 5.801747433583837e-06,
+     "sweat": 1.5822947546137737e-06,
+     "tg": 0.07756171542903527
+    },
+    "name_class_sampled": {
+     "tg": 0.5,
+     "implicit": 0.36770428015564205,
+     "named": 0.11867704280155641,
+     "other": 0.007782101167315175,
+     "kaiching": 0.0038910505836575876,
+     "sweat": 0.0019455252918287938
+    },
+    "name_only_share_full": 0.9224351199814556,
+    "name_only_share_sampled": 0.49416342412451364,
+    "name_only_share_sampled_inclusion_weighted": 0.48504070731855947,
+    "single_transaction_share_full": 0.9209912760178705,
+    "single_transaction_share_sampled": 0.8891050583657587,
+    "multi_receiver_share_full": 0.016357763173197194,
+    "multi_receiver_share_sampled": 0.029182879377431907,
+    "qaa_default_share_sampled": 0.46108949416342415
+   },
+   {
+    "month": "2026-03",
+    "accounts_full_month": 381465,
+    "accounts_sampled_windows": 319,
+    "inclusion": 0.0008362497214685489,
+    "nearblocks_mean_daily_active": 143175.29032258064,
+    "full_signers_over_mean_daily_active": 2.6643214701401443,
+    "name_class_full": {
+     "eth_implicit": 5.7672394584037854e-05,
+     "implicit": 0.2276355628956785,
+     "kaiching": 7.86441744327789e-06,
+     "named": 0.038690312348446124,
+     "other": 0.0005950742532080269,
+     "sweat": 8.650859187605678e-05,
+     "tg": 0.732927005098764
+    },
+    "name_class_sampled": {
+     "tg": 0.7648902821316614,
+     "named": 0.14733542319749215,
+     "implicit": 0.06896551724137931,
+     "other": 0.009404388714733543,
+     "kaiching": 0.006269592476489028,
+     "sweat": 0.003134796238244514
+    },
+    "name_only_share_full": 0.2669786218919167,
+    "name_only_share_sampled": 0.22570532915360503,
+    "name_only_share_sampled_inclusion_weighted": 0.21058501803772423,
+    "single_transaction_share_full": 0.26319321562921894,
+    "single_transaction_share_sampled": 0.8557993730407524,
+    "multi_receiver_share_full": 0.17106680822618064,
+    "multi_receiver_share_sampled": 0.05642633228840126,
+    "qaa_default_share_sampled": 0.23510971786833856
+   },
+   {
+    "month": "2026-04",
+    "accounts_full_month": 335794,
+    "accounts_sampled_windows": 307,
+    "inclusion": 0.0009142509991244632,
+    "nearblocks_mean_daily_active": 129496.7,
+    "full_signers_over_mean_daily_active": 2.5930699392339727,
+    "name_class_full": {
+     "eth_implicit": 5.95603256758608e-05,
+     "implicit": 0.22245483838305627,
+     "kaiching": 5.956032567586079e-06,
+     "named": 0.03847597038660607,
+     "other": 0.0004615925239879212,
+     "sweat": 9.827453736517031e-05,
+     "tg": 0.7384438078107411
+    },
+    "name_class_sampled": {
+     "tg": 0.758957654723127,
+     "named": 0.16938110749185667,
+     "implicit": 0.06188925081433225,
+     "other": 0.006514657980456026,
+     "sweat": 0.003257328990228013
+    },
+    "name_only_share_full": 0.26145196161932616,
+    "name_only_share_sampled": 0.23778501628664495,
+    "name_only_share_sampled_inclusion_weighted": 0.21743800178134887,
+    "single_transaction_share_full": 0.28827793230373383,
+    "single_transaction_share_sampled": 0.8208469055374593,
+    "multi_receiver_share_full": 0.1377183630440091,
+    "multi_receiver_share_sampled": 0.04560260586319218,
+    "qaa_default_share_sampled": 0.22149837133550487
+   },
+   {
+    "month": "2026-05",
+    "accounts_full_month": 359151,
+    "accounts_sampled_windows": 471,
+    "inclusion": 0.0013114261132504156,
+    "nearblocks_mean_daily_active": 120939.58064516129,
+    "full_signers_over_mean_daily_active": 2.9696729398603994,
+    "name_class_full": {
+     "eth_implicit": 6.403991635830055e-05,
+     "implicit": 0.3003750511623245,
+     "kaiching": 1.670606513694797e-05,
+     "named": 0.0413864920325991,
+     "other": 4.176516284236992e-05,
+     "sweat": 0.0001085894233901618,
+     "tg": 0.6580073562373486
+    },
+    "name_class_sampled": {
+     "tg": 0.7494692144373672,
+     "named": 0.15074309978768577,
+     "implicit": 0.09554140127388536,
+     "sweat": 0.0021231422505307855,
+     "other": 0.0021231422505307855
+    },
+    "name_only_share_full": 0.34186734827412424,
+    "name_only_share_sampled": 0.2484076433121019,
+    "name_only_share_sampled_inclusion_weighted": 0.22710707544900838,
+    "single_transaction_share_full": 0.3378384022319303,
+    "single_transaction_share_sampled": 0.8471337579617835,
+    "multi_receiver_share_full": 0.1494301839616206,
+    "multi_receiver_share_sampled": 0.04883227176220807,
+    "qaa_default_share_sampled": 0.2611464968152866
+   },
+   {
+    "month": "2026-06",
+    "accounts_full_month": 302563,
+    "accounts_sampled_windows": 299,
+    "inclusion": 0.000988223940138087,
+    "nearblocks_mean_daily_active": 112512.13333333333,
+    "full_signers_over_mean_daily_active": 2.6891588581261163,
+    "name_class_full": {
+     "eth_implicit": 5.61866454259113e-05,
+     "implicit": 0.24568106476998178,
+     "named": 0.04203752606895093,
+     "other": 4.296625826687334e-05,
+     "sweat": 4.296625826687334e-05,
+     "tg": 0.7121392899991076
+    },
+    "name_class_sampled": {
+     "tg": 0.7190635451505016,
+     "named": 0.19732441471571907,
+     "implicit": 0.07023411371237458,
+     "eth_implicit": 0.006688963210702341,
+     "other": 0.006688963210702341
+    },
+    "name_only_share_full": 0.2878177437426255,
+    "name_only_share_sampled": 0.2809364548494983,
+    "name_only_share_sampled_inclusion_weighted": 0.2530555381688074,
+    "single_transaction_share_full": 0.31510462283887986,
+    "single_transaction_share_sampled": 0.8093645484949833,
+    "multi_receiver_share_full": 0.11177506833287613,
+    "multi_receiver_share_sampled": 0.05016722408026756,
+    "qaa_default_share_sampled": 0.25418060200668896
+   },
+   {
+    "month": "2026-07",
+    "accounts_full_month": 252587,
+    "accounts_sampled_windows": 271,
+    "inclusion": 0.0010728976550653834,
+    "nearblocks_mean_daily_active": 93353.3870967742,
+    "full_signers_over_mean_daily_active": 2.7057079325697875,
+    "name_class_full": {
+     "eth_implicit": 5.93854790626596e-05,
+     "implicit": 0.19814558944047,
+     "named": 0.043228669725678674,
+     "other": 7.91806387502128e-05,
+     "sweat": 3.1672255500085117e-05,
+     "tg": 0.7584555024605384
+    },
+    "name_class_sampled": {
+     "tg": 0.6678966789667896,
+     "named": 0.23616236162361623,
+     "implicit": 0.09225092250922509,
+     "other": 0.0036900369003690036
+    },
+    "name_only_share_full": 0.24151282528396156,
+    "name_only_share_sampled": 0.33210332103321033,
+    "name_only_share_sampled_inclusion_weighted": 0.3039191821560014,
+    "single_transaction_share_full": 0.2627411545328936,
+    "single_transaction_share_sampled": 0.7675276752767528,
+    "multi_receiver_share_full": 0.10437987703246802,
+    "multi_receiver_share_sampled": 0.04059040590405904,
+    "qaa_default_share_sampled": 0.34686346863468637
+   },
+   {
+    "month": "2026-08",
+    "accounts_full_month": 215609,
+    "accounts_sampled_windows": 239,
+    "inclusion": 0.0011084880501277775,
+    "nearblocks_mean_daily_active": 81046.19354838709,
+    "full_signers_over_mean_daily_active": 2.66032234902278,
+    "name_class_full": {
+     "eth_implicit": 6.957037971513248e-05,
+     "implicit": 0.17587391991985493,
+     "named": 0.055651665746791645,
+     "other": 7.420840502947465e-05,
+     "sweat": 4.638025314342166e-05,
+     "tg": 0.7682842552954654
+    },
+    "name_class_sampled": {
+     "tg": 0.6736401673640168,
+     "named": 0.2301255230125523,
+     "implicit": 0.0794979079497908,
+     "eth_implicit": 0.008368200836820083,
+     "other": 0.008368200836820083
+    },
+    "name_only_share_full": 0.2316693644513912,
+    "name_only_share_sampled": 0.3263598326359833,
+    "name_only_share_sampled_inclusion_weighted": 0.300124407937119,
+    "single_transaction_share_full": 0.27465458306471435,
+    "single_transaction_share_sampled": 0.7782426778242678,
+    "multi_receiver_share_full": 0.11576047382066611,
+    "multi_receiver_share_sampled": 0.05439330543933055,
+    "qaa_default_share_sampled": 0.3138075313807531
+   },
+   {
+    "month": "2026-09",
+    "accounts_full_month": 302272,
+    "accounts_sampled_windows": 254,
+    "inclusion": 0.0008403027736608088,
+    "nearblocks_mean_daily_active": 62939.46666666667,
+    "full_signers_over_mean_daily_active": 4.802582799133982,
+    "name_class_full": {
+     "eth_implicit": 0.0006781971204742748,
+     "implicit": 0.3048082521702308,
+     "kaiching": 9.924835909379632e-06,
+     "named": 0.09572504234596654,
+     "other": 0.0017335380055049756,
+     "sweat": 1.9849671818759263e-05,
+     "tg": 0.5970251958500953
+    },
+    "name_class_sampled": {
+     "tg": 0.5078740157480315,
+     "named": 0.30708661417322836,
+     "implicit": 0.17716535433070865,
+     "eth_implicit": 0.003937007874015748,
+     "other": 0.003937007874015748
+    },
+    "name_only_share_full": 0.4029450296421766,
+    "name_only_share_sampled": 0.4921259842519685,
+    "name_only_share_sampled_inclusion_weighted": 0.4669903440417941,
+    "single_transaction_share_full": 0.35573589349989415,
+    "single_transaction_share_sampled": 0.7322834645669292,
+    "multi_receiver_share_full": 0.2312652180817277,
+    "multi_receiver_share_sampled": 0.0984251968503937,
+    "qaa_default_share_sampled": 0.3937007874015748
+   },
+   {
+    "month": "2026-10",
+    "accounts_full_month": 826700,
+    "accounts_sampled_windows": 205,
+    "inclusion": 0.00024797387202128945,
+    "nearblocks_mean_daily_active": 72046.48387096774,
+    "full_signers_over_mean_daily_active": 11.4745363768284,
+    "name_class_full": {
+     "eth_implicit": 0.00011854360711261643,
+     "implicit": 0.13093867182774888,
+     "kaiching": 0.6775069553647031,
+     "named": 0.033920406435224384,
+     "other": 0.0006459416958993589,
+     "sweat": 8.46740050804403e-06,
+     "tg": 0.15686101366880367
+    },
+    "name_class_sampled": {
+     "named": 0.43902439024390244,
+     "tg": 0.35609756097560974,
+     "implicit": 0.1951219512195122,
+     "other": 0.00975609756097561
+    },
+    "name_only_share_full": 0.1656235635659853,
+    "name_only_share_sampled": 0.6439024390243903,
+    "name_only_share_sampled_inclusion_weighted": 0.6289642315477586,
+    "single_transaction_share_full": 0.8049086730373776,
+    "single_transaction_share_sampled": 0.6048780487804878,
+    "multi_receiver_share_full": 0.08229103665174792,
+    "multi_receiver_share_sampled": 0.1024390243902439,
+    "qaa_default_share_sampled": 0.6195121951219512
+   }
+  ],
+  "months_compared": 24,
+  "inclusion_median": 0.0010158957701638808,
+  "name_only_gap_sampled_minus_full": {
+   "median": -0.03247011903549643,
+   "min": -0.4282716958569419,
+   "max": 0.478278875458405
+  },
+  "name_only_gap_weighted_minus_full": {
+   "median": -0.04889285979160861,
+   "min": -0.4373944126628961,
+   "max": 0.4633406679817733
+  },
+  "weighting_moves_toward_full_in_months": 8,
+  "multi_receiver_gap_sampled_minus_full_median": -0.10761919406859596,
+  "single_transaction_gap_sampled_minus_full_median": 0.49892401020782845,
+  "full_signers_over_mean_daily_active_median": 2.924590807978028,
+  "mini_app_name_patterns": [
+   "tg",
+   "sweat",
+   "kaiching"
+  ],
+  "kaiching_share_of_full_month": {
+   "2024-11": 0.8159765469730331,
+   "2024-12": 0.8111009853225298,
+   "2025-01": 0.851023969994842,
+   "2025-02": 0.804678754012566,
+   "2025-03": 2.7065485619092536e-06,
+   "2025-04": 4.098710613952694e-06,
+   "2025-05": 1.567546765798324e-06,
+   "2025-06": 5.203874805179937e-06,
+   "2025-07": 5.325430394627705e-06,
+   "2025-08": 7.827431232755191e-06,
+   "2025-09": 6.495773687244736e-06,
+   "2025-10": 5.058655105953531e-06,
+   "2025-11": 7.184630638138893e-06,
+   "2025-12": 2.1841548303676153e-06,
+   "2026-01": 5.697031846408021e-06,
+   "2026-02": 1.5822947546137737e-06,
+   "2026-03": 7.86441744327789e-06,
+   "2026-04": 5.956032567586079e-06,
+   "2026-05": 1.670606513694797e-05,
+   "2026-06": 0.0,
+   "2026-07": 0.0,
+   "2026-08": 0.0,
+   "2026-09": 9.924835909379632e-06,
+   "2026-10": 0.6775069553647031
+  },
+  "reading": "over 24 months the two fixed windows observe a median 0.10% of the month's signers, and the month holds a median 2.9 times the mean daily active accounts that the QAA count rescales; the name-only quality share computed on the sampled windows sits -3.2% (median; range -42.8% to +47.8%) from the full-month share and the inclusion weighting leaves -4.9%, moving toward the full month in 8 of 24 months: the design bias is large, varies in sign across months and is not corrected by the weighting; the population share of the sampled windows is not identified by this design, and the QAA count (share times mean daily actives) is not a count of quality accounts in the monthly population",
+  "kind": "observed (full-month population from BigQuery against the sampled windows)"
+ },
  "by_window_hour": {
   "hours": [
    3,
@@ -582,6 +1429,6 @@
  },
  "not_done": [
   "external human/bot labels (none available)",
-  "a fuller observation of whole months (the within-day inclusion measurement covers six days)"
+  "a clustering refit on full-month features (the committed window-based assignment stays the baseline)"
  ]
 }

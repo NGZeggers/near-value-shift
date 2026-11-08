@@ -56,6 +56,16 @@ Para los 17 restantes no se observó un swap en el rango leído; su existencia y
 
 La API pública de bloques (FastNear neardata, ~0.2 bloques/s) quedó agotada para estos frentes: la muestra sistemática tomó 4 h 27 min y la búsqueda profunda 4 h. La única fuente gratuita con datos completos es el dataset público de NEAR en BigQuery, que exige un proyecto de Google Cloud creado con la cuenta del equipo; en el entorno de trabajo no había `.env`, `gcloud` ni credenciales. Los pasos están en [`PENDIENTES_AL_100.md`](PENDIENTES_AL_100.md).
 
+## Actualización del mismo día: BigQuery ejecutado
+
+Tras este balance se configuró el proyecto de Google Cloud (sandbox, 0 USD) y se ejecutaron los extractos completos. Los tres frentes cambian de estado:
+
+- **Volumen:** con los 46 días comparables leídos completos, nuestro volumen es 0.50 de la referencia en la mediana de días; la referencia cuenta los dos lados de cada swap. El componente definicional queda resuelto; desde septiembre de 2026 queda una brecha menor abierta.
+- **QAA:** contra la población mensual completa, las dos ventanas observan el 0.1 % de los firmantes y la cuota muestreada no es una cuota poblacional; la tesis lo dice así. La validación con etiquetas humano/bot sigue sin existir.
+- **Recompras:** 3,197 retiros reconciliados con el snapshot; intercambio observado en el 60 % (69 % del NEAR); origen por transferencia interna. La intención sigue inferida.
+
+Detalle en la undécima pasada de [`AUDIT_RESPONSE_2026-11-06.md`](AUDIT_RESPONSE_2026-11-06.md).
+
 ## Expectativa razonable sobre la nota
 
 Con lo medido en esta ronda cabe esperar que el auditor mantenga el 96 y reconozca la muestra sistemática como avance en el frente de volumen, sin dar por cerrado ninguno de los tres. Subir exige BigQuery.

@@ -51,7 +51,7 @@
    "status": "observed (receipts, valued at the daily NEAR price); attribution to executed purchases inferred",
    "source": "https://api.nearblocks.io/v1/account/buybacks.multisignature.near/txns?per_page=250 (paginated)",
    "share_of_previous": 0.5942361692841919,
-   "note": "3081 inbound transfers from intents.near from 2026-03-18 to 2026-11-01; a further 510,068 NEAR arrived from the other revenue wallets (treasury moves, excluded here as the adapter excludes them) and 8,293 NEAR from other accounts. Trace of a pre-declared sample (45 of 3197 receipts, every 80th plus the five largest): 45 match a dip4 native_withdraw of wrapped NEAR from 16 distinct Intents-side accounts; for 16 the funding swap (token_diff of the same account, 16 buying wrap.near) is in the same blocks, for the other 29 it is outside the blocks read and the purchase is not observed. A second pre-declared pass over those found the funding swap within 200 blocks before the withdrawal for 12 more (28 of 45 in total); the origin of the sold asset is not traced. Receipts excluded: 0 failed, 0 without an explicit status. The wallet was created 2026-03-18, after the adapter's buyback start 2026-02-23, so labelled revenue before that date cannot be matched to this wallet"
+   "note": "3081 inbound transfers from intents.near from 2026-03-18 to 2026-11-01; a further 510,068 NEAR arrived from the other revenue wallets (treasury moves, excluded here as the adapter excludes them) and 8,293 NEAR from other accounts. Trace of a pre-declared sample (45 of 3197 receipts, every 80th plus the five largest): 45 match a dip4 native_withdraw of wrapped NEAR from 16 distinct Intents-side accounts; for 16 the funding swap (token_diff of the same account, 16 buying wrap.near) is in the same blocks, for the other 29 it is outside the blocks read and the purchase is not observed. A second pre-declared pass over those found the funding swap within 200 blocks before the withdrawal for 12 more (28 of 45 in total). Population from BigQuery: of 3,197 withdrawals (1,695,932 NEAR) the funding exchange is observed for 1,926 (60% of receipts, 69% of the NEAR); the sold asset reached the account by a bridge deposit in 0 cases and by an internal transfer in 1,925. Exchange and origin are observed where they appear; the remaining receipts have no wrap.near purchase by the same account in the day before the withdrawal, so for them the economic operation stays unobserved. Receipts excluded: 0 failed, 0 without an explicit status. The wallet was created 2026-03-18, after the adapter's buyback start 2026-02-23, so labelled revenue before that date cannot be matched to this wallet"
   },
   {
    "step": 6,
@@ -169,6 +169,47 @@
    "d499c7f6f32b9bcf07dcbf18b0fcf12b40797590eb2e5bdbace6072b3de8d907"
   ],
   "intents_side_balances_at_fetch": {},
+  "full_attribution": {
+   "rule": {
+    "declared": "2026-11-08, before the query ran",
+    "population": "every native_withdraw log of intents.near whose receiver is the buyback wallet on the days with inbound receipts (2026-04-23 to 2026-11-06), from the NEAR public BigQuery dataset",
+    "exchange": "the latest token_diff of the same Intents-side account that bought wrap.near, at or before the withdrawal block, searching back one day of blocks",
+    "origin": "a bridge deposit (mt_mint) or an internal transfer (mt_transfer) of an asset sold in that exchange to the same account, within one day before the exchange",
+    "what_it_establishes": "the withdrawal and the exchange are observed on-chain for every receipt they cover; the origin shows how the sold asset reached the account; whether the operator intended the withdrawal as a buyback remains an interpretation of the flows"
+   },
+   "withdrawals": 3197,
+   "near_total": 1695932.414753386,
+   "distinct_intents_accounts": 1273,
+   "exchange_observed": 1926,
+   "exchange_observed_share": 0.6024397873005943,
+   "exchange_observed_near_share": 0.6873975446487456,
+   "blocks_withdrawal_minus_swap": {
+    "median": 0.0,
+    "p90": 157.0,
+    "within_200_blocks": 1767
+   },
+   "origin_deposit_observed": 0,
+   "origin_transfer_in_observed": 1925,
+   "origin_observed_share_of_exchanges": 0.9994807892004154,
+   "sold_assets_top": {
+    "nep141:zec.omft.near": 128,
+    "nep141:nbtc.bridge.near": 86,
+    "nep141:tron-d28a265909efecdcee7c5028585214ea0b96f015.omft.near": 76,
+    "nep141:eth-0xdac17f958d2ee523a2206206994597c13d831ec7.omft.near": 75,
+    "nep141:aaaaaa20d9e0e2461697782ef11675f668207961.factory.bridge.near": 69
+   },
+   "kind": "observed (public logs); intention inferred",
+   "reconciliation_with_nearblocks_snapshot": {
+    "snapshot_receipts": 3197,
+    "snapshot_near": 1695932.414753386,
+    "matched_on_day_and_amount": 3197,
+    "snapshot_receipts_unmatched": 0,
+    "bigquery_withdrawals_unmatched": 0,
+    "near_ratio_bigquery_over_snapshot": 1.0,
+    "note": "ids differ by construction (log-emitting receipt versus the child transfer receipt); matching is on UTC day and exact amount"
+   },
+   "reading": "of 3,197 withdrawals (1,695,932 NEAR) the funding exchange is observed for 1,926 (60% of receipts, 69% of the NEAR); the sold asset reached the account by a bridge deposit in 0 cases and by an internal transfer in 1,925. Exchange and origin are observed where they appear; the remaining receipts have no wrap.near purchase by the same account in the day before the withdrawal, so for them the economic operation stays unobserved"
+  },
   "funding_swap_found_within_extension": 12,
   "funding_swap_observed_total": 28,
   "extension": {

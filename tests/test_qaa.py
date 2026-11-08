@@ -146,3 +146,23 @@ def test_refit_variants_report_agreement_and_shares():
         assert 0 <= v["latest_month_share"]["default"] <= 1
     lo, hi = res["default_share_range"]
     assert lo <= same["latest_month_share"]["default"] <= hi
+
+
+def test_monthly_validation_from_full_population(tmp_path):
+    df = synthetic(n=600, seed=2).sort_values(["month", "account"]).reset_index(drop=True)
+    df["observation_periods"] = 60
+    quality = ~df["name_class"].eq("tg")
+    rows = []
+    for m in df["month"].unique():
+        sub = df[df["month"] == m]
+        for nc, g in sub.groupby("name_class"):                            # every sampled account is in the full month...
+            rows.append(dict(month=m, name_class=nc, accounts=len(g), single_tx_accounts=int((g["txns"] == 1).sum()), multi_receiver_accounts=int((g["distinct_receivers"] >= 2).sum()),
+                             intents_accounts=0, txns=int(g["txns"].sum()) * 3, active_days_mean=10.0, txns_median=5))
+        rows.append(dict(month=m, name_class="tg", accounts=2000, single_tx_accounts=2000, multi_receiver_accounts=0, intents_accounts=0, txns=2000, active_days_mean=1.0, txns_median=1))
+    f = tmp_path / "l1_full_month_summary.csv"                            # ...plus 2,000 light .tg accounts the windows never saw
+    pd.DataFrame(rows).to_csv(f, index=False)
+    out = qaa.monthly_validation_from_full(df, quality, files=[f])
+    assert out["months_compared"] == 2 and 0 < out["inclusion_median"] < 0.2
+    assert out["name_only_gap_sampled_minus_full"]["median"] > 0                 # the windows over-represent named accounts
+    assert out["months"][0]["single_transaction_share_full"] > out["months"][0]["single_transaction_share_sampled"]
+    assert qaa.monthly_validation_from_full(df, quality, files=[]) is None

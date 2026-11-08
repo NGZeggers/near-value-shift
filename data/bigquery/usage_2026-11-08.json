@@ -1,0 +1,8 @@
+{
+ "as_of": "2026-11-08",
+ "project": "near-thesis-514107 (sandbox, billing disabled)",
+ "queries_billed": 15,
+ "bytes_billed_gb": 718.6,
+ "free_tier_tib_per_month": 1.0,
+ "note": "every query was dry-run first; the runner passes maximum_bytes_billed; a sandbox project cannot be charged, queries fail once the free tier is used"
+}

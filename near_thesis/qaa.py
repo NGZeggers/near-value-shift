@@ -334,12 +334,13 @@ def sensitivity(df: pd.DataFrame, x: pd.DataFrame, labels: np.ndarray, monthly: 
         freq["validation"] = ("checked within six days against 24 hourly windows of the same design (inclusion_from_intraday_days); the month-level "
                               "bias of the share is still not identified")
     refits = json.loads(REFITS.read_text()) if REFITS.exists() else None
-    not_done = ["external human/bot labels (none available)", "a fuller observation of whole months (the within-day inclusion measurement covers six days)"]
+    full_months = monthly_validation_from_full(df, quality) if sampled else None
+    not_done = ["external human/bot labels (none available)"] + ([] if full_months else ["a fuller observation of whole months (the within-day inclusion measurement covers six days)"]) + ["a clustering refit on full-month features (the committed window-based assignment stays the baseline)"]
     if not refits:
         not_done.insert(0, "refits with other clustering hyper-parameters (make qaa-refits writes them as a committed sensitivity artifact)")
     return {"latest_month": str(last.date())[:7], "criteria": criteria, "label_threshold_variants_default_share": variants,
             "noise_bounds_default_share": {"noise_excluded": lower, "noise_included": upper},
-            "name_only_baseline": name_only, "inclusion_probability_weighting": freq, "inclusion_from_intraday_days": incl, "by_window_hour": by_hour,
+            "name_only_baseline": name_only, "inclusion_probability_weighting": freq, "inclusion_from_intraday_days": incl, "full_month_validation": full_months, "by_window_hour": by_hour,
             "model_agreement": agreement, "refits": refits, "scope": scope,
             "not_done": not_done}
 
@@ -422,6 +423,81 @@ def inclusion_from_intraday(path=INTRADAY_SIGNERS, day_path=INTRADAY_SIGNER_DAYS
                         "observed quantity; it does not identify the month-level bias of the QAA share, which would need a fuller observation of "
                         "whole months"),
             "kind": "observed (within-day, six days), used as a check of the weighting sensitivity"}
+
+
+FULL_MONTHS_RULE = {
+    "declared": "2026-11-08, before the first full month was read from BigQuery",
+    "population": "every signer of at least one transaction in the month, from bigquery-public-data.crypto_near_mainnet_us.transactions "
+                  "(the committed QAA months; none chosen by result)",
+    "checks": ["inclusion of the two-window design: accounts observed in the sampled windows over all accounts active in the month",
+               "composition by name class and the name-only quality share, full month against sampled windows and against the inclusion-weighted sampled share",
+               "share of accounts with a single transaction and with at least two distinct receivers, full month against sampled windows"],
+    "limits": ("the behavioral clustering is not refitted on full months here: its features are defined inside 50-block windows and the committed "
+               "assignment is the baseline; this validation measures the population the sampled share describes, not a new QAA level"),
+}
+
+
+def monthly_validation_from_full(df_sampled: pd.DataFrame, quality: pd.Series, files=None) -> dict | None:
+    """Month-level check of the sampled design against the full population of signers from BigQuery.
+
+    Reads the committed per (month, name class) aggregates (l1_full_month_summary*.csv): accounts, single-transaction accounts,
+    multi-receiver accounts and intents callers. The name-class rule is the same as the sampled loader's."""
+    files = sorted(BQ_DIR.glob("l1_full_month_summary*.csv")) if files is None else list(files)
+    if not files:
+        return None
+    full = pd.concat([pd.read_csv(f, parse_dates=["month"]) for f in files], ignore_index=True)
+    full["month"] = full["month"].dt.to_period("M").dt.to_timestamp()
+    full["name_class"] = full["name_class"].fillna("other")
+    tot = full.groupby("month").agg(accounts=("accounts", "sum"), single=("single_tx_accounts", "sum"), multi=("multi_receiver_accounts", "sum"), txns=("txns", "sum"))
+    miniapp = ["tg", "sweat", "kaiching"]          # name patterns of mini-app sub-accounts; the full months showed millions of .users.kaiching signers
+    low = full[full["name_class"].isin(miniapp)].groupby("month")["accounts"].sum().reindex(tot.index).fillna(0)
+    a = df_sampled["account"].astype(str)
+    fine = np.select([a.str.endswith(".tg"), a.str.endswith(".sweat"), a.str.endswith(".kaiching"), a.str.fullmatch(r"[0-9a-f]{64}"), a.str.fullmatch(r"0x[0-9a-f]{40}"), a.str.endswith(".near")],
+                     ["tg", "sweat", "kaiching", "implicit", "eth_implicit", "named"], "other")
+    sm = df_sampled.assign(quality=quality.to_numpy(), fine_class=fine, quality_name_only=~pd.Series(fine, index=df_sampled.index).isin(miniapp))
+    dau = None
+    mfile = DERIVED / "monthly.csv"
+    if mfile.exists():
+        dau = pd.read_csv(mfile, parse_dates=["month"]).set_index("month")["active_accounts"]
+    w = inclusion_weights(sm["active_days"], sm["observation_periods"] if "observation_periods" in sm else sm["month"].dt.days_in_month)
+    sm = sm.assign(w=w)
+    months = sorted(set(tot.index) & set(sm["month"]))
+    rows = []
+    for m in months:
+        f = full[full["month"] == m]; g = sm[sm["month"] == m]
+        n_full = int(tot.loc[m, "accounts"])
+        rows.append({"month": str(m.date())[:7], "accounts_full_month": n_full, "accounts_sampled_windows": int(len(g)),
+                     "inclusion": len(g) / n_full if n_full else None,
+                     "nearblocks_mean_daily_active": float(dau.get(m)) if dau is not None and m in dau.index and pd.notna(dau.get(m)) else None,
+                     "full_signers_over_mean_daily_active": float(n_full / dau.get(m)) if dau is not None and m in dau.index and pd.notna(dau.get(m)) and dau.get(m) > 0 else None,
+                     "name_class_full": {r.name_class: float(r.accounts / n_full) for r in f.itertuples()},
+                     "name_class_sampled": {k: float(v) for k, v in g["fine_class"].value_counts(normalize=True).items()},
+                     "name_only_share_full": float(1 - low.loc[m] / n_full) if n_full else None, "name_only_share_sampled": float(g["quality_name_only"].mean()),
+                     "name_only_share_sampled_inclusion_weighted": float((g["quality_name_only"] * g["w"]).sum() / g["w"].sum()) if g["w"].sum() else None,
+                     "single_transaction_share_full": float(tot.loc[m, "single"] / n_full) if n_full else None, "single_transaction_share_sampled": float((g["txns"] == 1).mean()),
+                     "multi_receiver_share_full": float(tot.loc[m, "multi"] / n_full) if n_full else None, "multi_receiver_share_sampled": float((g["distinct_receivers"] >= 2).mean()),
+                     "qaa_default_share_sampled": float(g["quality"].mean())})
+    if not rows:
+        return None
+    r = pd.DataFrame(rows)
+    gap = r["name_only_share_sampled"] - r["name_only_share_full"]
+    gap_w = r["name_only_share_sampled_inclusion_weighted"] - r["name_only_share_full"]
+    return {"rule": FULL_MONTHS_RULE, "files": [f.name for f in files], "months": rows, "months_compared": len(rows),
+            "inclusion_median": float(r["inclusion"].median()),
+            "name_only_gap_sampled_minus_full": {"median": float(gap.median()), "min": float(gap.min()), "max": float(gap.max())},
+            "name_only_gap_weighted_minus_full": {"median": float(gap_w.median()), "min": float(gap_w.min()), "max": float(gap_w.max())},
+            "weighting_moves_toward_full_in_months": int((gap_w.abs() < gap.abs()).sum()),
+            "multi_receiver_gap_sampled_minus_full_median": float((r["multi_receiver_share_sampled"] - r["multi_receiver_share_full"]).median()),
+            "single_transaction_gap_sampled_minus_full_median": float((r["single_transaction_share_sampled"] - r["single_transaction_share_full"]).median()),
+            "full_signers_over_mean_daily_active_median": float(r["full_signers_over_mean_daily_active"].median()) if r["full_signers_over_mean_daily_active"].notna().any() else None,
+            "mini_app_name_patterns": miniapp,
+            "kaiching_share_of_full_month": {str(m.date())[:7]: float(full[(full["month"] == m) & (full["name_class"] == "kaiching")]["accounts"].sum() / tot.loc[m, "accounts"]) for m in months},
+            "reading": (f"over {len(rows)} months the two fixed windows observe a median {r['inclusion'].median():.2%} of the month's signers, and the month holds a median "
+                        f"{r['full_signers_over_mean_daily_active'].median():.1f} times the mean daily active accounts that the QAA count rescales; the name-only quality share "
+                        f"computed on the sampled windows sits {gap.median():+.1%} (median; range {gap.min():+.1%} to {gap.max():+.1%}) from the full-month share and the inclusion weighting leaves {gap_w.median():+.1%}, "
+                        f"moving toward the full month in {int((gap_w.abs() < gap.abs()).sum())} of {len(rows)} months: the design bias is large, varies in sign across months and is not corrected by the weighting; "
+                        "the population share of the sampled windows is not identified by this design, and the QAA count (share times mean daily actives) is not a count of quality accounts in the monthly population"),
+            "kind": "observed (full-month population from BigQuery against the sampled windows)"}
 
 
 REFITS = MODELS / "qaa_refits.json"

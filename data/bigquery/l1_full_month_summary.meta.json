@@ -1,0 +1,11 @@
+{
+ "sql": "l1_full_month_summary.sql (months 2024-11..2026-01 via the anonymous result table of the per-account query)",
+ "run_at": "2026-11-08T08:05:00+00:00",
+ "source_job_id": "45b1ab3e-56b1-438b-9ec1-87e1eb6149fa",
+ "source_bytes_processed": 148239286272,
+ "aggregate_job_id": "bqjob_rd2d6ce2d35cfb27_000001a1ba2e09e2_1",
+ "aggregate_maximum_bytes_billed": 10000000000,
+ "rows": 105,
+ "note": "the 46M-row per-account result was not downloaded (4 GB); it was aggregated server-side at a cost of about 4 GB instead of re-scanning 148 GB",
+ "name_class_rule": "tg, sweat, kaiching (ENDS_WITH .kaiching), implicit (64 hex), eth_implicit (0x + 40 hex), named (.near), other; re-aggregated 2026-11-08 from the same result table after the first aggregate showed millions of .users.kaiching sub-accounts under 'other'"
+}

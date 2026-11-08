@@ -1,4 +1,5 @@
 -- Q0. Dataset freshness. Run first. If MAX(block_date) is stale, THESIS.md must say so.
-SELECT MAX(block_date) AS last_block_date, COUNT(*) AS blocks_last_30d
+-- The window starts in 2026 so that a dataset that stopped updating still reports its last date instead of NULL.
+SELECT MAX(block_date) AS last_block_date, COUNT(*) AS blocks_since_2026
 FROM `bigquery-public-data.crypto_near_mainnet_us.blocks`
-WHERE block_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY);
+WHERE block_date >= '2026-01-01';

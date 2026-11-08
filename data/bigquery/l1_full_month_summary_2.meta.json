@@ -1,0 +1,10 @@
+{
+ "sql": "l1_full_month_summary_2.sql",
+ "run_at": "2026-11-08T08:18:55+00:00",
+ "bytes_processed": 20443430700,
+ "bytes_billed": 20444086272,
+ "accounted_bytes": 20444086272,
+ "maximum_bytes_billed": 200000000000,
+ "rows": 60,
+ "job_id": "d2f42225-11b8-41b9-8e11-c5d5515be36b"
+}

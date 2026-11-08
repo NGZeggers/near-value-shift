@@ -1,0 +1,11 @@
+{
+ "sql": "l2_full_days_valued.sql",
+ "run_at": "2026-11-08T08:09:25+00:00",
+ "bytes_processed": 185794431467,
+ "bytes_billed": 185795084288,
+ "accounted_bytes": 185795084288,
+ "maximum_bytes_billed": 200000000000,
+ "rows": 31,
+ "job_id": "fd13fbb9-6dee-4caf-ad60-cd37d90112d1",
+ "note": "columns sampled_windows_usd_sql and sampled_windows_receipts_sql removed after the run: the helper table they joined held 250-block ranges (the planner's default) instead of the 50 blocks actually sampled, so they did not describe the committed windows; the SQL valuation is cross-checked block by block on one day instead (l2_valuation_check_day.sql)"
+}

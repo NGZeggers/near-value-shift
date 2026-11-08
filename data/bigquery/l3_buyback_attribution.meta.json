@@ -1,0 +1,10 @@
+{
+ "sql": "l3_buyback_attribution.sql",
+ "run_at": "2026-11-08T08:27:07+00:00",
+ "bytes_processed": 287292578795,
+ "bytes_billed": 287293046784,
+ "accounted_bytes": 287293046784,
+ "maximum_bytes_billed": 300000000000,
+ "rows": 3197,
+ "job_id": "b5962da9-1c1c-4bb5-9c95-29cadd912c62"
+}
