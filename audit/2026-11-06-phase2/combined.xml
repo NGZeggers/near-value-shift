@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="13" skipped="0" tests="145" time="5.020" timestamp="2026-11-06T01:30:24.117267-06:00" hostname="ttech-main"><testcase classname="tests.test_blocks" name="test_extract_keeps_intents_logs_and_transactions" time="0.001" /><testcase classname="tests.test_bq" name="test_freshness_runs_first_and_stale_data_stops_l1" time="0.011" /><testcase classname="tests.test_bq" name="test_actual_usage_limits_next_query_even_when_estimate_drifted" time="0.006" /><testcase classname="tests.test_bq" name="test_billed_bytes_are_accounted_and_force_cannot_remove_run_cap" time="0.004" /><testcase classname="tests.test_bq" name="test_single_query_cannot_exceed_query_cap" time="0.001" /><testcase classname="tests.test_bq" name="test_invalid_run_budget_is_rejected[0]" time="0.001" /><testcase classname="tests.test_bq" name="test_invalid_run_budget_is_rejected[-1]" time="0.001" /><testcase classname="tests.test_bq" name="test_invalid_run_budget_is_rejected[nan]" time="0.001" /><testcase classname="tests.test_bq" name="test_invalid_run_budget_is_rejected[inf]" time="0.001" /><testcase classname="tests.test_econ_signal" name="test_detect_breaks_finds_level_shift" time="0.308" /><testcase classname="tests.test_econ_signal" name="test_adf_detects_random_walk_vs_noise" time="0.010" /><testcase classname="tests.test_econ_signal" name="test_block_bootstrap_ci_contains_rho_and_is_wide_for_independent_series" time="0.016" /><testcase classname="tests.test_econ_signal" name="test_var_does_not_infer_when_stationarity_is_unestablished" time="0.007" /><testcase classname="tests.test_econ_signal" name="test_johansen_full_rank_is_not_reported_as_absence" time="0.014" /><testcase classname="tests.test_econ_signal" name="test_bootstrap_is_reproducible_between_calls" time="0.003" /><testcase classname="tests.test_execution_security" name="test_extractor_requires_explicit_success[status0-1]" time="0.001" /><testcase classname="tests.test_execution_security" name="test_extractor_requires_explicit_success[status1-1]" time="0.000" /><testcase classname="tests.test_execution_security" name="test_extractor_requires_explicit_success[status2-0]" time="0.000" /><testcase classname="tests.test_execution_security" name="test_extractor_requires_explicit_success[status3-0]" time="0.000" /><testcase classname="tests.test_execution_security" name="test_extractor_requires_explicit_success[None-0]" time="0.000" /><testcase classname="tests.test_execution_security" name="test_extractor_requires_explicit_success[status5-0]" time="0.000" /><testcase classname="tests.test_execution_security" name="test_old_slim_cache_cannot_be_treated_as_verified" time="0.002" /><testcase classname="tests.test_execution_security" name="test_offline_sampler_preserves_extracts_when_cache_needs_migration" time="0.001" /><testcase classname="tests.test_execution_security" name="test_status_aware_verification_resumes_offline_without_network" time="0.003" /><testcase classname="tests.test_execution_security" name="test_revalidation_filters_failures_and_keeps_provenance" time="0.003" /><testcase classname="tests.test_execution_security" name="test_incomplete_verification_preserves_original_extract" time="0.001" /><testcase classname="tests.test_execution_security" name="test_legacy_or_unknown_extract_disables_l2_and_invalidates_stale_outputs[None]" time="0.005" /><testcase classname="tests.test_execution_security" name="test_legacy_or_unknown_extract_disables_l2_and_invalidates_stale_outputs[UNKNOWN]" time="0.006" /><testcase classname="tests.test_execution_security" name="test_asset_identifiers_are_exact_and_case_sensitive" time="0.000" /><testcase classname="tests.test_execution_security" name="test_make_signs_only_for_explicit_one[-False]" time="0.002" /><testcase classname="tests.test_execution_security" name="test_make_signs_only_for_explicit_one[0-False]" time="0.002" /><testcase classname="tests.test_execution_security" name="test_make_signs_only_for_explicit_one[1-True]" time="0.002" /><testcase classname="tests.test_execution_security" name="test_make_rejects_ambiguous_send_values[false]" time="0.001" /><testcase classname="tests.test_execution_security" name="test_make_rejects_ambiguous_send_values[yes]" time="0.001" /><testcase classname="tests.test_execution_security" name="test_make_rejects_ambiguous_send_values[2]" time="0.001" /><testcase classname="tests.test_execution_security" name="test_make_rejects_ambiguous_send_values[1 0]" time="0.001" /><testcase classname="tests.test_execution_security" name="test_unsupported_explorer_fails_even_without_credentials" time="0.001" /><testcase classname="tests.test_execution_security" name="test_invalid_retry_configuration_does_not_make_requests[0]" time="0.000" /><testcase classname="tests.test_execution_security" name="test_invalid_retry_configuration_does_not_make_requests[-1]" time="0.000" /><testcase classname="tests.test_execution_security" name="test_invalid_retry_configuration_does_not_make_requests[True]" time="0.000" /><testcase classname="tests.test_execution_security" name="test_invalid_retry_configuration_does_not_make_requests[1.5]" time="0.000" /><testcase classname="tests.test_execution_security" name="test_malformed_production_input_never_publishes_partial_metrics[None]" time="0.007" /><testcase classname="tests.test_execution_security" name="test_malformed_production_input_never_publishes_partial_metrics[17]" time="0.005" /><testcase classname="tests.test_execution_security" name="test_malformed_production_input_never_publishes_partial_metrics[malformed]" time="0.004" /><testcase classname="tests.test_execution_security" name="test_malformed_production_input_never_publishes_partial_metrics[data3]" time="0.004" /><testcase classname="tests.test_execution_security" name="test_malformed_production_input_never_publishes_partial_metrics[data4]" time="0.004" /><testcase classname="tests.test_execution_security" name="test_malformed_production_input_never_publishes_partial_metrics[data5]" time="0.004" /><testcase classname="tests.test_features" name="test_monthly_sums_and_means" time="0.009" /><testcase classname="tests.test_generated" name="test_numeric_precision_allowed_but_stale_market_cap_rejected" time="0.003" /><testcase classname="tests.test_generated" name="test_source_hashes_and_argument_require_exact_matches" time="0.000" /><testcase classname="tests.test_intents" name="test_parse_and_roles_and_metrics" time="0.028" /><testcase classname="tests.test_intents" name="test_token_diff_single_object_and_registry" time="0.001" /><testcase classname="tests.test_intents" name="test_multiple_users_in_receipt_with_only_stable_leg_priced" time="0.012" /><testcase classname="tests.test_intents" name="test_sample_run_retains_zero_days_and_loads_prices_once" time="0.154" /><testcase classname="tests.test_intents" name="test_solver_relative_threshold_is_sampled_only" time="0.018" /><testcase classname="tests.test_onchain" name="test_payload_is_deterministic_and_complete" time="0.313" /><testcase classname="tests.test_onchain" name="test_read_index_handles_missing" time="0.001" /><testcase classname="tests.test_onchain" name="test_verify_rejects_modified_numbers_even_with_matching_hash" time="0.000" /><testcase classname="tests.test_onchain" name="test_cli_network_and_account_override_environment_without_signing[testnet-mainnet]" time="0.004" /><testcase classname="tests.test_onchain" name="test_cli_network_and_account_override_environment_without_signing[mainnet-testnet]" time="0.003" /><testcase classname="tests.test_onchain" name="test_signer_receives_exact_selected_network_and_account[testnet]" time="0.002" /><testcase classname="tests.test_onchain" name="test_signer_receives_exact_selected_network_and_account[mainnet]" time="0.002" /><testcase classname="tests.test_onchain" name="test_verify_and_send_are_mutually_exclusive" time="0.004" /><testcase classname="tests.test_qaa" name="test_featurize_and_cluster_recovers_groups" time="0.230" /><testcase classname="tests.test_qaa" name="test_assignment_hash_preserves_magnitude_schema_and_keys" time="0.002" /><testcase classname="tests.test_qaa" name="test_frozen_qaa_cannot_use_future_months" time="0.136" /><testcase classname="tests.test_sampled_mode" name="test_load_sampled_builds_account_month_features" time="0.042" /><testcase classname="tests.test_sampled_mode" name="test_expansion_factor_uses_blocks_per_day" time="0.004" /><testcase classname="tests.test_sampled_mode" name="test_self_calls_and_window_denominator" time="0.036" /><testcase classname="tests.test_security_regressions" name="test_failed_receipt_must_not_be_counted_as_settlement" time="0.000" /><testcase classname="tests.test_security_regressions" name="test_unknown_token_name_cannot_impersonate_priced_asset[nep141:fake-usdc.attacker.near]" time="0.001" /><testcase classname="tests.test_security_regressions" name="test_unknown_token_name_cannot_impersonate_priced_asset[nep141:fake-btc.attacker.near]" time="0.000" /><testcase classname="tests.test_security_regressions" name="test_unknown_token_name_cannot_impersonate_priced_asset[nep141:fake-wrap.near.attacker]" time="0.000" /><testcase classname="tests.test_security_regressions" name="test_malformed_diff_is_rejected_without_crashing[not-a-mapping]" time="0.002" /><testcase classname="tests.test_security_regressions" name="test_malformed_diff_is_rejected_without_crashing[diff1]" time="0.002" /><testcase classname="tests.test_security_regressions" name="test_malformed_diff_is_rejected_without_crashing[1]" time="0.001" /><testcase classname="tests.test_security_regressions" name="test_non_events_are_ignored[None]" time="0.000" /><testcase classname="tests.test_security_regressions" name="test_non_events_are_ignored[]" time="0.000" /><testcase classname="tests.test_security_regressions" name="test_non_events_are_ignored[plain]" time="0.000" /><testcase classname="tests.test_security_regressions" name="test_non_events_are_ignored[EVENT_JSON:{]" time="0.000" /><testcase classname="tests.test_security_regressions" name="test_non_events_are_ignored[EVENT_JSON:[]]" time="0.000" /><testcase classname="tests.test_security_regressions" name="test_non_events_are_ignored[EVENT_JSON:{&quot;standard&quot;:&quot;other&quot;}]" time="0.000" /><testcase classname="tests.test_security_regressions" name="test_signing_not_imported_on_dry_run" time="0.002" /><testcase classname="tests.test_security_regressions" name="test_missing_credentials_prevent_transaction" time="0.001" /><testcase classname="tests.test_security_regressions" name="test_cli_testnet_selection_must_override_mainnet_environment" time="0.003" /><testcase classname="tests.test_security_regressions" name="test_rpc_error_causes_verification_to_fail_closed" time="0.000" /><testcase classname="tests.test_security_regressions" name="test_explorer_configured_must_not_report_success" time="0.001" /><testcase classname="tests.test_security_regressions" name="test_empty_retry_budget_has_clear_validation" time="0.000" /><testcase classname="tests.test_security_regressions" name="test_http_non_retryable_error_is_not_retried" time="0.000" /><testcase classname="tests.test_security_regressions" name="test_http_retries_429_then_succeeds" time="0.000" /><testcase classname="tests.test_security_regressions" name="test_site_escapes_script_termination" time="0.001" /><testcase classname="tests.test_verified_extract" name="test_verified_extract_matches_attestation_and_contains_no_failed_receipts" time="0.035" /><testcase classname="phase2_checks" name="test_duplicate_logs_cannot_double_volume" time="0.109"><failure message="AssertionError: assert (not True or np.float64(2.0) == np.float64(1.0))&#10; +  where np.float64(2.0) = sum()&#10; +    where sum = 0    2.0\nName: volume_priced_usd, dtype: float64.sum&#10; +      where 0    2.0\nName: volume_priced_usd, dtype: float64 =          date  batches  ...  top5_solver_share  withdraw_events\n0  2026-06-01        1  ...                NaN                0\n\n[1 rows x 15 columns].volume_priced_usd&#10;[+2 more lines; full report in element text]">l2 = (PosixPath('/tmp/pytest-of-ttech-main/pytest-17/test_duplicate_logs_cannot_dou0'), PosixPath('/tmp/pytest-of-ttech-mai...l2_intents_events.csv'),    block_date  ... execution_status
+0  2026-06-01  ...    SUCCESS_VALUE
+
+[1 rows x 5 columns])
+
+    def test_duplicate_logs_cannot_double_volume(l2):
+        root,path,frame=l2
+        assert intents.run()['computed']
+        original=pd.read_csv(root/'models/intents_daily.csv').volume_priced_usd.sum()
+        pd.concat([frame,frame],ignore_index=True).to_csv(path,index=False)
+        status=intents.run()
+&gt;       assert not status['computed'] or pd.read_csv(root/'models/intents_daily.csv').volume_priced_usd.sum()==original
+E       AssertionError: assert (not True or np.float64(2.0) == np.float64(1.0))
+E        +  where np.float64(2.0) = sum()
+E        +    where sum = 0    2.0\nName: volume_priced_usd, dtype: float64.sum
+E        +      where 0    2.0\nName: volume_priced_usd, dtype: float64 =          date  batches  ...  top5_solver_share  withdraw_events\n0  2026-06-01        1  ...                NaN                0\n\n[1 rows x 15 columns].volume_priced_usd
+E        +        where          date  batches  ...  top5_solver_share  withdraw_events\n0  2026-06-01        1  ...                NaN                0\n\n[1 rows x 15 columns] = &lt;function read_csv at 0x7a6680e4de40&gt;((PosixPath('/tmp/pytest-of-ttech-main/pytest-17/test_duplicate_logs_cannot_dou0') / 'models/intents_daily.csv'))
+E        +          where &lt;function read_csv at 0x7a6680e4de40&gt; = pd.read_csv
+
+phase2_checks.py:40: AssertionError</failure></testcase><testcase classname="phase2_checks" name="test_truncated_event_must_not_produce_partial_metrics" time="0.052"><failure message="assert True is False">l2 = (PosixPath('/tmp/pytest-of-ttech-main/pytest-17/test_truncated_event_must_not_0'), PosixPath('/tmp/pytest-of-ttech-mai...l2_intents_events.csv'),    block_date  ... execution_status
+0  2026-06-01  ...    SUCCESS_VALUE
+
+[1 rows x 5 columns])
+
+    def test_truncated_event_must_not_produce_partial_metrics(l2):
+        root,path,frame=l2
+        corrupt=frame.copy()
+        corrupt['receipt_id']='bad'
+        corrupt['log']='EVENT_JSON:{"standard":"dip4","event":"token_diff","data":['
+        pd.concat([frame,corrupt],ignore_index=True).to_csv(path,index=False)
+&gt;       assert intents.run()['computed'] is False
+E       assert True is False
+
+phase2_checks.py:49: AssertionError</failure></testcase><testcase classname="phase2_checks" name="test_success_column_cannot_override_mismatched_attestation" time="0.125"><failure message="assert True is False">l2 = (PosixPath('/tmp/pytest-of-ttech-main/pytest-17/test_success_column_cannot_ove0'), PosixPath('/tmp/pytest-of-ttech-mai...ock_height      block_timestamp
+0  2026-06-01          r  ...             7  1780272000000000000
+
+[1 rows x 9 columns])
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a6638946540&gt;
+
+    def test_success_column_cannot_override_mismatched_attestation(l2,monkeypatch):
+        root,path,frame=l2
+        frame['window_day']='2026-06-01'
+        frame['window_hour']=3
+        frame['block_height']=7
+        frame['block_timestamp']=1780272000000000000
+        frame.to_csv(root/'blocks/intents_events_sampled.csv',index=False)
+        path.unlink()
+        monkeypatch.setattr(blocks,'BLOCKS',root/'blocks')
+        pd.DataFrame({'date':['2026-06-01'],'intents_volume_usd':[100.],'blocks':[100000]}).to_csv(root/'derived/daily.csv',index=False)
+        (root/'blocks/sample_manifest.json').write_text(json.dumps({'windows':[{'day':'2026-06-01','hour':3,'n':50,'fetched':50,'usable':True}]}))
+        (root/'blocks/event_verification.json').write_text(json.dumps({'blocks_checked':1,'input_events':1,
+            'accepted_events':1,'failed_events_removed':0,'input_sha256':'1'*64,'output_sha256':'0'*64}))
+        # Real attestation schema, conflicting content. This is a local integrity
+        # check; the existing committed-data CI test is a separate mitigation.
+&gt;       assert intents.run()['computed'] is False
+E       assert True is False
+
+phase2_checks.py:67: AssertionError</failure></testcase><testcase classname="phase2_checks" name="test_valid_l2_control" time="0.054" /><testcase classname="phase2_checks" name="test_offline_without_cache_preserves_existing_extracts" time="0.003"><failure message="AssertionError: assert 'block_date,b...tion_status\n' == 'original events'&#10;  &#10;  - original events&#10;  + block_date,block_timestamp,receipt_id,caller,log,window_day,window_hour,block_height,execution_status">tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-17/test_offline_without_cache_pre0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a6638944890&gt;
+
+    def test_offline_without_cache_preserves_existing_extracts(tmp_path,monkeypatch):
+        ev,tx,cache=sampler_fixture(tmp_path,monkeypatch)
+        try:
+            blocks.run(offline=True,blocks_per_window=1)
+        except ValueError:
+            pass
+&gt;       assert ev.read_text()=='original events'
+E       AssertionError: assert 'block_date,b...tion_status\n' == 'original events'
+E         
+E         - original events
+E         + block_date,block_timestamp,receipt_id,caller,log,window_day,window_hour,block_height,execution_status
+
+phase2_checks.py:94: AssertionError</failure></testcase><testcase classname="phase2_checks" name="test_invalid_worker_count_cannot_truncate_extracts" time="0.003"><failure message="AssertionError: assert 'block_date,b...tion_status\n' == 'original events'&#10;  &#10;  - original events&#10;  + block_date,block_timestamp,receipt_id,caller,log,window_day,window_hour,block_height,execution_status">tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-17/test_invalid_worker_count_cann0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a6638946f00&gt;
+
+    def test_invalid_worker_count_cannot_truncate_extracts(tmp_path,monkeypatch):
+        ev,tx,cache=sampler_fixture(tmp_path,monkeypatch)
+        with pytest.raises(ValueError):
+            blocks.run(offline=True,blocks_per_window=1,workers=0)
+&gt;       assert ev.read_text()=='original events'
+E       AssertionError: assert 'block_date,b...tion_status\n' == 'original events'
+E         
+E         - original events
+E         + block_date,block_timestamp,receipt_id,caller,log,window_day,window_hour,block_height,execution_status
+
+phase2_checks.py:102: AssertionError</failure></testcase><testcase classname="phase2_checks" name="test_qaa_unavailable_cannot_feed_old_predictive_features" time="0.008"><failure message="assert (2026-02-01    123.0\n2026-02-02    123.0\n2026-02-03    123.0\n2026-02-04    123.0\n2026-02-05    123.0\nFreq: D, Name: qaa, dtype: float64 is None or np.False_)&#10; +  where np.False_ = all()&#10; +    where all = 2026-02-01    False\n2026-02-02    False\n2026-02-03    False\n2026-02-04    False\n2026-02-05    False\nFreq: D, Name: qaa, dtype: bool.all&#10;[+2 more lines; full report in element text]">tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-17/test_qaa_unavailable_cannot_fe0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a6638942db0&gt;
+
+    def test_qaa_unavailable_cannot_feed_old_predictive_features(tmp_path,monkeypatch):
+        monkeypatch.setattr(qaa,'MODELS',tmp_path)
+        monkeypatch.setattr(qaa,'load_inputs',lambda:None)
+        monkeypatch.setattr(qaa,'load_sampled',lambda:None)
+        pd.DataFrame({'month':['2026-01-01'],'available_at':['2026-02-01'],'qaa':[123.]}).to_csv(tmp_path/'qaa_causal_monthly.csv',index=False)
+        assert qaa.run()['computed'] is False
+        result=qaa.available_series(pd.date_range('2026-02-01',periods=5))
+&gt;       assert result is None or result.isna().all()
+E       assert (2026-02-01    123.0\n2026-02-02    123.0\n2026-02-03    123.0\n2026-02-04    123.0\n2026-02-05    123.0\nFreq: D, Name: qaa, dtype: float64 is None or np.False_)
+E        +  where np.False_ = all()
+E        +    where all = 2026-02-01    False\n2026-02-02    False\n2026-02-03    False\n2026-02-04    False\n2026-02-05    False\nFreq: D, Name: qaa, dtype: bool.all
+E        +      where 2026-02-01    False\n2026-02-02    False\n2026-02-03    False\n2026-02-04    False\n2026-02-05    False\nFreq: D, Name: qaa, dtype: bool = isna()
+E        +        where isna = 2026-02-01    123.0\n2026-02-02    123.0\n2026-02-03    123.0\n2026-02-04    123.0\n2026-02-05    123.0\nFreq: D, Name: qaa, dtype: float64.isna
+
+phase2_checks.py:113: AssertionError</failure></testcase><testcase classname="phase2_checks" name="test_publisher_uses_actual_latest_complete_month[2026-03-31-2026-03-12.0]" time="0.011"><failure message="AssertionError: assert '2026-02' == '2026-03'&#10;  &#10;  - 2026-03&#10;  ?       ^&#10;  + 2026-02&#10;  ?       ^">tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-17/test_publisher_uses_actual_lat0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a66367c3b90&gt;
+cutoff = '2026-03-31', expected_month = '2026-03', expected_qaa = 12.0
+
+    @pytest.mark.parametrize('cutoff,expected_month,expected_qaa',[
+        ('2026-03-31','2026-03',12.),('2026-03-01','2026-02',8.)])
+    def test_publisher_uses_actual_latest_complete_month(tmp_path,monkeypatch,cutoff,expected_month,expected_qaa):
+        monkeypatch.setattr(onchain,'DERIVED',tmp_path)
+        monkeypatch.setattr(onchain,'MODELS',tmp_path)
+        monkeypatch.setattr(onchain,'ROOT',tmp_path)
+        monkeypatch.setattr(onchain,'raw_manifest',lambda:[])
+        (tmp_path/'THESIS.md').write_text('test')
+        (tmp_path/'signal_ic.json').write_text('[]')
+        pd.DataFrame({'date':[str((pd.Timestamp(cutoff)-pd.Timedelta(days=1)).date()),cutoff]}).to_csv(tmp_path/'daily.csv',index=False)
+        pd.DataFrame({'month':['2026-02-01','2026-03-01'],'active_accounts':[10.,20.],
+            'intents_volume_usd':[100.,200.],'usd_per_txn':[1.,2.]}).to_csv(tmp_path/'monthly.csv',index=False)
+        pd.DataFrame({'month':['2026-02-01','2026-03-01'],'qaa':[8.,12.]}).to_csv(tmp_path/'qaa_monthly.csv',index=False)
+        result=onchain.payload()
+&gt;       assert result['month']==expected_month
+E       AssertionError: assert '2026-02' == '2026-03'
+E         
+E         - 2026-03
+E         ?       ^
+E         + 2026-02
+E         ?       ^
+
+phase2_checks.py:130: AssertionError</failure></testcase><testcase classname="phase2_checks" name="test_publisher_uses_actual_latest_complete_month[2026-03-01-2026-02-8.0]" time="0.007"><failure message="assert 12 == 8.0">tmp_path = PosixPath('/tmp/pytest-of-ttech-main/pytest-17/test_publisher_uses_actual_lat1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a66367c22a0&gt;
+cutoff = '2026-03-01', expected_month = '2026-02', expected_qaa = 8.0
+
+    @pytest.mark.parametrize('cutoff,expected_month,expected_qaa',[
+        ('2026-03-31','2026-03',12.),('2026-03-01','2026-02',8.)])
+    def test_publisher_uses_actual_latest_complete_month(tmp_path,monkeypatch,cutoff,expected_month,expected_qaa):
+        monkeypatch.setattr(onchain,'DERIVED',tmp_path)
+        monkeypatch.setattr(onchain,'MODELS',tmp_path)
+        monkeypatch.setattr(onchain,'ROOT',tmp_path)
+        monkeypatch.setattr(onchain,'raw_manifest',lambda:[])
+        (tmp_path/'THESIS.md').write_text('test')
+        (tmp_path/'signal_ic.json').write_text('[]')
+        pd.DataFrame({'date':[str((pd.Timestamp(cutoff)-pd.Timedelta(days=1)).date()),cutoff]}).to_csv(tmp_path/'daily.csv',index=False)
+        pd.DataFrame({'month':['2026-02-01','2026-03-01'],'active_accounts':[10.,20.],
+            'intents_volume_usd':[100.,200.],'usd_per_txn':[1.,2.]}).to_csv(tmp_path/'monthly.csv',index=False)
+        pd.DataFrame({'month':['2026-02-01','2026-03-01'],'qaa':[8.,12.]}).to_csv(tmp_path/'qaa_monthly.csv',index=False)
+        result=onchain.payload()
+        assert result['month']==expected_month
+&gt;       assert result['qaa']==expected_qaa
+E       assert 12 == 8.0
+
+phase2_checks.py:131: AssertionError</failure></testcase><testcase classname="phase2_checks" name="test_constant_series_breaks_are_inconclusive_not_crash" time="0.002"><failure message="ValueError: min() iterable argument is empty">def test_constant_series_breaks_are_inconclusive_not_crash():
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+&gt;           result=econ.detect_breaks(pd.Series(1.,index=pd.date_range('2024-01-01',periods=400)))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+phase2_checks.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+near_thesis/econ.py:56: in detect_breaks
+    idx = rpt.Pelt(model="l2", min_size=min_size, jump=1).fit(z).predict(pen=pen)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/ruptures/detection/pelt.py:131: in predict
+    partition = self._seg(pen)
+                ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;ruptures.detection.pelt.Pelt object at 0x7a6638945730&gt;
+pen = 17.974393641323946
+
+    def _seg(self, pen):
+        """Computes the segmentation for a given penalty using PELT (or a list
+        of penalties).
+    
+        Args:
+            penalty (float): penalty value
+    
+        Returns:
+            dict: partition dict {(start, end): cost value,...}
+        """
+        # initialization
+        # partitions[t] contains the optimal partition of signal[0:t]
+        partitions = dict()  # this dict will be recursively filled
+        partitions[0] = {(0, 0): 0}
+        admissible = []
+    
+        # Recursion
+        ind = [k for k in range(0, self.n_samples, self.jump) if k &gt;= self.min_size]
+        ind += [self.n_samples]
+        for bkp in ind:
+            # adding a point to the admissible set from the previous loop.
+            new_adm_pt = floor((bkp - self.min_size) / self.jump)
+            new_adm_pt *= self.jump
+            admissible.append(new_adm_pt)
+    
+            subproblems = list()
+            for t in admissible:
+                # left partition
+                try:
+                    tmp_partition = partitions[t].copy()
+                except KeyError:  # no partition of 0:t exists
+                    continue
+                # we update with the right partition
+                tmp_partition.update({(t, bkp): self.cost.error(t, bkp) + pen})
+                subproblems.append(tmp_partition)
+    
+            # finding the optimal partition
+&gt;           partitions[bkp] = min(subproblems, key=lambda d: sum(d.values()))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           ValueError: min() iterable argument is empty
+
+.venv/lib/python3.12/site-packages/ruptures/detection/pelt.py:76: ValueError</failure></testcase><testcase classname="phase2_checks" name="test_constant_series_johansen_is_inconclusive_not_crash" time="0.009"><failure message="numpy.linalg.LinAlgError: Singular matrix">def test_constant_series_johansen_is_inconclusive_not_crash():
+        d=pd.DataFrame({'near_price':1.,'usage':1.},index=pd.date_range('2024-01-01',periods=800))
+&gt;       result=econ.johansen(d,'usage',None)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+phase2_checks.py:143: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+near_thesis/econ.py:151: in johansen
+    jr = coint_johansen(lw, det_order=0, k_ar_diff=2)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/statsmodels/tsa/vector_ar/vecm.py:690: in coint_johansen
+    sig = np.dot(sk0, np.dot(inv(s00), sk0.T))
+                             ^^^^^^^^
+.venv/lib/python3.12/site-packages/numpy/linalg/_linalg.py:659: in inv
+    ainv = _umath_linalg.inv(a, signature=signature)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+err = 'invalid value', flag = 8
+
+    def _raise_linalgerror_singular(err, flag):
+&gt;       raise LinAlgError("Singular matrix")
+E       numpy.linalg.LinAlgError: Singular matrix
+
+.venv/lib/python3.12/site-packages/numpy/linalg/_linalg.py:144: LinAlgError</failure></testcase><testcase classname="phase2_checks" name="test_infinite_chart_points_cannot_break_json" time="0.001"><failure message="ValueError: Out of range float values are not JSON compliant: inf">def test_infinite_chart_points_cannot_break_json():
+        series=pd.Series([1.,np.inf],index=pd.date_range('2026-01-01',periods=2))
+        points=charts._pts(series)
+&gt;       json.dumps(points,allow_nan=False)
+
+phase2_checks.py:150: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/json/__init__.py:238: in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+/usr/lib/python3.12/json/encoder.py:200: in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = &lt;json.encoder.JSONEncoder object at 0x7a66367c2c60&gt;
+o = [['2026-01-01', 1.0], ['2026-01-02', inf]], _one_shot = True
+
+    def iterencode(self, o, _one_shot=False):
+        """Encode the given object and yield each string
+        representation as available.
+    
+        For example::
+    
+            for chunk in JSONEncoder().iterencode(bigobject):
+                mysocket.write(chunk)
+    
+        """
+        if self.check_circular:
+            markers = {}
+        else:
+            markers = None
+        if self.ensure_ascii:
+            _encoder = encode_basestring_ascii
+        else:
+            _encoder = encode_basestring
+    
+        def floatstr(o, allow_nan=self.allow_nan,
+                _repr=float.__repr__, _inf=INFINITY, _neginf=-INFINITY):
+            # Check for specials.  Note that this type of test is processor
+            # and/or platform-specific, so do tests which don't depend on the
+            # internals.
+    
+            if o != o:
+                text = 'NaN'
+            elif o == _inf:
+                text = 'Infinity'
+            elif o == _neginf:
+                text = '-Infinity'
+            else:
+                return _repr(o)
+    
+            if not allow_nan:
+                raise ValueError(
+                    "Out of range float values are not JSON compliant: " +
+                    repr(o))
+    
+            return text
+    
+    
+        if (_one_shot and c_make_encoder is not None
+                and self.indent is None):
+            _iterencode = c_make_encoder(
+                markers, self.default, _encoder, self.indent,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, self.allow_nan)
+        else:
+            _iterencode = _make_iterencode(
+                markers, self.default, _encoder, self.indent, floatstr,
+                self.key_separator, self.item_separator, self.sort_keys,
+                self.skipkeys, _one_shot)
+&gt;       return _iterencode(o, 0)
+               ^^^^^^^^^^^^^^^^^
+E       ValueError: Out of range float values are not JSON compliant: inf
+
+/usr/lib/python3.12/json/encoder.py:258: ValueError</failure></testcase><testcase classname="phase2_checks" name="test_committed_analytical_json_is_standards_compliant" time="0.001"><failure message="AssertionError: ['data/derived/models/peer_valuation.json']&#10;assert not ['data/derived/models/peer_valuation.json']">def test_committed_analytical_json_is_standards_compliant():
+        def reject(value):raise ValueError('Non-JSON constant: '+value)
+        failures=[]
+        for path in Path('data/derived').rglob('*.json'):
+            try:json.loads(path.read_text(),parse_constant=reject)
+            except ValueError:failures.append(str(path))
+&gt;       assert not failures,failures
+E       AssertionError: ['data/derived/models/peer_valuation.json']
+E       assert not ['data/derived/models/peer_valuation.json']
+
+phase2_checks.py:159: AssertionError</failure></testcase><testcase classname="phase2_checks" name="test_unknown_fetch_source_cannot_claim_success" time="0.001"><failure message="Failed: DID NOT RAISE any of (SystemExit, ValueError)">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x7a66389429f0&gt;
+
+    def test_unknown_fetch_source_cannot_claim_success(monkeypatch):
+&gt;       with pytest.raises((SystemExit,ValueError)):
+E       Failed: DID NOT RAISE any of (SystemExit, ValueError)
+
+phase2_checks.py:163: Failed</failure></testcase><testcase classname="phase2_checks" name="test_non_events_are_ignored_by_low_level_parser[None]" time="0.001" /><testcase classname="phase2_checks" name="test_non_events_are_ignored_by_low_level_parser[]" time="0.000" /><testcase classname="phase2_checks" name="test_non_events_are_ignored_by_low_level_parser[plain]" time="0.000" /><testcase classname="phase2_checks" name="test_non_events_are_ignored_by_low_level_parser[EVENT_JSON:{]" time="0.000" /><testcase classname="phase2_checks" name="test_non_events_are_ignored_by_low_level_parser[EVENT_JSON:[]]" time="0.000" /><testcase classname="phase2_checks" name="test_unknown_assets_remain_unpriced[nep141:fake-usdc.attacker.near]" time="0.001" /><testcase classname="phase2_checks" name="test_unknown_assets_remain_unpriced[nep141:btc.attacker.near]" time="0.000" /><testcase classname="phase2_checks" name="test_unknown_assets_remain_unpriced[nep141:wrap.near.attacker]" time="0.001" /><testcase classname="phase2_checks" name="test_invalid_network_fails_before_any_signer_import" time="0.002" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[0]" time="0.017" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[1]" time="0.015" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[2]" time="0.015" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[3]" time="0.012" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[4]" time="0.015" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[5]" time="0.016" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[6]" time="0.016" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[7]" time="0.011" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[8]" time="0.016" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[9]" time="0.019" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[10]" time="0.017" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[11]" time="0.012" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[12]" time="0.015" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[13]" time="0.017" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[14]" time="0.017" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[15]" time="0.011" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[16]" time="0.014" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[17]" time="0.017" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[18]" time="0.018" /><testcase classname="phase2_checks" name="test_balanced_multiuser_ledger_matches_independent_notional[19]" time="0.011" /><testcase classname="phase2_checks" name="test_hhi_scale_invariance_and_bounds[0]" time="0.001" /><testcase classname="phase2_checks" name="test_hhi_scale_invariance_and_bounds[1]" time="0.000" /><testcase classname="phase2_checks" name="test_hhi_scale_invariance_and_bounds[2]" time="0.000" /><testcase classname="phase2_checks" name="test_hhi_scale_invariance_and_bounds[3]" time="0.000" /><testcase classname="phase2_checks" name="test_hhi_scale_invariance_and_bounds[4]" time="0.000" /><testcase classname="phase2_checks" name="test_hhi_scale_invariance_and_bounds[5]" time="0.000" /><testcase classname="phase2_checks" name="test_hhi_scale_invariance_and_bounds[6]" time="0.000" /><testcase classname="phase2_checks" name="test_hhi_scale_invariance_and_bounds[7]" time="0.000" /><testcase classname="phase2_checks" name="test_hhi_scale_invariance_and_bounds[8]" time="0.000" /><testcase classname="phase2_checks" name="test_hhi_scale_invariance_and_bounds[9]" time="0.000" /></testsuite></testsuites>
