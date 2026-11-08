@@ -354,7 +354,9 @@ def sensitivity_table(ratio: dict, cross_ok: bool, qaa_last, qsens: dict, recon:
                 variants.append({"label": "excluding the reference's confidential-intents share (estimate from a cumulative figure)", "value": f"{res['after_confidential_intents_exclusion']:.2f}"})
             sd = recon.get("systematic_day") or {}
             if sd.get("ratio_to_reference") is not None:
-                variants.append({"label": f"systematic 2.5% block sample of {sd['day']} (design interval)", "value": f"{sd['ratio_to_reference']:.2f} [{sd['ratio_ci95'][0]:.2f}, {sd['ratio_ci95'][1]:.2f}]"})
+                sv = sd.get("sampling_verdict", "")
+                variants.append({"label": f"systematic 2.5% block sample of {sd['day']} (design interval; sampling verdict {sv.split(':')[0] if sv else 'n/a'})",
+                                 "value": f"{sd['ratio_to_reference']:.2f} [{sd['ratio_ci95'][0]:.2f}, {sd['ratio_ci95'][1]:.2f}]"})
             variants.append({"label": "after the measured intraday bias (median factor)", "value": f"{res['after_intraday_bias_correction']:.2f}"})
             if res.get("after_confidential_and_intraday"):
                 variants.append({"label": "confidential share and intraday bias together", "value": f"{res['after_confidential_and_intraday']:.2f}"})

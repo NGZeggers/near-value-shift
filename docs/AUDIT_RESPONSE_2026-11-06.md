@@ -212,3 +212,23 @@ Resultado: ninguna métrica de uso supera el criterio declarado; el veredicto lo
 - `make build` completo con el extracto sistemático pendiente; `make test`: 127 pruebas aprobadas (1 nueva); comprobaciones de navegador: 47 de 47; `make check-generated`: coincidente tras el commit.
 - Tras el extracto sistemático: `make build` de nuevo, 127 pruebas, 47 de 47 controles, `make check-generated` coincidente; commit propio.
 - Tras la búsqueda profunda de recompras: `make build` de nuevo, 127 pruebas, 47 de 47 controles, `make check-generated` coincidente; commit propio.
+
+---
+
+## Novena pasada: reserva metodológica sobre la muestra sistemática (96/100, base `725bec0`)
+
+**English summary.** The auditor showed that the intervals of the single-start systematic sample rest on assumptions about the block sequence and reproduced a periodic population where both intervals exclude the true total. This pass states the assumptions, withdraws the "model-free" wording, checks the error estimator on a proxy population with a known total (the 24 hourly windows of the same day) under a rule declared before computing it, simulates coverage on synthetic populations, and adds the adversarial case as a test. The diagnostic fails on the real day, so the sampling verdict for 2025-11-14 is downgraded to inconclusive and the gap is no longer attributed. A replicated-start design is declared for a future acquisition.
+
+| Punto | Estado | Qué se hizo y dónde verificarlo |
+| --- | --- | --- |
+| Intervalos como aproximaciones bajo supuestos; retirar "model-free" | Hecho | `reconcile.SYSTEMATIC_ASSUMPTIONS` (cuatro supuestos, publicados en THESIS.md junto al resultado); el bootstrap se describe como segunda aproximación que comparte los mismos bloques no observados. |
+| El veredicto no agota las causas | Hecho | La lectura conserva "o un patrón temporal en el intervalo de muestreo que un solo arranque no puede detectar" y, cuando el diagnóstico falla o no hay volumen, dice que el error de muestreo no se puede acotar y la brecha no se atribuye (`sampling_verdict`). |
+| Validar el procedimiento | Hecho, con resultado desfavorable declarado | `reconcile.systematic_coverage_diagnostic` (regla `SYSTEMATIC_COVERAGE_RULE`, declarada antes de calcular: razón ≤ 1.5 y cobertura ≥ 0.80): sobre las 24 ventanas del mismo día (1,200 bloques consecutivos, total conocido), la desviación real entre las 40 fases es 1.64 M USD frente a un error estándar medio de 0.43 M (razón 3.78) y el intervalo normal cubre el total en el 28 % de las fases; autocorrelación por encima del umbral en el retardo 4 (+0.09), divisor del paso. Post hoc y exploratorio, con pasos menores: la razón baja a 2.0–2.6 con 120–240 bloques por fase y la cobertura no pasa del 50 %. Veredicto: **no concluyente sobre el error de muestreo**; la brecha del día no se atribuye. `reconcile.systematic_coverage_simulation` (140,000 bloques, paso 40, 40 fases): cobertura 85 % con volumen concentrado independiente, 85 % con ráfagas dependientes, 0 % con periodo igual al paso, 100 % con periodo 37. Pruebas: `test_systematic_day_adversarial_periodic_pattern_is_inconclusive` (el caso del auditor: estimación 0, intervalos [0, 0], veredicto no concluyente), `test_systematic_coverage_diagnostic_supports_an_unstructured_population`, `test_systematic_coverage_simulation_fails_only_at_the_step`. |
+| Siete alturas nulas | Hecho | El manifiesto distingue `heights_without_block` (7, respuesta nula cacheada: alturas sin bloque) de `fetch_failed` (0); `run_systematic_day` lo registra en adelante. El estimador toma la media sobre bloques existentes y escala por la proporción de alturas con bloque; las alturas sin bloque no son unidades de la población. |
+| Diseño para acreditar cobertura | Declarado, no ejecutado | `blocks.SYSTEMATIC_REPLICATED_DESIGN`: cuatro arranques aleatorios independientes con paso 160, interpenetrantes, mismo presupuesto; varianza por dispersión entre réplicas sin supuestos sobre la secuencia. Evaluación fijada antes de leer ningún bloque. |
+
+**Consecuencia para la tesis.** Los tres diseños del día siguen coincidiendo en el punto (0.36, 0.33, 0.31), pero la afirmación de que la brecha de ese día no era error de muestreo se retira: queda como "no concluyente". La documentación de la referencia (origen compartido, *confidential intents*) y la cuota confidencial como componente estimado no dependen de esto y se mantienen.
+
+### Verificación de esta pasada
+
+- `make build` completo; `make test`: 206 pruebas aprobadas (3 nuevas); comprobaciones de navegador: 47 de 47; `make check-generated`: coincidente tras el commit.

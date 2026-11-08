@@ -91,7 +91,7 @@ The build reads committed snapshots. Full SHA-256 hashes cover raw files, block 
 | data/blocks/sample_manifest.json | 12580 | `444e3843e6290d33e115270aab918b23a5896fe6a419afa281c1e832a1716642` |
 | data/blocks/sample_plan.json | 8185 | `d46b1ffc11cc483d0a2838e50b1256584c59a5f4b8ee9b6c975d9372dfb63d78` |
 | data/blocks/systematic_day_events.csv | 14078309 | `33cf2db91b58ec8d129b6aac443fe930426dcd677df397093bc43fb0791fe6e6` |
-| data/blocks/systematic_day_manifest.json | 46740 | `5cb13cc739ef48db9d80e34ede6f0df84227b11a91892ec239dc2f8f155dcd52` |
+| data/blocks/systematic_day_manifest.json | 47075 | `fe2cff9416a365bd8e647053e78c81c156a12b34e890539c2d41f8eca7834f41` |
 | data/blocks/tx_sampled.csv | 22653523 | `3a7de3ac562a89bb6e83d030262f67bbc30d8d44073e18e03eb6beca181f38e2` |
 | data/derived/models/qaa_assignments.csv | 7941854 | `b9b072a58ce46c78eb51cc52d69f26a0f24daebe7c4f7a613fee576be4cf852d` |
 | data/derived/models/qaa_causal_model.json | 4950 | `5e4f03b366c5f749bb24f7bdec07e3a8e3f41f726356526a69286791350e3f44` |

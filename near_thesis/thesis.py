@@ -259,10 +259,24 @@ def reconciliation_section() -> list[str]:
         head = f"**Systematic within-day sample (declared {rule['declared']}).** Day: {rule['day']}. Design: {rule['design']}. Estimator: {rule['estimator']}. "
         if sd.get('estimate_usd') is not None:
             dz = sd['design']; od = sd.get('same_day_other_designs') or {}
-            out.append(head + f"Result: {dz['blocks_fetched']:,} of {dz['blocks_in_day']:,} blocks ({dz['sampling_fraction']:.2%}), {sd['blocks_with_volume']:,} with Intents volume; "
+            out.append(head + f"Result: {dz['blocks_fetched']:,} of {dz['heights_in_day']:,} heights ({dz['sampling_fraction']:.2%}; {dz.get('heights_without_block') if dz.get('heights_without_block') is not None else 'n/a'} sampled heights have no block and are not population units), {sd['blocks_with_volume']:,} with Intents volume; "
                        f"estimate {usd(sd['estimate_usd'])} with design standard error {usd(sd['standard_error_usd'])} (relative {sd['relative_standard_error']:.1%}) against a reference of {usd(sd['reference_usd'])}: ratio {sd['ratio_to_reference']:.2f}, 95% design interval {sd['ratio_ci95'][0]:.2f} to {sd['ratio_ci95'][1]:.2f} (bootstrap {sd['ratio_ci95_bootstrap'][0]:.2f} to {sd['ratio_ci95_bootstrap'][1]:.2f}). "
                        + (f"The same day under the two fixed windows gave {num(od.get('two_fixed_windows_ratio'), 2)} and under 24 hourly windows {num(od.get('twenty_four_hourly_windows_ratio'), 2)}. " if od else "")
-                       + f"The top one percent of sampled blocks carries {sd['share_of_sampled_usd_in_top_1pct_blocks']:.0%} of the sampled volume. Reading: {sd['reading']}. {rule['what_it_establishes'][0].upper() + rule['what_it_establishes'][1:]}.\n")
+                       + f"The top one percent of sampled blocks carries {sd['share_of_sampled_usd_in_top_1pct_blocks']:.0%} of the sampled volume. "
+                       + "Assumptions of the intervals: " + "; ".join(sd.get('assumptions', [])) + ". "
+                       + f"Reading: {sd['reading']}. {rule['what_it_establishes'][0].upper() + rule['what_it_establishes'][1:]}.\n")
+            dg, sim = sd.get('coverage_diagnostic'), sd.get('coverage_simulation')
+            if dg:
+                dr = dg['rule']
+                out.append(f"**Does the error estimator hold on this day's volume? (declared {dr['declared']}).** Proxy: {dr['proxy_population']}. Verdict rule: {dr['verdict']}. "
+                           f"Result on {dg['proxy_windows']} windows ({dg['proxy_blocks']:,} consecutive blocks, {dg['phases_evaluated']} phases of about {dg['blocks_per_phase_mean']:.0f} blocks): the standard deviation of the estimates across phases is {usd(dg['sd_of_estimates_across_phases_usd'])} against a mean successive-difference standard error of {usd(dg['mean_successive_difference_se_usd'])} (ratio {num(dg['ratio_true_sd_to_estimated_se'], 2)}); the normal interval covers the known total in {dg['normal_interval_coverage']:.0%} of phases. "
+                           + ("Post hoc and exploratory, with smaller steps so that each phase holds more blocks: " + "; ".join(f"step {k} ({v['blocks_per_phase']} blocks per phase) ratio {v['ratio_true_sd_to_estimated_se']:.2f}, coverage {v['normal_interval_coverage']:.0%}" for k, v in sorted(dg['post_hoc_by_step']['steps'].items(), key=lambda kv: int(kv[0]))) + ". " if dg.get('post_hoc_by_step', {}).get('steps') else "")
+                           + ("Autocorrelation flagged at the step or a divisor: " + ", ".join(f"lag {k} {v:+.2f}" for k, v in dg['autocorrelation_flagged_at_step_or_divisors'].items()) + ". " if dg['autocorrelation_flagged_at_step_or_divisors'] else "No autocorrelation is flagged at the step or its divisors (threshold " + f"{dg['autocorrelation_threshold']:.3f}). ")
+                           + f"{dg['reading'][0].upper() + dg['reading'][1:]}. Sampling verdict: {sd.get('sampling_verdict', '')}. Limit: {dr['limits']}.\n")
+            if sim:
+                out.append("**Simulated coverage of the intervals (synthetic populations, " + f"{sim['settings']['blocks']:,} blocks, step {sim['settings']['step']}, {sim['settings']['phases']} phases).** "
+                           + "; ".join(f"{k.replace('_', ' ')}: normal {v['normal_interval_coverage']:.0%}, bootstrap {v['bootstrap_coverage']:.0%}" for k, v in sim.items() if isinstance(v, dict) and 'normal_interval_coverage' in v)
+                           + f". {sim['reading'][0].upper() + sim['reading'][1:]}.\n")
         else:
             out.append(head + f"Status: {sd['status']}.\n")
     chk = val['two_sided_pricing_check']

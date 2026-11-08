@@ -309,66 +309,229 @@ def intraday(prices: dict, blocks_per_day: pd.Series, llama: pd.Series, fixed_ho
                       "(see intraday_validation)")}
 
 
-def systematic_day(prices: dict, llama: pd.Series, events=None, manifest=None, intraday_days: list[dict] | None = None) -> dict:
+SYSTEMATIC_ASSUMPTIONS = [
+    "the successive-difference variance estimator assumes that adjacent sampled blocks behave like a stratified sample of pairs; it is "
+    "conservative under smooth trends and understates the error when the volume process has a periodic or dependent component at the "
+    "sampling interval or a divisor of it, which a single systematic start cannot detect from the selected blocks alone",
+    "the percentile bootstrap resamples the selected blocks as if independent; it is a second approximation that shares the same "
+    "unobserved blocks, not an independent observation of the error",
+    "the normal interval is approximate for a volume concentrated in a few blocks",
+    "skipped heights (null blocks) are not population units; the mean is taken over existing sampled blocks and scaled to the heights of the day",
+]
+SYSTEMATIC_COVERAGE_RULE = {
+    "declared": "2026-11-08, before the diagnostic was computed",
+    "proxy_population": ("the 24 fifty-block hourly windows of the same day (consecutive blocks), whose total is known; every one of the step "
+                         "phases is applied to it and the estimate and its design standard error are computed for each phase"),
+    "checks": ["ratio of the standard deviation of the estimates across phases (the true design error on this population) to the mean "
+               "successive-difference standard error",
+               "share of phases whose 95% normal interval covers the known total",
+               "autocorrelation of the per-block volume within windows at lags 1 to 50, flagging the sampling step and its divisors"],
+    "verdict": "the design interval is considered supported on the proxy if the ratio is at most 1.5 and the coverage is at least 0.80; "
+               "otherwise the sampling reading is inconclusive and the day's verdict is downgraded",
+    "limits": "the proxy has about 30 blocks per phase and is made of discontiguous windows, so it tests the error estimator on this day's "
+              "volume process at short range, not the whole-day design",
+}
+
+
+def _succ_diff_se(y: np.ndarray, N: int) -> tuple[float, float]:
+    """Successive-difference standard deviation and the standard error of the total for a systematic sample of size len(y) from N."""
+    if len(y) < 2:
+        return float("nan"), float("nan")
+    sd = float(np.sqrt(np.sum(np.diff(y) ** 2) / (2 * (len(y) - 1))))
+    return sd, sd / np.sqrt(len(y)) * np.sqrt(max(0.0, 1 - len(y) / N)) * N
+
+
+def _per_block_usd(raw: pd.DataFrame, prices: dict) -> pd.Series:
+    raw = raw[raw["execution_status"].isin(SUCCESS_STATUSES)].copy() if len(raw) else raw
+    if not len(raw):
+        return pd.Series(dtype=float)
+    raw["block_date"] = pd.to_datetime(raw["window_day"]).dt.date
+    legs = _legs_with_prices(raw, prices)
+    bv = batch_values(legs) if len(legs) else pd.DataFrame(columns=["half_gross"])
+    if not len(bv):
+        return pd.Series(dtype=float)
+    bv = bv.join(raw.drop_duplicates("receipt_id").set_index("receipt_id")[["block_height", "window_hour"]])
+    return bv.groupby("block_height")["half_gross"].sum()
+
+
+def systematic_coverage_diagnostic(prices: dict, day: str, step: int, events=None, manifest=None) -> dict | None:
+    """Check the error estimator on a proxy population with known total: the consecutive-block hourly windows of the same day."""
+    events = INTRADAY_VALIDATION_EVENTS if events is None else events
+    manifest = INTRADAY_VALIDATION_MANIFEST if manifest is None else manifest
+    if not events.exists() or not manifest.exists():
+        return None
+    man = json.loads(manifest.read_text())
+    wins = [w for w in man["windows"] if w["day"] == day and w.get("usable")]
+    if not wins:
+        return None
+    raw = pd.read_csv(events)
+    raw = raw[raw["window_day"] == day]
+    got = _per_block_usd(raw, prices)
+    series = []
+    for w in wins:
+        hs = np.arange(w["start_height"], w["start_height"] + w["n"])
+        series.append(pd.Series(got.reindex(hs).fillna(0.0).to_numpy(), index=hs))
+    pop = pd.concat(series).sort_index()
+    T, Npop = float(pop.sum()), int(len(pop))
+    ests, ses, covered = [], [], 0
+    for phase in range(step):
+        samp = pop[(pop.index % step) == phase]
+        if len(samp) < 2:
+            continue
+        est = float(samp.mean()) * Npop
+        _, se = _succ_diff_se(samp.to_numpy(dtype=float), Npop)
+        ests.append(est); ses.append(se); covered += int(est - 1.96 * se <= T <= est + 1.96 * se)
+    ests, ses = np.array(ests), np.array(ses)
+    # autocorrelation within windows (pairs never straddle two windows)
+    lags = {}
+    max_lag = min(50, max(len(sr) for sr in series) - 1)
+    for L in range(1, max_lag + 1):
+        a, b = [], []
+        for sr in series:
+            v = sr.to_numpy(dtype=float)
+            if len(v) > L:
+                a.append(v[:-L]); b.append(v[L:])
+        if not a:
+            continue
+        a, b = np.concatenate(a), np.concatenate(b)
+        lags[L] = float(np.corrcoef(a, b)[0, 1]) if a.std() > 0 and b.std() > 0 else 0.0
+    npairs = sum(max(0, len(sr) - 1) for sr in series)
+    thr = 2 / np.sqrt(npairs) if npairs else 1.0
+    divisors = [d for d in range(1, step + 1) if step % d == 0]
+    flagged = {str(L): lags[L] for L in divisors if L in lags and abs(lags[L]) > thr}
+    ratio = float(ests.std(ddof=1) / ses.mean()) if len(ests) > 1 and ses.mean() > 0 else None
+    zero_se_with_dispersion = bool(len(ests) > 1 and ses.mean() == 0 and ests.std(ddof=1) > 0)   # every phase looks certain, yet the phases disagree
+    cov = covered / len(ests) if len(ests) else None
+    ok = ratio is not None and cov is not None and ratio <= 1.5 and cov >= 0.80 and not zero_se_with_dispersion
+    # Post hoc, exploratory (not part of the declared verdict): the same check with smaller steps, so that each phase holds more
+    # blocks; it shows whether a failure at the declared step is driven by the few blocks per phase and the concentration of volume.
+    by_step = {}
+    for k in sorted({step, 20, 10, 8, 5}):
+        if k > Npop // 2:
+            continue
+        e_k, s_k, c_k = [], [], 0
+        for phase in range(k):
+            samp = pop[(pop.index % k) == phase]
+            if len(samp) < 2:
+                continue
+            est = float(samp.mean()) * Npop
+            _, se = _succ_diff_se(samp.to_numpy(dtype=float), Npop)
+            e_k.append(est); s_k.append(se); c_k += int(est - 1.96 * se <= T <= est + 1.96 * se)
+        if len(e_k) > 1 and np.mean(s_k) > 0:
+            by_step[str(k)] = {"blocks_per_phase": int(Npop // k), "ratio_true_sd_to_estimated_se": float(np.std(e_k, ddof=1) / np.mean(s_k)),
+                               "normal_interval_coverage": c_k / len(e_k), "phases": len(e_k)}
+    return {"rule": SYSTEMATIC_COVERAGE_RULE, "proxy_blocks": Npop, "proxy_windows": len(wins), "proxy_total_usd": T,
+            "phases_evaluated": int(len(ests)), "blocks_per_phase_mean": float(Npop / step),
+            "sd_of_estimates_across_phases_usd": float(ests.std(ddof=1)) if len(ests) > 1 else None,
+            "mean_successive_difference_se_usd": float(ses.mean()) if len(ses) else None,
+            "ratio_true_sd_to_estimated_se": ratio, "estimated_error_zero_while_phases_disagree": zero_se_with_dispersion, "normal_interval_coverage": cov,
+            "autocorrelation_threshold": float(thr), "autocorrelation_flagged_at_step_or_divisors": flagged,
+            "largest_autocorrelations": {str(L): v for L, v in sorted(lags.items(), key=lambda kv: -abs(kv[1]))[:5]},
+            "supported": bool(ok),
+            "post_hoc_by_step": {"kind": "exploratory, not part of the declared verdict", "steps": by_step,
+                                 "reading": "ratio and coverage as the blocks per phase grow; the declared design has about 3,500 blocks per phase, far beyond what this proxy can hold"},
+            "reading": (("on the proxy population the successive-difference error is of the right size and the normal interval covers the known total "
+                         "in the declared share of phases; no autocorrelation at the step or its divisors is flagged" if not flagged else
+                         "on the proxy population the error size and coverage pass but autocorrelation is flagged at a divisor of the step; the interval is read with that caveat")
+                        if ok else
+                        "on the proxy population the successive-difference error understates the true design error or the interval under-covers; "
+                        "the sampling reading for this day is inconclusive")}
+
+
+def systematic_coverage_simulation(step: int = 40, N: int = 140_000, phases: int = 60, seed: int = 20261108) -> dict:
+    """Coverage of the design and bootstrap intervals on synthetic populations: concentrated, dependent, periodic at the step, periodic off the step."""
+    rng = np.random.default_rng(seed)
+    heavy = np.exp(rng.normal(0, 2.5, N))                                      # concentrated: a few blocks carry most of the total
+    ar = np.empty(N); ar[0] = 0.0
+    eps = rng.normal(0, 1, N)
+    for i in range(1, N):
+        ar[i] = 0.9 * ar[i - 1] + eps[i]
+    dependent = np.exp(ar) * (rng.random(N) < 0.3)                              # bursts with slowly varying intensity
+    periodic_step = np.where(np.arange(N) % step == 1, 100.0, 0.0)              # the auditor's case
+    periodic_off = np.where(np.arange(N) % 37 == 1, 100.0, 0.0)                 # a period that is not a divisor of the step
+    pops = {"concentrated_iid": heavy, "dependent_bursts": dependent, "periodic_at_step": periodic_step, "periodic_off_step": periodic_off}
+    out = {}
+    for name, y in pops.items():
+        T = float(y.sum())
+        cov_n, cov_b, rel = 0, 0, []
+        for ph in rng.choice(step, size=phases, replace=False) if phases <= step else range(step):
+            samp = y[ph::step]
+            est = samp.mean() * N
+            _, se = _succ_diff_se(samp, N)
+            cov_n += int(est - 1.96 * se <= T <= est + 1.96 * se)
+            boot = rng.choice(samp, size=(200, len(samp)), replace=True).mean(axis=1) * N
+            lo, hi = np.quantile(boot, [0.025, 0.975])
+            cov_b += int(lo <= T <= hi)
+            rel.append((est - T) / T if T else 0.0)
+        n_ph = phases if phases <= step else step
+        out[name] = {"normal_interval_coverage": cov_n / n_ph, "bootstrap_coverage": cov_b / n_ph,
+                     "relative_error_sd": float(np.std(rel)), "phases": n_ph}
+    cov_c = out["concentrated_iid"]["normal_interval_coverage"]; cov_d = out["dependent_bursts"]["normal_interval_coverage"]
+    out["reading"] = (f"for concentrated independent volume and for dependent bursts the intervals cover the total in about {cov_c:.0%} and {cov_d:.0%} of phases, "
+                      "below the nominal 95%: with a heavy-tailed volume the intervals are somewhat too narrow and should be read as indicative; for a pattern "
+                      "periodic at the sampling step both intervals fail completely (the sample sees one phase only), while a period that is not a divisor of the "
+                      "step is handled; this is why the real-data diagnostic on the proxy population matters")
+    out["settings"] = {"step": step, "blocks": N, "phases": min(phases, step), "seed": seed, "bootstrap_draws": 200}
+    return out
+
+
+def systematic_day(prices: dict, llama: pd.Series, events=None, manifest=None, intraday_days: list[dict] | None = None,
+                   diagnostic_events=None, diagnostic_manifest=None, simulate: bool = True) -> dict:
     """Design-based estimate of one day's volume from a systematic block sample (every k-th block over the whole day).
 
-    Estimate = mean USD per sampled block x blocks in the day. Standard error from successive differences, the standard
-    variance estimator for a systematic sample of an ordered population (Wolter 2007, v2); it treats the sample as
-    approximately a stratified sample of adjacent pairs and is conservative under smooth trends."""
+    Estimate = mean USD per existing sampled block x heights in the day. Standard error from successive differences (Wolter 2007,
+    v2) under the assumptions listed in SYSTEMATIC_ASSUMPTIONS; a percentile bootstrap is a second approximation. The error
+    estimator is checked on a proxy population with known total (systematic_coverage_diagnostic) and on synthetic populations
+    (systematic_coverage_simulation); the verdict is downgraded to inconclusive when the diagnostic fails."""
     from .blocks import SYSTEMATIC_EVENTS, SYSTEMATIC_MANIFEST, SYSTEMATIC_RULE
     events = SYSTEMATIC_EVENTS if events is None else events
     manifest = SYSTEMATIC_MANIFEST if manifest is None else manifest
-    out = {"rule": SYSTEMATIC_RULE, "status": "pending: systematic day not fetched yet (make blocks-systematic-day)"}
+    out = {"rule": SYSTEMATIC_RULE, "assumptions": SYSTEMATIC_ASSUMPTIONS, "status": "pending: systematic day not fetched yet (make blocks-systematic-day)"}
     if not events.exists() or not manifest.exists():
         return out
     man = json.loads(manifest.read_text())
     heights = sorted(int(h) for h in man["heights_sampled"])
+    nulls = set(int(h) for h in man.get("heights_without_block", []))
+    heights_existing = [h for h in heights if h not in nulls]
     raw = pd.read_csv(events)
-    raw = raw[raw["execution_status"].isin(SUCCESS_STATUSES)].copy() if len(raw) else raw
-    per_block = pd.Series(0.0, index=heights)
-    if len(raw):
-        raw["block_date"] = pd.to_datetime(raw["window_day"]).dt.date
-        legs = _legs_with_prices(raw, prices)
-        bv = batch_values(legs) if len(legs) else pd.DataFrame(columns=["half_gross"])
-        if len(bv):
-            bv = bv.join(raw.drop_duplicates("receipt_id").set_index("receipt_id")[["block_height", "window_hour"]])
-            got = bv.groupby("block_height")["half_gross"].sum()
-            per_block.loc[per_block.index.isin(got.index)] = got.reindex(per_block.index[per_block.index.isin(got.index)]).to_numpy()
-    fetched_heights = set(heights)
-    missing = int(man.get("blocks_missing", 0))
-    # blocks that were requested but not served are treated as unobserved: the mean is over fetched blocks only
-    n = len(heights) - missing if missing else len(heights)
+    got = _per_block_usd(raw, prices)
+    per_block = got.reindex(heights_existing).fillna(0.0)
     y = per_block.to_numpy(dtype=float)
-    if missing:
-        # heights_sampled lists requested heights; without per-height status we keep zeros for the missing ones and note it
-        pass
-    N = int(man["blocks_in_day"])
+    N_heights = int(man["blocks_in_day"])
+    # existing blocks among the day's heights: scale by the observed share of existing heights in the sample
+    N = int(round(N_heights * (len(heights_existing) / len(heights)))) if heights else N_heights
     mean = float(y.mean()) if len(y) else float("nan")
     est = mean * N
-    sd = float(np.sqrt(np.sum(np.diff(y) ** 2) / (2 * (len(y) - 1)))) if len(y) > 1 else float("nan")
-    se_mean = sd / np.sqrt(len(y)) * np.sqrt(1 - len(y) / N) if len(y) > 1 else float("nan")
-    se_total = se_mean * N
+    sd, se_total = _succ_diff_se(y, N)
     ref = llama.get(pd.Timestamp(man["day"]))
     ref = float(ref) if ref is not None and pd.notna(ref) else None
-    hours = raw.groupby("window_hour").size() if len(raw) else pd.Series(dtype=int)
+    raw_ok = raw[raw["execution_status"].isin(SUCCESS_STATUSES)] if len(raw) else raw
     by_hour_usd = {}
-    if len(raw) and len(bv):
-        by_hour_usd = {f"{int(h):02d}": float(v) for h, v in bv.groupby("window_hour")["half_gross"].sum().items()}
+    if len(got):
+        hours = raw_ok.drop_duplicates("receipt_id").set_index("receipt_id")["window_hour"]
+        bh = _legs_with_prices(raw_ok.assign(block_date=pd.to_datetime(raw_ok["window_day"]).dt.date), prices)
+        bvh = batch_values(bh) if len(bh) else pd.DataFrame(columns=["half_gross"])
+        if len(bvh):
+            bvh = bvh.join(hours)
+            by_hour_usd = {f"{int(h):02d}": float(v) for h, v in bvh.groupby("window_hour")["half_gross"].sum().items()}
     top_share = float(np.sort(y)[::-1][: max(1, len(y) // 100)].sum() / y.sum()) if y.sum() > 0 else None
-    # skew check: percentile bootstrap of the mean (blocks resampled i.i.d.; ignores the systematic ordering, so it is a
-    # second, model-free reading of the sampling error rather than a replacement for the design estimator)
     rng = np.random.default_rng(20261107)
     boot = rng.choice(y, size=(4000, len(y)), replace=True).mean(axis=1) * N if len(y) > 1 else np.array([])
     boot_ci = [float(np.quantile(boot, 0.025)), float(np.quantile(boot, 0.975))] if len(boot) else None
     same_day_24 = next((d for d in (intraday_days or []) if d.get("day") == man["day"]), None)
+    diag = systematic_coverage_diagnostic(prices, man["day"], int(man["step"]), events=diagnostic_events, manifest=diagnostic_manifest)
+    sim = systematic_coverage_simulation(step=int(man["step"])) if simulate else None
     out.update({"status": "complete" if man.get("complete") else "partial extract", "day": man["day"], "fetched_at": man.get("fetched_at"),
-                "design": {"step": man["step"], "offset": man["offset"], "blocks_in_day": N, "blocks_requested": man["blocks_requested"],
-                           "blocks_fetched": man["blocks_fetched"], "blocks_missing": missing, "sampling_fraction": man["blocks_fetched"] / N if N else None},
+                "design": {"step": man["step"], "offset": man["offset"], "heights_in_day": N_heights, "blocks_in_day_estimated": N,
+                           "blocks_requested": man["blocks_requested"], "blocks_fetched": man["blocks_fetched"],
+                           "heights_without_block": len(nulls) if "heights_without_block" in man else None,
+                           "fetch_failed": man.get("fetch_failed"), "blocks_missing": int(man.get("blocks_missing", 0)),
+                           "sampling_fraction": man["blocks_fetched"] / N if N else None},
                 "sampled_usd": float(y.sum()), "blocks_with_volume": int((y > 0).sum()),
                 "share_of_sampled_usd_in_top_1pct_blocks": top_share,
                 "estimate_usd": est, "standard_error_usd": se_total, "ci95_usd": [est - 1.96 * se_total, est + 1.96 * se_total],
                 "relative_standard_error": (se_total / est) if est else None,
-                "ci95_usd_bootstrap": boot_ci, "missing_blocks_treated_as_zero": bool(missing),
+                "ci95_usd_bootstrap": boot_ci,
                 "reference_usd": ref, "ratio_to_reference": (est / ref) if ref else None,
                 "ratio_ci95": [(est - 1.96 * se_total) / ref, (est + 1.96 * se_total) / ref] if ref else None,
                 "ratio_ci95_bootstrap": [boot_ci[0] / ref, boot_ci[1] / ref] if (ref and boot_ci) else None,
@@ -377,20 +540,33 @@ def systematic_day(prices: dict, llama: pd.Series, events=None, manifest=None, i
                 "usd_by_hour": by_hour_usd,
                 "same_day_other_designs": ({"two_fixed_windows_ratio": same_day_24.get("ratio_fixed_hours_to_reference"),
                                             "twenty_four_hourly_windows_ratio": same_day_24.get("ratio_all_hours_to_reference"),
-                                            "blocks_observed_24_windows": same_day_24.get("blocks_observed")} if same_day_24 else None)})
+                                            "blocks_observed_24_windows": same_day_24.get("blocks_observed")} if same_day_24 else None),
+                "coverage_diagnostic": diag, "coverage_simulation": sim})
     r = out["ratio_to_reference"]
     if r is not None:
         lo, hi = out["ratio_ci95"]
         blo, bhi = out["ratio_ci95_bootstrap"] or (None, None)
         both_exclude = (not out["reference_inside_ci95"]) and (out["reference_inside_ci95_bootstrap"] is False)
         either_includes = out["reference_inside_ci95"] or bool(out["reference_inside_ci95_bootstrap"])
-        out["reading"] = (f"on this day the even {man['step']}-block systematic sample estimates {r:.2f} of the reference with a 95% design interval of {lo:.2f} to {hi:.2f} "
-                          f"(percentile bootstrap {blo:.2f} to {bhi:.2f}; volume is concentrated in few blocks, so the normal design interval is approximate and both readings are given); "
-                          + ("both intervals exclude parity, which is evidence against a purely sampling explanation of this day's gap, conditional on the design and the error estimator; "
-                             "what remains is definitional (what the reference counts, one- or two-sided notional, confidential intents) or a difference in reconstruction or pricing" if both_exclude else
-                             "at least one interval includes parity, so for this day the gap to the reference is compatible with sampling error under our definition" if either_includes else
-                             "the two intervals disagree about parity; the sampling error alone cannot be ruled out or confirmed")
-                          + "; one day cannot establish the global total")
+        diag_ok = bool(diag and diag.get("supported"))
+        no_volume = y.sum() <= 0
+        out["sampling_verdict"] = ("inconclusive: no volume observed in the sample" if no_volume else
+                                   "inconclusive: the error estimator is not supported on the proxy population" if (diag is not None and not diag_ok) else
+                                   "unchecked: no proxy population available for this day" if diag is None else
+                                   "supported on the proxy population")
+        head = (f"on this day the even {man['step']}-block systematic sample estimates {r:.2f} of the reference with a 95% design interval of {lo:.2f} to {hi:.2f} "
+                f"(percentile bootstrap {blo:.2f} to {bhi:.2f}); both intervals are approximations under the stated assumptions and share the same unobserved blocks; ")
+        if no_volume or (diag is not None and not diag_ok):
+            body = ("the sampling error cannot be bounded with this design on this day (" + out["sampling_verdict"] + "), so the gap to the reference is not attributed")
+        elif both_exclude:
+            body = ("both intervals exclude parity, which is evidence against a purely sampling explanation of this day's gap conditional on the design and on an error "
+                    "estimator that the proxy-population diagnostic supports; what remains is definitional (what the reference counts, one- or two-sided notional, "
+                    "confidential intents), a difference in reconstruction or pricing, or a temporal pattern at the sampling interval that a single systematic start cannot detect")
+        elif either_includes:
+            body = "at least one interval includes parity, so for this day the gap to the reference is compatible with sampling error under our definition"
+        else:
+            body = "the two intervals disagree about parity; the sampling error alone cannot be ruled out or confirmed"
+        out["reading"] = head + body + "; one day cannot establish the global total"
     return out
 
 

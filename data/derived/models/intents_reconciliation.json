@@ -680,42 +680,50 @@
    "estimator": "day volume = sum of the sampled blocks' half-gross participant notional x step; design-based standard error from successive differences",
    "what_it_establishes": "whether the day's total under our definition is compatible with the reference once intraday selection is replaced by an even spread with a quantified sampling error; one day, so it bounds the sampling component for that day, not the global total"
   },
+  "assumptions": [
+   "the successive-difference variance estimator assumes that adjacent sampled blocks behave like a stratified sample of pairs; it is conservative under smooth trends and understates the error when the volume process has a periodic or dependent component at the sampling interval or a divisor of it, which a single systematic start cannot detect from the selected blocks alone",
+   "the percentile bootstrap resamples the selected blocks as if independent; it is a second approximation that shares the same unobserved blocks, not an independent observation of the error",
+   "the normal interval is approximate for a volume concentrated in a few blocks",
+   "skipped heights (null blocks) are not population units; the mean is taken over existing sampled blocks and scaled to the heights of the day"
+  ],
   "status": "complete",
   "day": "2025-11-14",
   "fetched_at": "2026-11-08T00:21:04+00:00",
   "design": {
    "step": 40,
    "offset": 36,
-   "blocks_in_day": 139853,
+   "heights_in_day": 139853,
+   "blocks_in_day_estimated": 139573,
    "blocks_requested": 3496,
    "blocks_fetched": 3489,
+   "heights_without_block": 7,
+   "fetch_failed": 0,
    "blocks_missing": 7,
-   "sampling_fraction": 0.024947623576183565
+   "sampling_fraction": 0.024997671469410274
   },
   "sampled_usd": 1172470.014486787,
   "blocks_with_volume": 1552,
   "share_of_sampled_usd_in_top_1pct_blocks": 0.8953163380177444,
-  "estimate_usd": 46903160.450806804,
-  "standard_error_usd": 13484539.694020918,
+  "estimate_usd": 46903169.19804079,
+  "standard_error_usd": 13484546.111470466,
   "ci95_usd": [
-   20473462.650525805,
-   73332858.2510878
+   20473458.819558676,
+   73332879.5765229
   ],
-  "relative_standard_error": 0.2874974642308771,
+  "relative_standard_error": 0.2874975474372366,
   "ci95_usd_bootstrap": [
-   23444901.864576615,
-   75030187.42921005
+   23979106.12170579,
+   76354214.46335386
   ],
-  "missing_blocks_treated_as_zero": true,
   "reference_usd": 152283590.0,
-  "ratio_to_reference": 0.3079987833935804,
+  "ratio_to_reference": 0.3079988408340044,
   "ratio_ci95": [
-   0.1344429997383553,
-   0.48155456704880545
+   0.13444297458155982,
+   0.48155470708644904
   ],
   "ratio_ci95_bootstrap": [
-   0.1539555369332744,
-   0.492700411312933
+   0.15746349374680352,
+   0.5013948939826928
   ],
   "reference_inside_ci95": false,
   "reference_inside_ci95_bootstrap": false,
@@ -750,7 +758,114 @@
    "twenty_four_hourly_windows_ratio": 0.3307836473428638,
    "blocks_observed_24_windows": 1194
   },
-  "reading": "on this day the even 40-block systematic sample estimates 0.31 of the reference with a 95% design interval of 0.13 to 0.48 (percentile bootstrap 0.15 to 0.49; volume is concentrated in few blocks, so the normal design interval is approximate and both readings are given); both intervals exclude parity, which is evidence against a purely sampling explanation of this day's gap, conditional on the design and the error estimator; what remains is definitional (what the reference counts, one- or two-sided notional, confidential intents) or a difference in reconstruction or pricing; one day cannot establish the global total"
+  "coverage_diagnostic": {
+   "rule": {
+    "declared": "2026-11-08, before the diagnostic was computed",
+    "proxy_population": "the 24 fifty-block hourly windows of the same day (consecutive blocks), whose total is known; every one of the step phases is applied to it and the estimate and its design standard error are computed for each phase",
+    "checks": [
+     "ratio of the standard deviation of the estimates across phases (the true design error on this population) to the mean successive-difference standard error",
+     "share of phases whose 95% normal interval covers the known total",
+     "autocorrelation of the per-block volume within windows at lags 1 to 50, flagging the sampling step and its divisors"
+    ],
+    "verdict": "the design interval is considered supported on the proxy if the ratio is at most 1.5 and the coverage is at least 0.80; otherwise the sampling reading is inconclusive and the day's verdict is downgraded",
+    "limits": "the proxy has about 30 blocks per phase and is made of discontiguous windows, so it tests the error estimator on this day's volume process at short range, not the whole-day design"
+   },
+   "proxy_blocks": 1200,
+   "proxy_windows": 24,
+   "proxy_total_usd": 430852.8408710183,
+   "phases_evaluated": 40,
+   "blocks_per_phase_mean": 30.0,
+   "sd_of_estimates_across_phases_usd": 1636514.9790863814,
+   "mean_successive_difference_se_usd": 432773.4760560858,
+   "ratio_true_sd_to_estimated_se": 3.7814585912245122,
+   "estimated_error_zero_while_phases_disagree": false,
+   "normal_interval_coverage": 0.275,
+   "autocorrelation_threshold": 0.05832118435198043,
+   "autocorrelation_flagged_at_step_or_divisors": {
+    "4": 0.08654801892359941
+   },
+   "largest_autocorrelations": {
+    "3": 0.11863279192820653,
+    "4": 0.08654801892359941,
+    "47": -0.04561320749520441,
+    "48": -0.034076289378183605,
+    "49": -0.033090345204398096
+   },
+   "supported": false,
+   "post_hoc_by_step": {
+    "kind": "exploratory, not part of the declared verdict",
+    "steps": {
+     "5": {
+      "blocks_per_phase": 240,
+      "ratio_true_sd_to_estimated_se": 2.1389918599872604,
+      "normal_interval_coverage": 0.4,
+      "phases": 5
+     },
+     "8": {
+      "blocks_per_phase": 150,
+      "ratio_true_sd_to_estimated_se": 2.032593518465582,
+      "normal_interval_coverage": 0.5,
+      "phases": 8
+     },
+     "10": {
+      "blocks_per_phase": 120,
+      "ratio_true_sd_to_estimated_se": 2.627621827781302,
+      "normal_interval_coverage": 0.4,
+      "phases": 10
+     },
+     "20": {
+      "blocks_per_phase": 60,
+      "ratio_true_sd_to_estimated_se": 3.172840331762724,
+      "normal_interval_coverage": 0.45,
+      "phases": 20
+     },
+     "40": {
+      "blocks_per_phase": 30,
+      "ratio_true_sd_to_estimated_se": 3.7814585912245122,
+      "normal_interval_coverage": 0.275,
+      "phases": 40
+     }
+    },
+    "reading": "ratio and coverage as the blocks per phase grow; the declared design has about 3,500 blocks per phase, far beyond what this proxy can hold"
+   },
+   "reading": "on the proxy population the successive-difference error understates the true design error or the interval under-covers; the sampling reading for this day is inconclusive"
+  },
+  "coverage_simulation": {
+   "concentrated_iid": {
+    "normal_interval_coverage": 0.85,
+    "bootstrap_coverage": 0.85,
+    "relative_error_sd": 0.29662887584914027,
+    "phases": 40
+   },
+   "dependent_bursts": {
+    "normal_interval_coverage": 0.85,
+    "bootstrap_coverage": 0.875,
+    "relative_error_sd": 0.2749354848344905,
+    "phases": 40
+   },
+   "periodic_at_step": {
+    "normal_interval_coverage": 0.0,
+    "bootstrap_coverage": 0.0,
+    "relative_error_sd": 6.244997998398398,
+    "phases": 40
+   },
+   "periodic_off_step": {
+    "normal_interval_coverage": 1.0,
+    "bootstrap_coverage": 1.0,
+    "relative_error_sd": 0.005178625249013137,
+    "phases": 40
+   },
+   "reading": "for concentrated independent volume and for dependent bursts the intervals cover the total in about 85% and 85% of phases, below the nominal 95%: with a heavy-tailed volume the intervals are somewhat too narrow and should be read as indicative; for a pattern periodic at the sampling step both intervals fail completely (the sample sees one phase only), while a period that is not a divisor of the step is handled; this is why the real-data diagnostic on the proxy population matters",
+   "settings": {
+    "step": 40,
+    "blocks": 140000,
+    "phases": 40,
+    "seed": 20261108,
+    "bootstrap_draws": 200
+   }
+  },
+  "sampling_verdict": "inconclusive: the error estimator is not supported on the proxy population",
+  "reading": "on this day the even 40-block systematic sample estimates 0.31 of the reference with a 95% design interval of 0.13 to 0.48 (percentile bootstrap 0.16 to 0.50); both intervals are approximations under the stated assumptions and share the same unobserved blocks; the sampling error cannot be bounded with this design on this day (inconclusive: the error estimator is not supported on the proxy population), so the gap to the reference is not attributed; one day cannot establish the global total"
  },
  "trace_examples": [
   "simple_two_party_fully_priced",

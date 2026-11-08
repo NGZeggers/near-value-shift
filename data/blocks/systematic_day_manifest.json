@@ -3515,5 +3515,16 @@
   172665541,
   172665581,
   172665621
- ]
+ ],
+ "heights_without_block": [
+  172566101,
+  172596501,
+  172610101,
+  172617501,
+  172622061,
+  172622541,
+  172622581
+ ],
+ "fetch_failed": 0,
+ "missing_reading": "a height without a block is a skipped height in the chain (the API returns null and the null is cached); a fetch failure is a request that never produced a cached answer"
 }

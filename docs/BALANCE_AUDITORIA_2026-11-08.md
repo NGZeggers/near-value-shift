@@ -25,7 +25,7 @@ Las tres son validaciones de evidencia, no fallos de código. El auditor advirti
 | Mismo día con dos ventanas fijas / 24 ventanas horarias | 0.36 / 0.33 |
 | Concentración | el 1 % de los bloques muestreados concentra el 90 % del volumen |
 
-Lectura: los tres diseños coinciden y ambos intervalos excluyen la paridad. Para ese día, los intervalos aportan evidencia contra una explicación puramente muestral, condicionada al diseño y al estimador de error; quedan abiertas diferencias de definición (qué cuenta la referencia, uno o dos lados, *confidential intents*) o de reconstrucción y precios. Un día no establece el total global.
+Lectura (revisada el 2026-11-08 tras la reserva metodológica del auditor): los tres diseños coinciden en el punto, pero el estimador de error de la muestra sistemática no queda respaldado en este día. Comprobado sobre las 24 ventanas horarias del mismo día (1,200 bloques consecutivos, total conocido), la desviación real entre las 40 fases es 3.8 veces el error estándar por diferencias sucesivas y el intervalo normal cubre el total en el 27.5 % de las fases; con pasos menores (hasta 150 bloques por fase) la razón baja a 2.0 y la cobertura no pasa del 50 %. La simulación con poblaciones sintéticas del tamaño real da cobertura del 85 % para volumen concentrado o dependiente y del 0 % para un patrón periódico en el paso. Veredicto declarado de antemano: no concluyente sobre el error de muestreo; la brecha de ese día frente a la referencia no se atribuye. Un día no establece el total global.
 
 ### Búsqueda del swap de financiación de las recompras a 200 bloques
 

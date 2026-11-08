@@ -772,6 +772,16 @@ SYSTEMATIC_RULE = {
 }
 
 
+SYSTEMATIC_REPLICATED_DESIGN = {
+    "declared": "2026-11-08, not executed: declared for a future acquisition so that its evaluation is fixed before any block is read",
+    "design": ("four independent random starts in [0, 160) with step 160 each, interpenetrating, so that the four replicate estimates "
+               "have the same total block budget as one step-40 sample; the design variance is estimated from the spread of the four "
+               "replicates without any assumption about the sequence"),
+    "evaluation": "ratio to the reference with the replicate-based 95% interval; the same acceptance reading as the single-start sample",
+    "limit": "four replicates give a wide interval on the variance itself; the gain is validity, not precision",
+}
+
+
 def run_systematic_day(day: str = SYSTEMATIC_DAY, step: int = SYSTEMATIC_STEP, offline: bool = False) -> dict:
     import random
     if isinstance(step, bool) or not isinstance(step, int) or step <= 0:
@@ -790,7 +800,7 @@ def run_systematic_day(day: str = SYSTEMATIC_DAY, step: int = SYSTEMATIC_STEP, o
     if offline:
         heights = [h for h in heights if (CACHE / f"{h}.json").exists()]
     print(f"systematic day {day}: heights {h0}..{h_end}, step {step}, offset {offset}, {len(heights)} blocks" + (" (offline)" if offline else ""), flush=True)
-    t0 = time.time(); fetched = 0; missing = 0
+    t0 = time.time(); fetched = 0; missing = 0; nulls: list[int] = []
     tmp = SYSTEMATIC_EVENTS.with_suffix(".csv.tmp")
     with tmp.open("w", newline="") as fe:
         we = csv.writer(fe)
@@ -799,6 +809,9 @@ def run_systematic_day(day: str = SYSTEMATIC_DAY, step: int = SYSTEMATIC_STEP, o
             b = fetch_block(h, offline=offline)
             if b is None:
                 missing += 1
+                cached = CACHE / f"{h}.json"
+                if cached.exists() and cached.read_text().strip() in ("null", ""):
+                    nulls.append(h)          # a skipped height: the chain has no block there (the null answer is cached)
             else:
                 fetched += 1
                 d = datetime.fromtimestamp(b["ts"] / 1e9, tz=timezone.utc)
@@ -812,7 +825,10 @@ def run_systematic_day(day: str = SYSTEMATIC_DAY, step: int = SYSTEMATIC_STEP, o
     tmp.replace(SYSTEMATIC_EVENTS)
     man = {"fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": NEARDATA, "rule": SYSTEMATIC_RULE, "day": day, "step": step,
            "offset": offset, "start_height": h0, "end_height": h_end, "blocks_in_day": h_end - h0, "blocks_requested": len(heights),
-           "blocks_fetched": fetched, "blocks_missing": missing, "complete": fetched + missing >= len(heights), "heights_sampled": heights}
+           "blocks_fetched": fetched, "blocks_missing": missing, "heights_without_block": nulls, "fetch_failed": missing - len(nulls),
+           "missing_reading": ("a height without a block is a skipped height in the chain (the API returns null and the null is cached); "
+                               "a fetch failure is a request that never produced a cached answer"),
+           "complete": fetched + missing >= len(heights), "heights_sampled": heights}
     SYSTEMATIC_MANIFEST.write_text(json.dumps(man, indent=1))
     print(f"systematic day done: {fetched} blocks in {time.time() - t0:,.0f}s (complete={man['complete']})", flush=True)
     return man

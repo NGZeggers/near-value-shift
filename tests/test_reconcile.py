@@ -238,15 +238,71 @@ def test_systematic_day_estimate_and_design_error(tmp_path, monkeypatch):
                          "window_day": day, "window_hour": i % 24, "block_height": h, "execution_status": "SUCCESS_VALUE"})
     (tmp_path / "e.csv").write_text(pd.DataFrame(rows).to_csv(index=False))
     man = {"day": day, "step": 40, "offset": 0, "blocks_in_day": 400, "blocks_requested": 10, "blocks_fetched": 10, "blocks_missing": 0, "complete": True,
-           "heights_sampled": heights, "fetched_at": "x"}
+           "heights_sampled": heights, "heights_without_block": [], "fetch_failed": 0, "fetched_at": "x"}
     (tmp_path / "m.json").write_text(json.dumps(man))
     monkeypatch.setattr(intents, "_REGISTRY", {"usdc": ("usdc", 6, "usd-coin")})
     ref = pd.Series({pd.Timestamp(day): 20_000.0})
     out = reconcile.systematic_day({}, ref, events=tmp_path / "e.csv", manifest=tmp_path / "m.json",
-                                   intraday_days=[{"day": day, "ratio_fixed_hours_to_reference": 0.3, "ratio_all_hours_to_reference": 0.4, "blocks_observed": 1200}])
+                                   intraday_days=[{"day": day, "ratio_fixed_hours_to_reference": 0.3, "ratio_all_hours_to_reference": 0.4, "blocks_observed": 1200}],
+                                   diagnostic_events=tmp_path / "none.csv", diagnostic_manifest=tmp_path / "none.json", simulate=False)
     assert out["sampled_usd"] == pytest.approx(500.0) and out["estimate_usd"] == pytest.approx(500 / 10 * 400)   # 20,000 = the reference
     assert out["ratio_to_reference"] == pytest.approx(1.0) and out["reference_inside_ci95"] is True
     sd = np.sqrt(sum(100.0**2 for _ in range(9)) / (2 * 9))          # alternating 100/0: every successive difference is 100
     assert out["standard_error_usd"] == pytest.approx(sd / np.sqrt(10) * np.sqrt(1 - 10 / 400) * 400)
     assert out["same_day_other_designs"]["two_fixed_windows_ratio"] == 0.3 and "includes parity" in out["reading"]
-    assert out["ratio_ci95_bootstrap"][0] <= 1.0 <= out["ratio_ci95_bootstrap"][1] and out["missing_blocks_treated_as_zero"] is False
+    assert out["ratio_ci95_bootstrap"][0] <= 1.0 <= out["ratio_ci95_bootstrap"][1]
+    assert out["coverage_diagnostic"] is None and out["sampling_verdict"].startswith("unchecked") and len(out["assumptions"]) == 4
+
+
+
+def _periodic_windows(tmp_path, day, step=40, period=40, n_windows=24, n=50, start=100_000):
+    """Hourly windows of consecutive blocks whose volume is 100 USDC only at heights == 1 mod period: a proxy population with a known total."""
+    rows, wins = [], []
+    for k in range(n_windows):
+        h0 = start + k * 5_000
+        wins.append({"day": day, "hour": k, "start_height": h0, "n": n, "fetched": n, "usable": True})
+        for h in range(h0, h0 + n):
+            if h % period == 1:
+                log = json.dumps({"standard": "dip4", "event": "token_diff", "data": [
+                    {"account_id": "u", "intent_hash": f"u{h}", "diff": {"usdc": str(-100 * 10**6), "zzz": "1"}},
+                    {"account_id": "mm", "intent_hash": f"m{h}", "diff": {"usdc": str(100 * 10**6), "zzz": "-1"}}]})
+                rows.append({"block_date": day, "block_timestamp": h, "receipt_id": f"r{h}", "caller": "relay", "log": "EVENT_JSON:" + log,
+                             "window_day": day, "window_hour": k, "block_height": h, "execution_status": "SUCCESS_VALUE"})
+    (tmp_path / "w.csv").write_text(pd.DataFrame(rows).to_csv(index=False))
+    (tmp_path / "w.json").write_text(json.dumps({"days": [day], "windows": wins}))
+    return tmp_path / "w.csv", tmp_path / "w.json"
+
+
+def test_systematic_day_adversarial_periodic_pattern_is_inconclusive(tmp_path, monkeypatch):
+    """The auditor's case: volume only at heights == 1 mod 40, phase 0. The estimate is 0 with zero error; the verdict must not attribute the gap."""
+    monkeypatch.setattr(intents, "_REGISTRY", {"usdc": ("usdc", 6, "usd-coin")})
+    day = "2025-11-14"
+    heights = list(range(0, 4000, 40))                                   # phase 0 never meets a volume block
+    (tmp_path / "e.csv").write_text(pd.DataFrame(columns=["block_date", "block_timestamp", "receipt_id", "caller", "log", "window_day", "window_hour", "block_height", "execution_status"]).to_csv(index=False))
+    man = {"day": day, "step": 40, "offset": 0, "blocks_in_day": 4000, "blocks_requested": 100, "blocks_fetched": 100, "blocks_missing": 0, "complete": True,
+           "heights_sampled": heights, "heights_without_block": [], "fetch_failed": 0, "fetched_at": "x"}
+    (tmp_path / "m.json").write_text(json.dumps(man))
+    ev, mf = _periodic_windows(tmp_path, day)
+    out = reconcile.systematic_day({}, pd.Series({pd.Timestamp(day): 10_000.0}), events=tmp_path / "e.csv", manifest=tmp_path / "m.json",
+                                   diagnostic_events=ev, diagnostic_manifest=mf, simulate=False)
+    assert out["estimate_usd"] == 0 and out["ratio_ci95"] == [0.0, 0.0]
+    assert out["sampling_verdict"].startswith("inconclusive") and "not attributed" in out["reading"]
+    dg = out["coverage_diagnostic"]
+    assert dg["supported"] is False and (dg["ratio_true_sd_to_estimated_se"] is None or dg["ratio_true_sd_to_estimated_se"] > 1.5)
+    assert dg["estimated_error_zero_while_phases_disagree"] is True             # phase 1 sees everything, the others nothing, every SE is zero
+    assert "40" in dg["autocorrelation_flagged_at_step_or_divisors"] or dg["normal_interval_coverage"] < 0.8
+
+
+def test_systematic_coverage_diagnostic_supports_an_unstructured_population(tmp_path, monkeypatch):
+    monkeypatch.setattr(intents, "_REGISTRY", {"usdc": ("usdc", 6, "usd-coin")})
+    day = "2025-11-14"
+    ev, mf = _periodic_windows(tmp_path, day, period=7)                   # a period that is not a divisor of 40, spread across phases
+    dg = reconcile.systematic_coverage_diagnostic({}, day, 40, events=ev, manifest=mf)
+    assert dg["phases_evaluated"] == 40 and dg["ratio_true_sd_to_estimated_se"] < 1.5 and dg["normal_interval_coverage"] >= 0.8
+    assert dg["supported"] is True
+
+
+def test_systematic_coverage_simulation_fails_only_at_the_step():
+    sim = reconcile.systematic_coverage_simulation(step=40, N=140_000, phases=20, seed=1)
+    assert sim["periodic_at_step"]["normal_interval_coverage"] == 0 and sim["periodic_at_step"]["bootstrap_coverage"] == 0
+    assert sim["concentrated_iid"]["normal_interval_coverage"] >= 0.8 and sim["periodic_off_step"]["normal_interval_coverage"] >= 0.8
