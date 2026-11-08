@@ -273,3 +273,13 @@ Resultado: ninguna métrica de uso supera el criterio declarado; el veredicto lo
 | 4b. Evento previo compatible frente a financiación demostrada | Hecho | Textos y claves distinguen "evento previo compatible observado" de "financiación demostrada": `exchange_kind`, `kind` ("eventos observados; asignación inferida"), y la lectura dice que todos los retiros tienen algún flujo previo compatible, no que el origen esté contabilizado. Se publica el caso más fuerte: intercambio y retiro en el mismo recibo, 1,124 de 1,926. Los importes por pata y los saldos previos no se conservan; la asignación de fondos a cada retiro queda inferida. |
 
 - `make build` completo; `make test`: 213 pruebas aprobadas (2 nuevas); comprobaciones de navegador: 47 de 47; `make check-generated`: coincidente tras el commit. Sin consultas nuevas a BigQuery.
+
+---
+
+## Decimotercera pasada: emparejador independiente del orden (98/100, base `69f26a6`)
+
+| Hallazgo | Estado | Qué se hizo y dónde verificarlo |
+| --- | --- | --- |
+| P2: con importes ambiguos, el orden de los recibos cambiaba el número de emparejamientos | Hecho | `bridge._match_snapshot` construye primero la relación admisible (mismo día UTC, importes a distancia ≤ tolerancia float64) y calcula el emparejamiento de cardinalidad máxima con `scipy.sparse.csgraph.maximum_bipartite_matching`; el resultado no depende del orden de ninguna de las dos entradas. La ambigüedad se mide sobre la relación admisible antes de asignar: recibos del snapshot con más de un retiro admisible, retiros con más de un recibo admisible y parejas emparejadas que tenían alternativa. Se publican los tres contadores y el método (`method`). Regresión `test_snapshot_match_is_order_independent_and_maximum`: el caso del auditor (A admite dos retiros, B solo uno) da dos emparejamientos en las cuatro permutaciones de ambas entradas, con ambigüedad 1/1/2. Datos actuales: 3,197 emparejados, 0 ambigüedades. |
+
+- `make build` completo; `make test`: 214 pruebas aprobadas (1 nueva); comprobaciones de navegador: 47 de 47; `make check-generated`: coincidente tras el commit.

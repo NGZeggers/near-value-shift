@@ -306,3 +306,25 @@ def test_snapshot_match_is_approximate_and_flags_large_integer_collisions(tmp_pa
     assert out["near_total"] == pytest.approx(2.0) and rec["matched_on_day_and_amount"] == 2 and rec["ambiguous_snapshot_receipts"] >= 1
     assert "approximate" in rec["kind"] and "float64" in rec["precision"]
     assert "compatible" in out["exchange_kind"] and "inferred" in out["kind"]
+
+
+def test_snapshot_match_is_order_independent_and_maximum(tmp_path):
+    """The auditor's case: snapshot A admits withdrawals 1 and 2, snapshot B admits only 1. Greedy in A-first order matched one; the
+    maximum matching pairs both, whatever the order of either input, and the ambiguity counts describe the admissible relation."""
+    ts = int(pd.Timestamp("2026-05-01T10:00:00Z").timestamp() * 10**9)
+    base = {"block_date": "2026-05-01", "intents_account": "a", "intent_hash": None, "swap_block": None, "swap_receipt": None, "sold": None, "bought": None,
+            "blocks_withdrawal_minus_swap": None, "deposit_block": None, "blocks_swap_minus_deposit": None, "transfer_in_block": None, "blocks_swap_minus_transfer_in": None}
+    # amounts near 2^60 yocto: the float64 tolerance is exactly 256 yocto and every value below is exactly representable
+    w1 = dict(base, block_height=100, receipt_id="w1", amount_yocto=str(2**60))
+    w2 = dict(base, block_height=101, receipt_id="w2", amount_yocto=str(2**60 + 200))
+    A = {"receipt_id": "A", "predecessor_account_id": "intents.near", "block_timestamp": ts, "actions": [{"action": "TRANSFER", "deposit": float(2**60)}]}          # admits w1 (0) and w2 (200)
+    B = {"receipt_id": "B", "predecessor_account_id": "intents.near", "block_timestamp": ts, "actions": [{"action": "TRANSFER", "deposit": float(2**60 - 128)}]}    # admits only w1 (128 <= tolerance ~256); w2 is 384 away
+    results = []
+    for wd in ([w1, w2], [w2, w1]):
+        for sn in ([A, B], [B, A]):
+            f = tmp_path / f"attr_{len(results)}.csv"; pd.DataFrame(wd).to_csv(f, index=False)
+            rec = bridge.full_attribution(sn, path=f)["reconciliation_with_nearblocks_snapshot"]
+            results.append((rec["matched_on_day_and_amount"], rec["ambiguous_snapshot_receipts"], rec["ambiguous_withdrawals"], rec["matched_pairs_with_alternatives"]))
+    assert len(set(results)) == 1, results                       # the same answer under every permutation of both inputs
+    matched, amb_s, amb_w, alt = results[0]
+    assert matched == 2 and amb_s == 1 and amb_w == 1 and alt == 2

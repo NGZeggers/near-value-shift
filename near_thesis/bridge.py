@@ -41,22 +41,39 @@ AMOUNT_MATCH_TOLERANCE = "the NearBlocks snapshot stores deposits as floating-po
 
 
 def _match_snapshot(a: pd.DataFrame, snap: list[dict]) -> dict:
-    """Approximate one-to-one reconciliation by UTC day and amount at float precision, with ambiguity counted, never assumed exact."""
-    import math
+    """Approximate one-to-one reconciliation by UTC day and amount at float precision.
+
+    Admissible pairs are every (snapshot receipt, withdrawal) of the same day whose amounts differ by at most the float64
+    representation tolerance. The count of matched pairs is the maximum-cardinality bipartite matching over those pairs, so it does
+    not depend on the order of either input. Ambiguity is measured on the admissible relation before any assignment: snapshot
+    receipts with more than one admissible withdrawal, withdrawals with more than one admissible snapshot receipt, and the number of
+    matched pairs that have an alternative admissible partner (pairs inside a non-trivial component)."""
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import maximum_bipartite_matching
     bq = [(str(pd.Timestamp(d).date()), int(y)) for d, y in zip(a["block_date"], a["amount_yocto"])]
-    used = [False] * len(bq)
-    matched = ambiguous = 0
-    for t in snap:
+    rows, cols = [], []
+    snap_keys = []
+    for si, t in enumerate(snap):
         day = pd.Timestamp(int(t["block_timestamp"]) // 10**9, unit="s").strftime("%Y-%m-%d")
         amt = float(sum(float(x["deposit"]) for x in t.get("actions", []) if x.get("action") == "TRANSFER"))
         tol = max(1.0, abs(amt) * 2 ** -52)
-        cands = [i for i, (d, y) in enumerate(bq) if d == day and not used[i] and abs(float(y) - amt) <= tol]
-        if len(cands) > 1:
-            ambiguous += 1
-        if cands:
-            used[cands[0]] = True
-            matched += 1
-    return {"matched_on_day_and_amount": matched, "ambiguous_snapshot_receipts": ambiguous}
+        snap_keys.append((day, amt))
+        for bi, (d, y) in enumerate(bq):
+            if d == day and abs(float(y) - amt) <= tol:
+                rows.append(si); cols.append(bi)
+    n_s, n_b = len(snap), len(bq)
+    if not rows or not n_s or not n_b:
+        return {"matched_on_day_and_amount": 0, "ambiguous_snapshot_receipts": 0, "ambiguous_withdrawals": 0, "matched_pairs_with_alternatives": 0,
+                "method": "maximum-cardinality bipartite matching over the admissible pairs; order-independent"}
+    adj = coo_matrix((np.ones(len(rows), dtype=np.int8), (rows, cols)), shape=(n_s, n_b)).tocsr()
+    match = maximum_bipartite_matching(adj, perm_type="column")      # match[si] = bi or -1
+    matched = int((match >= 0).sum())
+    deg_s = np.asarray(adj.sum(axis=1)).ravel(); deg_b = np.asarray(adj.sum(axis=0)).ravel()
+    ambiguous_s = int((deg_s > 1).sum()); ambiguous_b = int((deg_b > 1).sum())
+    with_alternatives = int(sum(1 for si, bi in enumerate(match) if bi >= 0 and (deg_s[si] > 1 or deg_b[bi] > 1)))
+    return {"matched_on_day_and_amount": matched, "ambiguous_snapshot_receipts": ambiguous_s, "ambiguous_withdrawals": ambiguous_b,
+            "matched_pairs_with_alternatives": with_alternatives,
+            "method": "maximum-cardinality bipartite matching over the admissible pairs; order-independent"}
 
 
 def _classify_wnear_origin(a: pd.DataFrame, origin_path=None) -> pd.DataFrame | None:
@@ -106,6 +123,8 @@ def full_attribution(txns: list[dict] | None = None, path=ATTRIBUTION) -> dict |
         matched = mm["matched_on_day_and_amount"]
         out["reconciliation_with_nearblocks_snapshot"] = {"snapshot_receipts": len(snap), "snapshot_near": snap_near,
                                                            "matched_on_day_and_amount": int(matched), "ambiguous_snapshot_receipts": int(mm["ambiguous_snapshot_receipts"]),
+                                                           "ambiguous_withdrawals": int(mm["ambiguous_withdrawals"]), "matched_pairs_with_alternatives": int(mm["matched_pairs_with_alternatives"]),
+                                                           "method": mm["method"],
                                                            "snapshot_receipts_unmatched": int(len(snap) - matched), "bigquery_withdrawals_unmatched": int(n - matched),
                                                            "near_ratio_bigquery_over_snapshot": float(a["amount_near"].sum() / snap_near) if snap_near else None,
                                                            "precision": AMOUNT_MATCH_TOLERANCE,
