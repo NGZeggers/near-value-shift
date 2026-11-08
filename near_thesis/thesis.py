@@ -260,7 +260,7 @@ def reconciliation_section() -> list[str]:
         if sd.get('estimate_usd') is not None:
             dz = sd['design']; od = sd.get('same_day_other_designs') or {}
             out.append(head + f"Result: {dz['blocks_fetched']:,} of {dz['blocks_in_day']:,} blocks ({dz['sampling_fraction']:.2%}), {sd['blocks_with_volume']:,} with Intents volume; "
-                       f"estimate {usd(sd['estimate_usd'])} with design standard error {usd(sd['standard_error_usd'])} (relative {sd['relative_standard_error']:.1%}) against a reference of {usd(sd['reference_usd'])}: ratio {sd['ratio_to_reference']:.2f}, 95% interval {sd['ratio_ci95'][0]:.2f} to {sd['ratio_ci95'][1]:.2f}. "
+                       f"estimate {usd(sd['estimate_usd'])} with design standard error {usd(sd['standard_error_usd'])} (relative {sd['relative_standard_error']:.1%}) against a reference of {usd(sd['reference_usd'])}: ratio {sd['ratio_to_reference']:.2f}, 95% design interval {sd['ratio_ci95'][0]:.2f} to {sd['ratio_ci95'][1]:.2f} (bootstrap {sd['ratio_ci95_bootstrap'][0]:.2f} to {sd['ratio_ci95_bootstrap'][1]:.2f}). "
                        + (f"The same day under the two fixed windows gave {num(od.get('two_fixed_windows_ratio'), 2)} and under 24 hourly windows {num(od.get('twenty_four_hourly_windows_ratio'), 2)}. " if od else "")
                        + f"The top one percent of sampled blocks carries {sd['share_of_sampled_usd_in_top_1pct_blocks']:.0%} of the sampled volume. Reading: {sd['reading']}. {rule['what_it_establishes'][0].upper() + rule['what_it_establishes'][1:]}.\n")
         else:

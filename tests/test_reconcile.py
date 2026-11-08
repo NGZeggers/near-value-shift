@@ -249,3 +249,4 @@ def test_systematic_day_estimate_and_design_error(tmp_path, monkeypatch):
     sd = np.sqrt(sum(100.0**2 for _ in range(9)) / (2 * 9))          # alternating 100/0: every successive difference is 100
     assert out["standard_error_usd"] == pytest.approx(sd / np.sqrt(10) * np.sqrt(1 - 10 / 400) * 400)
     assert out["same_day_other_designs"]["two_fixed_windows_ratio"] == 0.3 and "includes parity" in out["reading"]
+    assert out["ratio_ci95_bootstrap"][0] <= 1.0 <= out["ratio_ci95_bootstrap"][1] and out["missing_blocks_treated_as_zero"] is False

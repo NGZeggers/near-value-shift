@@ -680,7 +680,77 @@
    "estimator": "day volume = sum of the sampled blocks' half-gross participant notional x step; design-based standard error from successive differences",
    "what_it_establishes": "whether the day's total under our definition is compatible with the reference once intraday selection is replaced by an even spread with a quantified sampling error; one day, so it bounds the sampling component for that day, not the global total"
   },
-  "status": "pending: systematic day not fetched yet (make blocks-systematic-day)"
+  "status": "complete",
+  "day": "2025-11-14",
+  "fetched_at": "2026-11-08T00:21:04+00:00",
+  "design": {
+   "step": 40,
+   "offset": 36,
+   "blocks_in_day": 139853,
+   "blocks_requested": 3496,
+   "blocks_fetched": 3489,
+   "blocks_missing": 7,
+   "sampling_fraction": 0.024947623576183565
+  },
+  "sampled_usd": 1172470.014486787,
+  "blocks_with_volume": 1552,
+  "share_of_sampled_usd_in_top_1pct_blocks": 0.8953163380177444,
+  "estimate_usd": 46903160.450806804,
+  "standard_error_usd": 13484539.694020918,
+  "ci95_usd": [
+   20473462.650525805,
+   73332858.2510878
+  ],
+  "relative_standard_error": 0.2874974642308771,
+  "ci95_usd_bootstrap": [
+   23444901.864576615,
+   75030187.42921005
+  ],
+  "missing_blocks_treated_as_zero": true,
+  "reference_usd": 152283590.0,
+  "ratio_to_reference": 0.3079987833935804,
+  "ratio_ci95": [
+   0.1344429997383553,
+   0.48155456704880545
+  ],
+  "ratio_ci95_bootstrap": [
+   0.1539555369332744,
+   0.492700411312933
+  ],
+  "reference_inside_ci95": false,
+  "reference_inside_ci95_bootstrap": false,
+  "usd_by_hour": {
+   "00": 11636.705480901948,
+   "01": 19889.79505757465,
+   "02": 24824.494468137003,
+   "03": 2571.411010974865,
+   "04": 178606.30697499492,
+   "05": 38561.02817505263,
+   "06": 12473.295168504319,
+   "07": 92490.30225778818,
+   "08": 14824.768531308411,
+   "09": 21856.233075952292,
+   "10": 253230.80244877766,
+   "11": 31671.19896126798,
+   "12": 48806.70596558765,
+   "13": 188079.70584775408,
+   "14": 30501.546401012587,
+   "15": 59208.42792519971,
+   "16": 55654.38328308596,
+   "17": 28180.300697849732,
+   "18": 8697.43781270452,
+   "19": 16777.28296204371,
+   "20": 22062.66088324838,
+   "21": 3334.210828035522,
+   "22": 8033.776164425651,
+   "23": 497.23410460460957
+  },
+  "same_day_other_designs": {
+   "two_fixed_windows_ratio": 0.36011985174701217,
+   "twenty_four_hourly_windows_ratio": 0.3307836473428638,
+   "blocks_observed_24_windows": 1194
+  },
+  "reading": "on this day the even 40-block systematic sample estimates 0.31 of the reference with a 95% design interval of 0.13 to 0.48 (percentile bootstrap 0.15 to 0.49; volume is concentrated in few blocks, so the normal design interval is approximate and both readings are given); both intervals exclude parity, so for this day the gap is not sampling error: it is definitional (what the reference counts, one- or two-sided notional, confidential intents) or a difference in reconstruction or pricing; one day cannot establish the global total"
  },
  "trace_examples": [
   "simple_two_party_fully_priced",

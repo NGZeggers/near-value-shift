@@ -354,6 +354,11 @@ def systematic_day(prices: dict, llama: pd.Series, events=None, manifest=None, i
     if len(raw) and len(bv):
         by_hour_usd = {f"{int(h):02d}": float(v) for h, v in bv.groupby("window_hour")["half_gross"].sum().items()}
     top_share = float(np.sort(y)[::-1][: max(1, len(y) // 100)].sum() / y.sum()) if y.sum() > 0 else None
+    # skew check: percentile bootstrap of the mean (blocks resampled i.i.d.; ignores the systematic ordering, so it is a
+    # second, model-free reading of the sampling error rather than a replacement for the design estimator)
+    rng = np.random.default_rng(20261107)
+    boot = rng.choice(y, size=(4000, len(y)), replace=True).mean(axis=1) * N if len(y) > 1 else np.array([])
+    boot_ci = [float(np.quantile(boot, 0.025)), float(np.quantile(boot, 0.975))] if len(boot) else None
     same_day_24 = next((d for d in (intraday_days or []) if d.get("day") == man["day"]), None)
     out.update({"status": "complete" if man.get("complete") else "partial extract", "day": man["day"], "fetched_at": man.get("fetched_at"),
                 "design": {"step": man["step"], "offset": man["offset"], "blocks_in_day": N, "blocks_requested": man["blocks_requested"],
@@ -362,9 +367,12 @@ def systematic_day(prices: dict, llama: pd.Series, events=None, manifest=None, i
                 "share_of_sampled_usd_in_top_1pct_blocks": top_share,
                 "estimate_usd": est, "standard_error_usd": se_total, "ci95_usd": [est - 1.96 * se_total, est + 1.96 * se_total],
                 "relative_standard_error": (se_total / est) if est else None,
+                "ci95_usd_bootstrap": boot_ci, "missing_blocks_treated_as_zero": bool(missing),
                 "reference_usd": ref, "ratio_to_reference": (est / ref) if ref else None,
                 "ratio_ci95": [(est - 1.96 * se_total) / ref, (est + 1.96 * se_total) / ref] if ref else None,
+                "ratio_ci95_bootstrap": [boot_ci[0] / ref, boot_ci[1] / ref] if (ref and boot_ci) else None,
                 "reference_inside_ci95": bool(ref and est - 1.96 * se_total <= ref <= est + 1.96 * se_total) if ref else None,
+                "reference_inside_ci95_bootstrap": bool(ref and boot_ci and boot_ci[0] <= ref <= boot_ci[1]) if (ref and boot_ci) else None,
                 "usd_by_hour": by_hour_usd,
                 "same_day_other_designs": ({"two_fixed_windows_ratio": same_day_24.get("ratio_fixed_hours_to_reference"),
                                             "twenty_four_hourly_windows_ratio": same_day_24.get("ratio_all_hours_to_reference"),
@@ -372,11 +380,15 @@ def systematic_day(prices: dict, llama: pd.Series, events=None, manifest=None, i
     r = out["ratio_to_reference"]
     if r is not None:
         lo, hi = out["ratio_ci95"]
-        out["reading"] = (f"on this day the even {man['step']}-block systematic sample estimates {r:.2f} of the reference with a 95% design interval of {lo:.2f} to {hi:.2f}; "
-                          + ("the interval includes parity, so for this day the gap to the reference is compatible with sampling error under our definition"
-                             if out["reference_inside_ci95"] else
-                             "the interval excludes parity, so for this day the gap is not sampling error: it is definitional (what the reference counts, "
-                             "one- or two-sided notional, confidential intents) or a difference in reconstruction or pricing")
+        blo, bhi = out["ratio_ci95_bootstrap"] or (None, None)
+        both_exclude = (not out["reference_inside_ci95"]) and (out["reference_inside_ci95_bootstrap"] is False)
+        either_includes = out["reference_inside_ci95"] or bool(out["reference_inside_ci95_bootstrap"])
+        out["reading"] = (f"on this day the even {man['step']}-block systematic sample estimates {r:.2f} of the reference with a 95% design interval of {lo:.2f} to {hi:.2f} "
+                          f"(percentile bootstrap {blo:.2f} to {bhi:.2f}; volume is concentrated in few blocks, so the normal design interval is approximate and both readings are given); "
+                          + ("both intervals exclude parity, so for this day the gap is not sampling error: it is definitional (what the reference counts, "
+                             "one- or two-sided notional, confidential intents) or a difference in reconstruction or pricing" if both_exclude else
+                             "at least one interval includes parity, so for this day the gap to the reference is compatible with sampling error under our definition" if either_includes else
+                             "the two intervals disagree about parity; the sampling error alone cannot be ruled out or confirmed")
                           + "; one day cannot establish the global total")
     return out
 
