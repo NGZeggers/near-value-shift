@@ -1,5 +1,7 @@
 # From clicks to settlement: a reproducible investment thesis on NEAR
 
+> **This repository is the development history, not the hackathon submission.** The NEAR Hackathon 2026 submission of this project is [Alberto-Campos-de-la-Torre/near-settlement-thesis](https://github.com/Alberto-Campos-de-la-Torre/near-settlement-thesis), continued by the same team from commit [`5f6a144`](https://github.com/NGZeggers/near-value-shift/commit/5f6a14467a9b2394e395eecaf6b4bb1c9ed0eba6) of this repository. Judges should review that repository, its [hosted dashboard](https://alberto-campos-de-la-torre.github.io/near-settlement-thesis/) and its [demo post on X](https://x.com/mrdvdmedina/status/2121061701374345406). This is one project and one submission; this repository is not submitted separately. It stays public so the dated commit history from 2026-11-02 onward remains verifiable.
+
 This is a reproducible investment thesis on NEAR, built for NEAR Hackathon 2026, track **Investment Thesis** (`thesis`). It tests whether falling account counts hide a shift toward cross-chain settlement. Run `make build` to rebuild the evidence and explore the dashboard: [Try it in two minutes](#reproduce-do-x-see-y).
 
 **Question:** do falling account counts obscure a shift toward cross-chain settlement, and does the evidence support a token investment case? The project compares activity, behavioral proxies, Intents flows, net captured fees and forward associations. It reports failed cross-checks and inconclusive statistical tests. Settlement growth alone does not establish undervaluation.
@@ -56,11 +58,11 @@ NEAR is both the subject and the evidence layer: FastNear supplies NEAR blocks a
 
 ## Submission
 
-Official rules: [HACKATHON.md](https://nearhackathon.com/HACKATHON.md). Deadline: 14 November 2026, 23:59 UTC. The public repository and an actual demo post on X are both required. `docs/DEMO.md` contains a storyboard and draft; the team supplies identity/contact details, mainnet payout address, demo-post link and consent before reviewing the final submission payload.
+Official rules: [HACKATHON.md](https://nearhackathon.com/HACKATHON.md). Deadline: 14 November 2026, 23:59 UTC. The submitted repository is [Alberto-Campos-de-la-Torre/near-settlement-thesis](https://github.com/Alberto-Campos-de-la-Torre/near-settlement-thesis); the demo post is [on X](https://x.com/mrdvdmedina/status/2121061701374345406). This repository is not a second submission. `docs/DEMO.md` keeps the storyboard and draft used while preparing the demo.
 
 ## Disclosure and license
 
-Libraries and locked versions: `pyproject.toml` and `uv.lock`. Parts of the original implementation used Claude Code; the correction pass and regression checks used Codex. The independent audit, its fixes and the receipt revalidation were developed on a temporary review branch and merged into this repository, which is the canonical one. No pre-existing product is declared reused. This is research software; its statistical and sampling limits are part of the deliverable. MIT; see `LICENSE`.
+Libraries and locked versions: `pyproject.toml` and `uv.lock`. Parts of the original implementation used Claude Code; the correction pass and regression checks used Codex. The independent audit, its fixes and the receipt revalidation were developed on a temporary review branch and merged into this repository, which holds the development history through commit `5f6a144`; later reviewer-facing work continues in the submitted repository named at the top. No pre-existing product is declared reused. This is research software; its statistical and sampling limits are part of the deliverable. MIT; see `LICENSE`.
 
 All commits date from 2026-11-02 onward; there is no pre-hackathon baseline. The first commit is [117c268](https://github.com/NGZeggers/near-value-shift/commit/117c268), dated 2026-11-02 10:10 in Guadalajara; all project commits fall within the permitted work window.
 

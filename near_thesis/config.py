@@ -28,5 +28,7 @@ INTENTS_EXPLORER_JWT = os.getenv("INTENTS_EXPLORER_JWT") or None
 START_DATE = "2021-01-01"
 INTENTS_START = "2024-11-04"   # intents.near deployed 2024-11-01; first DefiLlama volume 2024-12
 
-# Canonical repository (the hackathon submission). Review work was merged here from a temporary branch.
+# Development-history repository. The hackathon submission continues from commit 5f6a144 in
+# https://github.com/Alberto-Campos-de-la-Torre/near-settlement-thesis (one project, one submission).
+# REPO_URL stays as is: it feeds generated links that must keep matching the committed artifacts.
 REPO_URL = "https://github.com/NGZeggers/near-value-shift"
